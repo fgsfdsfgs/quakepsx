@@ -1,0 +1,9 @@
+build
+id1psx/*/*
+!id1psx/.empty
+!id1psx/maps/.empty
+*.o
+*.elf
+*.exe
+*.iso
+.vscode

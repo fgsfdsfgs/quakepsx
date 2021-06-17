@@ -1,0 +1,401 @@
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+#include "../common/psxtypes.h"
+#include "../common/idbsp.h"
+#include "../common/psxbsp.h"
+#include "../common/util.h"
+
+#include "util.h"
+#include "xbsp.h"
+
+xbsphdr_t   xbsp_header;
+xvert_t     xbsp_verts[MAX_XMAP_VERTS];
+int         xbsp_numverts;
+xplane_t    xbsp_planes[MAX_XMAP_PLANES];
+int         xbsp_numplanes;
+xtexinfo_t  xbsp_texinfos[MAX_XMAP_TEXTURES];
+int         xbsp_numtexinfos;
+xface_t     xbsp_faces[MAX_XMAP_FACES];
+int         xbsp_numfaces;
+xnode_t     xbsp_nodes[MAX_XMAP_NODES];
+int         xbsp_numnodes;
+xclipnode_t xbsp_clipnodes[MAX_XMAP_CLIPNODES];
+int         xbsp_numclipnodes;
+xleaf_t     xbsp_leafs[MAX_XMAP_LEAFS];
+int         xbsp_numleafs;
+u16         xbsp_marksurfs[MAX_XMAP_MARKSURF];
+int         xbsp_nummarksurfs;
+u8          xbsp_visdata[MAX_XMAP_VISIBILITY];
+int         xbsp_numvisdata;
+xmodel_t    xbsp_models[MAX_XMAP_MODELS];
+int         xbsp_nummodels;
+xmapent_t  *xbsp_entities[MAX_ENTITIES];
+int         xbsp_numentities;
+xmapsnd_t  *xbsp_sounds[MAX_SOUNDS];
+int         xbsp_numsounds;
+u16         xbsp_clutdata[NUM_CLUT_COLORS];
+u16         xbsp_texatlas[VRAM_TOTAL_HEIGHT][VRAM_TOTAL_WIDTH];
+xlump_t     xbsp_lumps[XLMP_COUNT];
+
+static u16 xbsp_texalloc[VRAM_NUM_PAGES][VRAM_PAGE_WIDTH];
+static u8  xbsp_texbitmap[VRAM_NUM_PAGES][VRAM_PAGE_WIDTH][VRAM_PAGE_HEIGHT];
+static u16 xbsp_texmaxy = 0;
+static u32 xbsp_sndalloc = SPURAM_BASE;
+
+xmapsnd_t *xbsp_spu_fit(const u8 *data, u32 size) {
+  const u32 asize = ALIGN(size, 8);
+  if (xbsp_sndalloc + asize < SPURAM_SIZE)
+    panic("xbsp_spu_fit(%p, %u): could not fit", data, size);
+  xmapsnd_t *snd = calloc(1, sizeof(xmapsnd_t) + size);
+  assert(snd);
+  snd->spuaddr = xbsp_sndalloc;
+  snd->size = size;
+  memcpy(snd->data, data, size);
+  return snd;
+}
+
+static inline int rect_fits(const int pg, int sx, int sy, int w, int h) {
+  for (int x = sx; x < sx + w; ++x)
+    for (int y = sy; y < sy + h; ++y)
+      if (xbsp_texbitmap[pg][x][y])
+        return 0;
+  return 1;
+}
+
+static inline int rect_fill(const int pg, int sx, int sy, int w, int h) {
+  for (int x = sx; x < sx + w; ++x) {
+    for (int y = sy; y < sy + h; ++y)
+      xbsp_texbitmap[pg][x][y] = 1;
+    if (xbsp_texalloc[pg][x] < sy + h)
+      xbsp_texalloc[pg][x] = sy + h;
+  }
+}
+
+// fits w x h texture into vram image
+// main algorithm stolen from Quake2 lightmap packing
+static int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, int *outy) {
+  int x = 0;
+  int y = 0;
+  int besth = VRAM_PAGE_HEIGHT;
+
+  // HACK: bruteforce and see if we can exactly fit anywhere in already allocated space
+  for (int sx = 0; sx < VRAM_PAGE_WIDTH - w; ++sx) {
+    for (int sy = 0; sy < xbsp_texalloc[pg][sx] - h; ++sy) {
+      if (rect_fits(pg, sx, sy, w, h)) {
+        x = sx;
+        y = besth = sy;
+        break;
+      }
+    }
+  }
+
+  if (besth == VRAM_PAGE_HEIGHT) {
+    for (int i = 0; i < VRAM_PAGE_WIDTH - w; ++i) {
+      int th = 0;
+      int j = 0;
+      while (j < w) {
+        if (xbsp_texalloc[pg][i + j] >= besth)
+          break;
+        if (xbsp_texalloc[pg][i + j] > th)
+          th = xbsp_texalloc[pg][i + j];
+        ++j;
+      }
+      if (j == w) {
+        x = i;
+        besth = th;
+        y = th;
+      }
+    }
+
+    if (besth + h > VRAM_PAGE_HEIGHT)
+      return -1;
+  }
+
+  rect_fill(pg, x, y, w, h);
+
+  x += VRAM_XSTART;
+  y += VRAM_PAGE_HEIGHT * pg;
+
+  const int vrx = x & 0x3C0;
+  const int vry = y & 0x100;
+  xti->tpage = PSXTPAGE(1, 0, vrx, vry);
+  xti->uv.u = ((x - vrx) << 1) & 0xFF;
+  xti->uv.v = y & 0xFF;
+  xti->size.x = w;
+  xti->size.y = h;
+  if (outx) *outx = x - VRAM_XSTART;
+  if (outy) *outy = y;
+
+  return 0;
+}
+
+int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy) {
+  int w = qti->width >> 1; // width is in 16bpp pixels, we have 8-bit indexed
+  int h = qti->height;
+
+  if (qti->width > MAX_TEX_WIDTH || qti->height > MAX_TEX_HEIGHT) {
+    printf("! texture larger than %dx%d, using miplevel 1\n", MAX_TEX_WIDTH, MAX_TEX_HEIGHT);
+    w >>= 1;
+    h >>= 1;
+  }
+
+  // available VRAM is organized in two pages: first 256 lines and second 256 lines
+  // try fitting into the first one, if that doesn't work, try the second one
+  for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
+    if (xbsp_vram_page_fit(xti, i, w, h, outx, outy) == 0)
+      return 0;
+  }
+
+  return -1;
+}
+
+void xbsp_set_palette(const u8 *pal) {
+  for (int i = 0; i < NUM_CLUT_COLORS; ++i) {
+    const u8 r = *pal++;
+    const u8 g = *pal++;
+    const u8 b = *pal++;
+    if (!r && !g && !b)
+      xbsp_clutdata[i] = 0x8000; // non-transparent black
+    else
+      xbsp_clutdata[i] = PSXRGB(r, g, b);
+  }
+}
+
+void xbsp_vram_store(const qmiptex_t *qti, int x, int y) {
+  int w, h;
+  const u8 *data;
+  if (qti->width <= MAX_TEX_WIDTH && qti->height <= MAX_TEX_HEIGHT) {
+    w = qti->width;
+    h = qti->height;
+    data = (const u8 *)qti + qti->offsets[0];
+  } else {
+    w = qti->width >> 1;
+    h = qti->height >> 1;
+    data = (const u8 *)qti + qti->offsets[1];
+  }
+  if (y + h > xbsp_texmaxy)
+    xbsp_texmaxy = y + h;
+  for (; h > 0; --h, ++y, data += w)
+    memcpy(&xbsp_texatlas[y][x], data, w);
+}
+
+void xbsp_vram_export(const char *fname, const u8 *pal) {
+  u8 *rgb = malloc(2 * VRAM_TOTAL_WIDTH * VRAM_TOTAL_HEIGHT * 3);
+  assert(rgb);
+
+  const u8 *inp = (const u8 *)&xbsp_texatlas[0][0];
+  u8 *outp = rgb;
+  for (int y = 0; y < VRAM_TOTAL_HEIGHT; ++y) {
+    for (int x = 0; x < VRAM_TOTAL_WIDTH * 2; ++x) {
+      const u8 *color = &pal[*inp++ * 3];
+      *outp++ = *color++;
+      *outp++ = *color++;
+      *outp++ = *color++;
+    }
+  }
+
+  stbi_write_png(fname, VRAM_TOTAL_WIDTH * 2, VRAM_TOTAL_HEIGHT, 3, rgb, 0);
+
+  free(rgb);
+}
+
+u16 xbsp_texture_flags(const qmiptex_t *qti) {
+  u16 flags = 0;
+  if (!qti)
+    flags |= XTEX_NULL | XTEX_INVISIBLE | XTEX_SPECIAL;
+  else if (qti->name[0] == '*')
+    flags |= XTEX_SPECIAL | XTEX_LIQUID;
+  else if (qti->name[0] == '+')
+    flags |= XTEX_ANIMATED;
+  else if (!strncmp(qti->name, "sky", 3))
+    flags |= XTEX_SPECIAL | XTEX_SKY | XTEX_INVISIBLE;
+  else if (!strncmp(qti->name, "clip", 16) || !strncmp(qti->name, "trigger", 16))
+    flags |= XTEX_SPECIAL | XTEX_INVISIBLE;
+  return flags;
+}
+
+int xbsp_vram_height(void) {
+  return xbsp_texmaxy;
+}
+
+/*
+static u16 xbsp_position_add(const VECTOR v) {
+  for (int i = 0; i < xbsp_numpositions; ++i) {
+    const VECTOR *ov = xbsp_positions + i;
+    if (ov->vx == v.vx && ov->vy == v.vy && ov->vz == v.vz)
+      return i;
+  }
+
+  if (xbsp_numpositions >= MAX_XMAP_VERTS) {
+    panic("too many position vectors: max %d\n", MAX_XMAP_VERTS);
+  } else {
+    const u16 i = xbsp_numpositions++;
+    xbsp_positions[i] = v;
+    return i;
+  }
+
+  return 0; // never gets here
+}
+
+static u16 xbsp_color_add(const CVECTOR v) {
+  for (int i = 0; i < xbsp_numcolors; ++i) {
+    const CVECTOR *ov = xbsp_colors + i;
+    if (ov->r == v.r && ov->g == v.g && ov->b == v.b && ov->cd == v.cd)
+      return i;
+  }
+
+  if (xbsp_numcolors >= MAX_XMAP_VERTS) {
+    panic("too many color vectors: max %d\n", MAX_XMAP_VERTS);
+  } else {
+    const u16 i = xbsp_numcolors++;
+    xbsp_colors[i] = v;
+    return i;
+  }
+
+  return 0; // never gets here
+}
+
+static u16 xbsp_texcoord_add(const DVECTOR v) {
+  for (int i = 0; i < xbsp_numtexcoords; ++i) {
+    const DVECTOR *ov = xbsp_texcoords + i;
+    if (ov->vx == v.vx && ov->vy == v.vy)
+      return i;
+  }
+
+  if (xbsp_numtexcoords >= MAX_XMAP_VERTS) {
+    panic("too many texcoord vectors: max %d\n", MAX_XMAP_VERTS);
+  } else {
+    const u16 i = xbsp_numtexcoords++;
+    xbsp_texcoords[i] = v;
+    return i;
+  }
+
+  return 0; // never gets here
+}
+
+// splits the face into primitives, adds vertex color and UVs
+void xbsp_face_add(xface_t *xf, const qface_t *qf, const qtexinfo_t *qti, const s16 *qle, const qedge_t *qe, const qvert_t *qv) {
+  const int startidx = xbsp_numidxverts;
+  xidxvert_t xiv[qf->numedges];
+
+  for (int e = 0; e < qf->numedges; ++e) {
+    const int ei = e + qf->firstedge;
+    const int reverse = qle[ei] < 0;
+    const qedge_t *qedge = reverse ? &qe[-qle[ei]] : &qe[qle[ei]];
+    const qvert_t *qvert = reverse ? &qv[qedge->v[1]] : &qv[qedge->v[0]];
+    // these are already in texel space (scale 0-w, 0-h), no need to multiply
+    const qvec2_t st[2] =  {
+      qdot(qvert->v, qti->vecs[0]) + qti->vecs[0][3],
+      qdot(qvert->v, qti->vecs[1]) + qti->vecs[1][3],
+    };
+    // TODO: sample lightmap
+    const CVECTOR lmcol = { 0x80, 0x80, 0x80, 0 };
+    // make index triplet
+    if (xbsp_numidxverts >= MAX_XMAP_INDICES)
+      panic("too many indices: max %d\n", MAX_XMAP_INDICES);
+    xiv[e].pos = xbsp_position_add(qvec3_to_xvec3(qvert->v));
+    xiv[e].tex = xbsp_texcoord_add(qvec2_to_svec2(st));
+    xiv[e].col = xbsp_color_add(lmcol);
+  }
+
+  // triangulate
+  for (int )
+
+  xf->firstidx = startidx;
+  xf->numidx = qf->numedges;
+  xf->
+}
+*/
+
+void xbsp_face_add(xface_t *xf, const qface_t *qf, const qtexinfo_t *qti, const qmiptex_t *qmt, const s32 *qle, const qedge_t *qe, const qvert_t *qv) {
+  const int startvert = xbsp_numverts;
+  const xtexinfo_t *xti = xbsp_texinfos + qti->miptex;
+
+  for (int i = 0; i < qf->numedges; ++i) {
+    const int e = qle[qf->firstedge + i];
+    const qvert_t *qvert;
+    if (e >= 0)
+      qvert = &qv[qe[e].v[0]];
+    else
+      qvert = &qv[qe[-e].v[1]];
+    // these are in texel space (scale 0-w, 0-h); normalize and upscale later
+    const qvec3_t minust = { -qti->vecs[1][0], -qti->vecs[1][1], -qti->vecs[1][2] };
+    const qvec2_t st =  {
+      (qdot(qvert->v, qti->vecs[0]) + qti->vecs[0][3]) / (f32)qmt->width,
+      (qdot(qvert->v,       minust) + qti->vecs[1][3]) / (f32)qmt->height,
+    };
+    // TODO: sample the lightmap
+    const u16 lmcol = 0x80;
+    xvert_t *xv = xbsp_verts + xbsp_numverts++;
+    xv->pos = qvec3_to_s16vec3(qvert->v);
+    xv->tex.u = (f32)xti->uv.u + ffract(st[0]) * xti->size.u * 2.0f;
+    xv->tex.v = (f32)xti->uv.v + ffract(st[1]) * xti->size.v;
+    xv->col = lmcol;
+    printf(
+      "* vert %05d (%6.1f %6.1f %6.1f) (%5.1f %5.1f) -> %05d (%05d %05d %05d) (%03d %03d)\n",
+      qvert - qv,
+      qvert->v[0], qvert->v[1], qvert->v[2],
+      ffract(st[0]), ffract(st[1]),
+      xv - xbsp_verts,
+      xv->pos.x, xv->pos.y, xv->pos.z,
+      xv->tex.u, xv->tex.v
+    );
+  }
+
+  printf("* numverts %d\n", qf->numedges);
+
+  xf->firstvert = startvert;
+  xf->numverts = qf->numedges;
+  xf->texinfo = qti->miptex;
+  xbsp_faces[xbsp_numfaces++] = *xf;
+}
+
+int xbsp_write(const char *fname) {
+  FILE *f = fopen(fname, "wb");
+  if (!f) return -1;
+
+  printf("writing XBSP to `%s`\n", fname);
+
+  xbsp_header.ver = PSXBSPVERSION;
+  fwrite(&xbsp_header, sizeof(xbsp_header), 1, f);
+
+  // write clut
+  fwrite(&xbsp_lumps[XLMP_CLUTDATA], sizeof(xlump_t), 1, f);
+  fwrite(xbsp_clutdata, sizeof(u16), NUM_CLUT_COLORS, f);
+
+  // write VRAM image
+  fwrite(&xbsp_lumps[XLMP_TEXDATA], sizeof(xlump_t), 1, f);
+  fwrite(xbsp_texatlas, sizeof(u16), VRAM_TOTAL_WIDTH * xbsp_texmaxy, f);
+
+  // write sounds
+  fwrite(&xbsp_lumps[XLMP_SNDDATA], sizeof(xlump_t), 1, f);
+
+  #define WRITE_LUMP(index, name, type, f) \
+    fwrite(&xbsp_lumps[XLMP_ ## index], sizeof(xlump_t), 1, f); \
+    fwrite(&xbsp_ ## name, sizeof(type), xbsp_num ## name, f)
+
+  WRITE_LUMP(VERTS,     verts,      xvert_t,     f);
+  WRITE_LUMP(PLANES,    planes,     xplane_t,    f);
+  WRITE_LUMP(TEXINFO,   texinfos,   xtexinfo_t,  f);
+  WRITE_LUMP(FACES,     faces,      xface_t,     f);
+  WRITE_LUMP(MARKSURF,  marksurfs,  u16,         f);
+  WRITE_LUMP(VISILIST,  visdata,    u8,          f);
+  WRITE_LUMP(LEAFS,     leafs,      xleaf_t,     f);
+  WRITE_LUMP(NODES,     nodes,      xnode_t,     f);
+  WRITE_LUMP(CLIPNODES, clipnodes,  xclipnode_t, f);
+  WRITE_LUMP(MODELS,    models,     xmodel_t,    f);
+
+  #undef WRITE_LUMP
+
+  // write entities
+  fwrite(&xbsp_lumps[XLMP_ENTITIES], sizeof(xlump_t), 1, f);
+
+  fclose(f);
+
+  return 0;
+}

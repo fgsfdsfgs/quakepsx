@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <iso_project image_name="quakepsx.iso">
+  <track type="data">
+    <identifiers
+      system      ="PLAYSTATION"
+      application ="PLAYSTATION"
+      volume      ="QUAKEPSX"
+      volume_set  ="QUAKEPSX"
+      publisher   ="FGSFDS"
+    />
+    <directory_tree>
+      <file name="system.cnf"   type="data" source="system.cnf"/>
+      <file name="quakepsx.exe" type="data" source="quakepsx.exe"/>
+      <dir  name="id1psx" srcdir="id1psx">
+        <dir  name="maps" srcdir="id1psx/maps">
+          <file name="start.psb" type="data"/>
+          <file name="e2m1.psb"  type="data"/>
+        </dir>
+      </dir>
+      <dummy sectors="1024"/>
+    </directory_tree>
+  </track>
+  </iso_project>
+</xml>
