@@ -109,9 +109,9 @@ void R_SetupGPU(void) {
   MATRIX  *m = (MATRIX *)(r + 1);
 
   // rotate Z going up (thank you quake very cool)
-  r->vx = TO_DEG16(+90);
+  r->vx = TO_DEG16(90);
   r->vy = 0;
-  r->vz = TO_DEG16(+90);
+  r->vz = TO_DEG16(90);
   r->pad = 0;
   RotMatrix(r, &m[2]);
 
@@ -230,14 +230,13 @@ void R_DrawDebug(void) {
     FntOpen(0, 8, 320, 216, 0, 255);
   }
 
-  FntPrint(-1, "X=%04d Y=%04d Z=%04d\n", 
+  FntPrint(-1, "X=%04d Y=%04d Z=%04d\n",
     rs.vieworg.x>>12, 
     rs.vieworg.y>>12, 
     rs.vieworg.z>>12);
-  FntPrint(-1, "RX=%05d RY=%05d FV=%04d\n", 
+  FntPrint(-1, "RX=%05d RY=%05d\n",
     rs.viewangles.x, 
-    rs.viewangles.y,
-    rs.fov);
+    rs.viewangles.y);
   FntPrint(-1, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
   FntPrint(-1, "FWD=(%3d.%04d %3d.%04d %3d.%04d)\n",
     rs.vforward.x >> 12, rs.vforward.x & 0x0FFF,
