@@ -159,10 +159,9 @@ void xbsp_set_palette(const u8 *pal) {
     const u8 r = *pal++;
     const u8 g = *pal++;
     const u8 b = *pal++;
-    if (!r && !g && !b)
-      xbsp_clutdata[i] = 0x8000; // non-transparent black
-    else
-      xbsp_clutdata[i] = PSXRGB(r, g, b);
+    xbsp_clutdata[i] = PSXRGB(r, g, b);
+    if (!xbsp_clutdata[i])
+      xbsp_clutdata[i] = 0x8000; // replace with non-transparent black
   }
 }
 
