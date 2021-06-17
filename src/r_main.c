@@ -83,8 +83,8 @@ void R_Init(void) {
   // set up GTE
   InitGeom();
   gte_SetGeomOffset(VID_CENTER_X, VID_CENTER_Y);
-  gte_SetGeomScreen(VID_CENTER_X);
-  gte_SetBackColor(0x80, 0x80, 0x80);
+  gte_SetGeomScreen(VID_CENTER_X); // approx 90 degrees?
+  gte_SetBackColor(0xFF, 0xFF, 0xFF);
 
   // enable display
   SetDispMask(1);
@@ -234,9 +234,10 @@ void R_DrawDebug(void) {
     rs.vieworg.x>>12, 
     rs.vieworg.y>>12, 
     rs.vieworg.z>>12);
-  FntPrint(-1, "RX=%05d RY=%05d\n", 
+  FntPrint(-1, "RX=%05d RY=%05d FV=%04d\n", 
     rs.viewangles.x, 
-    rs.viewangles.y);
+    rs.viewangles.y,
+    rs.fov);
   FntPrint(-1, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
   FntPrint(-1, "FWD=(%3d.%04d %3d.%04d %3d.%04d)\n",
     rs.vforward.x >> 12, rs.vforward.x & 0x0FFF,
