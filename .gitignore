@@ -6,4 +6,6 @@ id1psx/*/*
 *.elf
 *.exe
 *.iso
+*.psb
+*.bsp
 .vscode
