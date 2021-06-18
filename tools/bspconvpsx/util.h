@@ -26,7 +26,7 @@ static inline u8vec2_t qvec2_to_u8vec2(const qvec2_t v) {
 }
 
 static inline s16vec3_t qvec3_to_s16vec3(const qvec3_t v) {
-  return (s16vec3_t){ (s16)v[0], (s16)v[1], (s16)v[2] };
+  return (s16vec3_t){ (s16)round(v[0]), (s16)round(v[1]), (s16)round(v[2]) };
 }
 
 static inline x16vec3_t qvec3_to_x16vec3(const qvec3_t v) {
@@ -45,6 +45,21 @@ static inline x32vec3_t qvec3_to_x32vec3(const qvec3_t v) {
 
 static inline f32 qdot(const qvec3_t a, const qvec3_t b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+static inline f32 *qvec3_sub(qvec3_t a, qvec3_t b, qvec3_t c) {
+  c[0] = a[0] - b[0];
+  c[1] = a[1] - b[1];
+  c[2] = a[2] - b[2];
+  return c;
+}
+
+static inline f32 *qvec3_norm(qvec3_t a) {
+  const f32 s = 1.f / sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+  a[0] *= s;
+  a[1] *= s;
+  a[2] *= s;
+  return a;
 }
 
 static inline f32 ffract(const float x) {

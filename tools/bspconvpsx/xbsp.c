@@ -14,6 +14,10 @@
 #include "xbsp.h"
 #include "qbsp.h"
 
+// FIXME: removing T-junctions causes big gaps in geometry
+// #define REMOVE_TJUNCTIONS 1
+#define COLINEAR_EPSILON 0.001
+
 xbsphdr_t   xbsp_header;
 xvert_t     xbsp_verts[MAX_XMAP_VERTS];
 int         xbsp_numverts;
@@ -223,101 +227,12 @@ int xbsp_vram_height(void) {
   return xbsp_texmaxy;
 }
 
-/*
-static u16 xbsp_position_add(const VECTOR v) {
-  for (int i = 0; i < xbsp_numpositions; ++i) {
-    const VECTOR *ov = xbsp_positions + i;
-    if (ov->vx == v.vx && ov->vy == v.vy && ov->vz == v.vz)
-      return i;
-  }
-
-  if (xbsp_numpositions >= MAX_XMAP_VERTS) {
-    panic("too many position vectors: max %d\n", MAX_XMAP_VERTS);
-  } else {
-    const u16 i = xbsp_numpositions++;
-    xbsp_positions[i] = v;
-    return i;
-  }
-
-  return 0; // never gets here
-}
-
-static u16 xbsp_color_add(const CVECTOR v) {
-  for (int i = 0; i < xbsp_numcolors; ++i) {
-    const CVECTOR *ov = xbsp_colors + i;
-    if (ov->r == v.r && ov->g == v.g && ov->b == v.b && ov->cd == v.cd)
-      return i;
-  }
-
-  if (xbsp_numcolors >= MAX_XMAP_VERTS) {
-    panic("too many color vectors: max %d\n", MAX_XMAP_VERTS);
-  } else {
-    const u16 i = xbsp_numcolors++;
-    xbsp_colors[i] = v;
-    return i;
-  }
-
-  return 0; // never gets here
-}
-
-static u16 xbsp_texcoord_add(const DVECTOR v) {
-  for (int i = 0; i < xbsp_numtexcoords; ++i) {
-    const DVECTOR *ov = xbsp_texcoords + i;
-    if (ov->vx == v.vx && ov->vy == v.vy)
-      return i;
-  }
-
-  if (xbsp_numtexcoords >= MAX_XMAP_VERTS) {
-    panic("too many texcoord vectors: max %d\n", MAX_XMAP_VERTS);
-  } else {
-    const u16 i = xbsp_numtexcoords++;
-    xbsp_texcoords[i] = v;
-    return i;
-  }
-
-  return 0; // never gets here
-}
-
-// splits the face into primitives, adds vertex color and UVs
-void xbsp_face_add(xface_t *xf, const qface_t *qf, const qtexinfo_t *qti, const s16 *qle, const qedge_t *qe, const qvert_t *qv) {
-  const int startidx = xbsp_numidxverts;
-  xidxvert_t xiv[qf->numedges];
-
-  for (int e = 0; e < qf->numedges; ++e) {
-    const int ei = e + qf->firstedge;
-    const int reverse = qle[ei] < 0;
-    const qedge_t *qedge = reverse ? &qe[-qle[ei]] : &qe[qle[ei]];
-    const qvert_t *qvert = reverse ? &qv[qedge->v[1]] : &qv[qedge->v[0]];
-    // these are already in texel space (scale 0-w, 0-h), no need to multiply
-    const qvec2_t st[2] =  {
-      qdot(qvert->v, qti->vecs[0]) + qti->vecs[0][3],
-      qdot(qvert->v, qti->vecs[1]) + qti->vecs[1][3],
-    };
-    // TODO: sample lightmap
-    const CVECTOR lmcol = { 0x80, 0x80, 0x80, 0 };
-    // make index triplet
-    if (xbsp_numidxverts >= MAX_XMAP_INDICES)
-      panic("too many indices: max %d\n", MAX_XMAP_INDICES);
-    xiv[e].pos = xbsp_position_add(qvec3_to_xvec3(qvert->v));
-    xiv[e].tex = xbsp_texcoord_add(qvec2_to_svec2(st));
-    xiv[e].col = xbsp_color_add(lmcol);
-  }
-
-  // triangulate
-  for (int )
-
-  xf->firstidx = startidx;
-  xf->numidx = qf->numedges;
-  xf->
-}
-*/
-
 void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
   const int startvert = xbsp_numverts;
   const xtexinfo_t *xti = xbsp_texinfos + qti->miptex;
   const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
-  const int numverts = qf->numedges + 1;
+  int numverts = qf->numedges + 1;
   const qvec2_t texsiz = {
     (qmt && qmt->width) ? qmt->width : 1,
     (qmt && qmt->height) ? qmt->height : 1
@@ -348,6 +263,30 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   qcent.v[0] /= (f32)qf->numedges;
   qcent.v[1] /= (f32)qf->numedges;
   qcent.v[2] /= (f32)qf->numedges;
+
+  // remove t-junctions if needed
+#ifdef REMOVE_TJUNCTIONS
+  for (int i = 0; i < numverts; ++i) {
+    qvec3_t v1, v2;
+    f32 *prev, *this, *next;
+    prev = qverts[(i + numverts - 1) % numverts]->v;
+    this = qverts[i]->v;
+    next = qverts[(i + 1) % numverts]->v;
+    qvec3_sub(this, prev, v1);
+    qvec3_norm(v1);
+    qvec3_sub(next, prev, v2);
+    qvec3_norm(v2);
+    if ((fabsf(v1[0] - v2[0]) <= COLINEAR_EPSILON) &&
+        (fabsf(v1[1] - v2[1]) <= COLINEAR_EPSILON) && 
+        (fabsf(v1[2] - v2[2]) <= COLINEAR_EPSILON)) {
+      for (int j = i + 1; j < numverts; ++j)
+        qverts[j - 1] = qverts[j];
+      --numverts;
+      // retry next vertex next time, which is now current vertex
+      --i;
+    }
+  }
+#endif
 
   // calculate ST for each vertex and find extents
   for (int i = 0; i < numverts; ++i) {
