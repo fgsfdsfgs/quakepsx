@@ -8,7 +8,7 @@
 #include "system.h"
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x10000
+#define GPU_BUFSIZE 0x18000
 #define GPU_OTDEPTH 1024
 
 typedef struct render_state_s {
@@ -27,6 +27,7 @@ typedef struct render_state_s {
   mleaf_t *viewleaf;
   u8 frame;
   u8 visframe;
+  x32 frametime;
 } render_state_t;
 
 extern render_state_t rs;

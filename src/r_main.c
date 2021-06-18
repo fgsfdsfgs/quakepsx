@@ -218,10 +218,11 @@ void R_NewMap(void) {
 void R_RenderView(void) {
   if (!gs.worldmodel)
     Sys_Error("R_RenderView: NULL worldmodel");
+  rs.frametime = Sys_FixedTime();
   R_RenderScene();
 }
 
-void R_DrawDebug(void) {
+void R_DrawDebug(const x32 dt) {
   static int fontloaded = 0;
   if (!fontloaded) {
     fontloaded = 1;
@@ -238,15 +239,13 @@ void R_DrawDebug(void) {
     rs.viewangles.x, 
     rs.viewangles.y);
   FntPrint(-1, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
-  FntPrint(-1, "FWD=(%3d.%04d %3d.%04d %3d.%04d)\n",
-    rs.vforward.x >> 12, rs.vforward.x & 0x0FFF,
-    rs.vforward.y >> 12, rs.vforward.y & 0x0FFF,
-    rs.vforward.z >> 12, rs.vforward.z & 0x0FFF);
+  FntPrint(-1, "FRAME=%3d.%04d\n", dt >> 12, dt & 4095);
   FntFlush(-1);
 }
 
 void R_Flip(void) {
-  R_DrawDebug();
+  const x32 dt = Sys_FixedTime() - rs.frametime;
+  R_DrawDebug(dt);
 
   DrawSync(0);
   VSync(0);

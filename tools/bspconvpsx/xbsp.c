@@ -12,6 +12,7 @@
 
 #include "util.h"
 #include "xbsp.h"
+#include "qbsp.h"
 
 xbsphdr_t   xbsp_header;
 xvert_t     xbsp_verts[MAX_XMAP_VERTS];
@@ -67,7 +68,7 @@ static inline int rect_fits(const int pg, int sx, int sy, int w, int h) {
   return 1;
 }
 
-static inline int rect_fill(const int pg, int sx, int sy, int w, int h) {
+static inline void rect_fill(const int pg, int sx, int sy, int w, int h) {
   for (int x = sx; x < sx + w; ++x) {
     for (int y = sy; y < sy + h; ++y)
       xbsp_texbitmap[pg][x][y] = 1;
@@ -311,45 +312,86 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qtexinfo_t *qti, const 
 }
 */
 
-void xbsp_face_add(xface_t *xf, const qface_t *qf, const qtexinfo_t *qti, const qmiptex_t *qmt, const s32 *qle, const qedge_t *qe, const qvert_t *qv) {
+void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
+  const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
   const int startvert = xbsp_numverts;
   const xtexinfo_t *xti = xbsp_texinfos + qti->miptex;
+  const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
+  const int numverts = qf->numedges + 1;
+  const qvec2_t texsiz = {
+    (qmt && qmt->width) ? qmt->width : 1,
+    (qmt && qmt->height) ? qmt->height : 1
+  };
+  qvert_t *qverts[numverts];
+  qvec2_t qst[numverts];
+  qvert_t qcent = {{ 0.f, 0.f, 0.f }};
+  qvec2_t qstmin = { 999999.0f, 999999.0f };
+  qvec2_t qstmax = { -99999.0f, -99999.0f };
+  qvec2_t qstsiz;
+  qvec2_t quvmin, quvmax, quvsiz;
 
+  qverts[0] = &qcent;
+
+  // get verts and calculate centroid
+  // we need a vert at the centroid to subdivide stuff a little bit
   for (int i = 0; i < qf->numedges; ++i) {
-    const int e = qle[qf->firstedge + i];
-    const qvert_t *qvert;
+    const int e = qbsp->surfedges[qf->firstedge + i];
     if (e >= 0)
-      qvert = &qv[qe[e].v[0]];
+      qverts[1 + i] = &qbsp->verts[qbsp->edges[e].v[0]];
     else
-      qvert = &qv[qe[-e].v[1]];
-    // these are in texel space (scale 0-w, 0-h); normalize and upscale later
-    const qvec3_t minust = { -qti->vecs[1][0], -qti->vecs[1][1], -qti->vecs[1][2] };
-    const qvec2_t st =  {
-      (qdot(qvert->v, qti->vecs[0]) + qti->vecs[0][3]) / (f32)qmt->width,
-      (qdot(qvert->v,       minust) + qti->vecs[1][3]) / (f32)qmt->height,
-    };
+      qverts[1 + i] = &qbsp->verts[qbsp->edges[-e].v[1]];
+    qcent.v[0] += qverts[1 + i]->v[0];
+    qcent.v[1] += qverts[1 + i]->v[1];
+    qcent.v[2] += qverts[1 + i]->v[2];
+  }
+  // average
+  qcent.v[0] /= (f32)qf->numedges;
+  qcent.v[1] /= (f32)qf->numedges;
+  qcent.v[2] /= (f32)qf->numedges;
+
+  // calculate ST for each vertex and find extents
+  for (int i = 0; i < numverts; ++i) {
+    // these are in image space; we'll normalize and upscale later
+    for (int j = 0; j < 2; ++j) {
+      qst[i][j] = qdot(qverts[i]->v, qti->vecs[j]) + qti->vecs[j][3];
+      if (qst[i][j] < qstmin[j]) qstmin[j] = qst[i][j];
+      if (qst[i][j] > qstmax[j]) qstmax[j] = qst[i][j];
+    }
+  }
+
+  for (int j = 0; j < 2; ++j) {
+    qstsiz[j] = qstmax[j] - qstmin[j];
+    quvmin[j] = fsfract(qstmin[j] / texsiz[j]);
+    quvsiz[j] = qstsiz[j] / texsiz[j];
+    quvmax[j] = quvmin[j] + quvsiz[j];
+  }
+
+  for (int i = 0; i < numverts; ++i) {
+    const qvert_t *qvert = qverts[i];
+    qvec2_t vst = { qst[i][0], qst[i][1] };
+    qvec2_t duv = { (vst[0] - qstmin[0]) / texsiz[0], (vst[1] - qstmin[1]) / texsiz[1] };
+    qvec2_t fuv;
+
+    for (int j = 0; j < 2; ++j) {
+      if (quvmin[j] < 0.0f && quvmax[j] <= 0.0f)
+        fuv[j] = 1.0f + quvmin[j] + duv[j];
+      else if (quvmin[j] > 0.0f && quvmax[j] <= 1.0f)
+        fuv[j] = quvmin[j] + duv[j];
+      else // dunno what to do, just scale it to cover the entire poly
+        fuv[j] = duv[j] / quvsiz[j];
+    }
+
     // TODO: sample the lightmap
     const u16 lmcol = 0x80;
     xvert_t *xv = xbsp_verts + xbsp_numverts++;
     xv->pos = qvec3_to_s16vec3(qvert->v);
-    xv->tex.u = (f32)xti->uv.u + ffract(st[0]) * xti->size.u * 2.0f;
-    xv->tex.v = (f32)xti->uv.v + ffract(st[1]) * xti->size.v;
+    xv->tex.u = (f32)xti->uv.u + fuv[0] * 2.0f * (f32)(xti->size.u - 1);
+    xv->tex.v = (f32)xti->uv.v + fuv[1] * 1.0f * (f32)(xti->size.v - 1);
     xv->col = lmcol;
-    printf(
-      "* vert %05d (%6.1f %6.1f %6.1f) (%5.1f %5.1f) -> %05d (%05d %05d %05d) (%03d %03d)\n",
-      qvert - qv,
-      qvert->v[0], qvert->v[1], qvert->v[2],
-      ffract(st[0]), ffract(st[1]),
-      xv - xbsp_verts,
-      xv->pos.x, xv->pos.y, xv->pos.z,
-      xv->tex.u, xv->tex.v
-    );
   }
 
-  printf("* numverts %d\n", qf->numedges);
-
   xf->firstvert = startvert;
-  xf->numverts = qf->numedges;
+  xf->numverts = numverts;
   xf->texinfo = qti->miptex;
   xbsp_faces[xbsp_numfaces++] = *xf;
 }

@@ -3,6 +3,8 @@
 #include "../common/psxbsp.h"
 #include "../common/idbsp.h"
 
+#include "qbsp.h"
+
 extern xbsphdr_t   xbsp_header;
 extern xvert_t     xbsp_verts[MAX_XMAP_VERTS];
 extern int         xbsp_numverts;
@@ -39,5 +41,5 @@ void xbsp_vram_store(const qmiptex_t *qti, int x, int y);
 void xbsp_vram_export(const char *fname, const u8 *pal);
 u16 xbsp_texture_flags(const qmiptex_t *qti);
 int xbsp_vram_height(void);
-void xbsp_face_add(xface_t *xf, const qface_t *qf, const qtexinfo_t *qti, const qmiptex_t *qmt, const s32 *qle, const qedge_t *qe, const qvert_t *qv);
+void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp);
 int xbsp_write(const char *fname);

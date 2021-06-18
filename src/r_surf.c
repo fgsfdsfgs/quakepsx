@@ -4,6 +4,7 @@
 #include <psxgte.h>
 
 #include "common.h"
+#include "inline_c.h"
 #include "system.h"
 #include "render.h"
 #include "entity.h"
@@ -14,9 +15,9 @@
 #define CLIP_TOP	4
 #define CLIP_BOTTOM	8
 
-static inline int TestClip(const RECT *clip, const s16 x, const s16 y) {
+static inline s16 TestClip(const RECT *clip, const s16 x, const s16 y) {
   // tests which corners of the screen a point lies outside of
-  int result = 0;
+  register s16 result = 0;
   if (x < clip->x)
     result |= CLIP_LEFT;
   if (x >= (clip->x+(clip->w-1)))
@@ -28,7 +29,7 @@ static inline int TestClip(const RECT *clip, const s16 x, const s16 y) {
   return result;
 }
 
-static inline qboolean TriClip(const RECT *clip, const DVECTOR *v0, const DVECTOR *v1, const DVECTOR *v2) {
+static qboolean TriClip(const RECT *clip, const DVECTOR *v0, const DVECTOR *v1, const DVECTOR *v2) {
   // returns non-zero if a triangle is outside the screen boundaries
   s16 c[3];
 
@@ -46,46 +47,40 @@ static inline qboolean TriClip(const RECT *clip, const DVECTOR *v0, const DVECTO
   return true;
 }
 
-static inline void DrawTextureChains(void) {
-  for (int i = 0; i < gs.worldmodel->numtextures; ++i) {
-    mtexture_t *t = gs.worldmodel->textures + i;
-    if (t->flags & TEX_INVISIBLE) continue;
-    msurface_t *s = t->texchain;
-    if (!s) continue;
-    if (t->flags & TEX_SKY) {
-      // draw sky
-    } else {
-      for (; s; s = s->texchain)
-        R_RenderBrushPoly(s);
-    }
-    t->texchain = NULL;
-  }
-}
+typedef struct {
+  SVECTOR pos;
+  u16 col;
+  u8 u;
+  u8 v;
+} svert_t;
 
 void R_RenderBrushPoly(msurface_t *fa) {
-  const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
+  register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
   const u16 tpage = fa->texture->vram_page;
   const u16 tclut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
-  // positions have to be 8-byte aligned I think, so just put them in the scratchpad
-  SVECTOR *pos = PSX_SCRATCH;
-  pos[0].vx = v[0].pos.x;
-  pos[0].vy = v[0].pos.y;
-  pos[0].vz = v[0].pos.z;
 
-  POLY_GT3 *p = GPU_GetPtr();
+  // positions have to be 8-byte aligned I think, so just put them in the scratchpad
+  // in advance to avoid raping our tiny I-cache
+  register const u16 numverts = fa->numverts;
+  register svert_t *sv = PSX_SCRATCH;
+  for (int i = 0; i < numverts; ++i, ++v, ++sv) {
+    sv->pos.vx = v->pos.x;
+    sv->pos.vy = v->pos.y;
+    sv->pos.vz = v->pos.z;
+    sv->col    = v->col;
+    *(u8vec2_t *)&sv->u = v->tex;
+  }
+  // copy the first poly vert to the end to close the cycle
+  *sv = ((svert_t *)PSX_SCRATCH)[1];
+  sv = PSX_SCRATCH;
+
+  register POLY_GT3 *p = GPU_GetPtr();
+  register int j = 2; // i + 1
   int otz = 0;
 
-  for (u16 i = 1; i < fa->numverts - 1; ++i) {
-    // copy positions to aligned buffer
-    pos[1].vx = v[i].pos.x;
-    pos[1].vy = v[i].pos.y;
-    pos[1].vz = v[i].pos.z;
-    pos[2].vx = v[i + 1].pos.x;
-    pos[2].vy = v[i + 1].pos.y;
-    pos[2].vz = v[i + 1].pos.z;
-
+  for (u16 i = 1; i < numverts; ++i, ++j) {
     // load verts
-    gte_ldv3(&pos[0], &pos[1], &pos[2]);
+    gte_ldv3(&sv[0].pos, &sv[i].pos, &sv[j].pos);
 
     // transform verts
     gte_rtpt();
@@ -116,24 +111,39 @@ void R_RenderBrushPoly(msurface_t *fa) {
       continue;
 
     // set color
-    setSemiTrans(p, 0);
-    setRGB0(p, v[0].col, v[0].col, v[0].col);
-    setRGB1(p, v[i].col, v[i].col, v[i].col);
-    setRGB2(p, v[i + 1].col, v[i + 1].col, v[i + 1].col);
+    setRGB0(p, sv[0].col, sv[0].col, sv[0].col);
+    setRGB1(p, sv[i].col, sv[i].col, sv[i].col);
+    setRGB2(p, sv[j].col, sv[j].col, sv[j].col);
 
     // set uv
-    p->u0 = v[0].tex.u;
-    p->v0 = v[0].tex.v;
-    p->u1 = v[i].tex.u;
-    p->v1 = v[i].tex.v;
-    p->u2 = v[i + 1].tex.u;
-    p->v2 = v[i + 1].tex.v;
+    p->u0 = sv[0].u;
+    p->v0 = sv[0].v;
+    p->u1 = sv[i].u;
+    p->v1 = sv[i].v;
+    p->u2 = sv[j].u;
+    p->v2 = sv[j].v;
     p->tpage = tpage;
     p->clut = tclut;
 
     // sort it into the OT
     p = GPU_SortPrim(sizeof(POLY_GT3), otz);
     ++c_draw_polys;
+  }
+}
+
+static inline void DrawTextureChains(void) {
+  for (int i = 0; i < gs.worldmodel->numtextures; ++i) {
+    mtexture_t *t = gs.worldmodel->textures + i;
+    if (t->flags & TEX_INVISIBLE) continue;
+    msurface_t *s = t->texchain;
+    if (!s) continue;
+    if (t->flags & TEX_SKY) {
+      // draw sky
+    } else {
+      for (; s; s = s->texchain)
+        R_RenderBrushPoly(s);
+    }
+    t->texchain = NULL;
   }
 }
 

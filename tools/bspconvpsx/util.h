@@ -50,3 +50,7 @@ static inline f32 qdot(const qvec3_t a, const qvec3_t b) {
 static inline f32 ffract(const float x) {
   return x - floorf(x);
 }
+
+static inline f32 fsfract(const float x) {
+  return x - (long)(x);
+}

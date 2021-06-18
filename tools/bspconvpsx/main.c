@@ -13,15 +13,11 @@
 
 #include "util.h"
 #include "xbsp.h"
-
-static qbsp_t *qbsp_header;
-static u8 *qbsp_start;
-static size_t qbsp_size;
-static u8 *qpalette;
+#include "qbsp.h"
 
 static void cleanup(void) {
-  if (qbsp_start) free(qbsp_start);
-  if (qpalette) free(qpalette);
+  if (qbsp.start) free(qbsp.start);
+  if (qbsp.palette) free(qbsp.palette);
 }
 
 struct texsort { const qmiptex_t *qtex; int id; };
@@ -44,9 +40,7 @@ static int tex_sort(const struct texsort *a, const struct texsort *b) {
 }
 
 static inline void do_textures(const char *export) {
-  const u8 *qtexbase = qbsp_start + qbsp_header->miptex.ofs;
-  const qmiptexlump_t *qtexhdr = (const qmiptexlump_t *)qtexbase;
-  const int numtex = qtexhdr->nummiptex;
+  const int numtex = qbsp.miptex->nummiptex;
 
   if (numtex > MAX_XMAP_TEXTURES)
     panic("input map has too many textures (%d > %d)", numtex, MAX_XMAP_TEXTURES);
@@ -55,9 +49,7 @@ static inline void do_textures(const char *export) {
   struct texsort sorted[numtex];
   for (int i = 0; i < numtex; ++i) {
     sorted[i] = (struct texsort) {
-      .qtex = (qtexhdr->dataofs[i] >= 0) ?
-        (const qmiptex_t *)(qtexbase + qtexhdr->dataofs[i]) :
-        NULL,
+      .qtex = qbsp_get_miptex(&qbsp, i),
       .id = i
     };
   }
@@ -87,49 +79,32 @@ static inline void do_textures(const char *export) {
   xbsp_lumps[XLMP_CLUTDATA].size = 2 * NUM_CLUT_COLORS;
 
   if (export && *export)
-    xbsp_vram_export(export, qpalette);
+    xbsp_vram_export(export, qbsp.palette);
 }
 
 static void do_planes(void) {
-  const int numplanes = qbsp_header->planes.len / sizeof(qplane_t);
-  const qplane_t *planes = (const qplane_t *)(qbsp_start + qbsp_header->planes.ofs);
+  printf("converting %d planes\n", qbsp.numplanes);
 
-  printf("converting %d planes\n", numplanes);
-
-  for (int i = 0; i < numplanes; ++i) {
+  for (int i = 0; i < qbsp.numplanes; ++i) {
     xplane_t *xp = xbsp_planes + i;
-    xp->type = planes[i].type;
-    xp->dist = f32_to_x32(planes[i].dist);
-    xp->normal = qvec3_to_x16vec3(planes[i].normal);
+    xp->type = qbsp.planes[i].type;
+    xp->dist = f32_to_x32(qbsp.planes[i].dist);
+    xp->normal = qvec3_to_x16vec3(qbsp.planes[i].normal);
   }
 
-  xbsp_numplanes = numplanes;
-  xbsp_lumps[XLMP_PLANES].size = sizeof(xplane_t) * numplanes;
+  xbsp_numplanes = qbsp.numplanes;
+  xbsp_lumps[XLMP_PLANES].size = sizeof(xplane_t) * qbsp.numplanes;
 }
 
 static void do_faces(void) {
-  static const qmiptex_t empty;
-  const int numfaces = qbsp_header->faces.len / sizeof(qface_t);
-  const qface_t *faces = (const qface_t *)(qbsp_start + qbsp_header->faces.ofs);
-  const s32 *ledges = (const s32 *)(qbsp_start + qbsp_header->ledges.ofs);
-  const qedge_t *edges = (const qedge_t *)(qbsp_start + qbsp_header->edges.ofs);
-  const qtexinfo_t *texinfos = (const qtexinfo_t *)(qbsp_start + qbsp_header->texinfo.ofs);
-  const u8 *qtexbase = qbsp_start + qbsp_header->miptex.ofs;
-  const qmiptexlump_t *qtexhdr = (const qmiptexlump_t *)qtexbase;
-  const qvert_t *verts = (const qvert_t *)(qbsp_start + qbsp_header->vertices.ofs);
+  printf("converting %d faces\n", qbsp.numfaces);
 
-  printf("converting %d faces\n", numfaces);
-
-  for (int f = 0; f < numfaces; ++f) {
-    const qface_t *qf = faces + f;
-    const qtexinfo_t *qti = texinfos + qf->texinfo;
-    const qmiptex_t *qmt = qtexhdr->dataofs[qti->miptex] >= 0 ?
-      (const qmiptex_t *)(qtexbase + qtexhdr->dataofs[qti->miptex]) :
-      &empty;
+  for (int f = 0; f < qbsp.numfaces; ++f) {
+    const qface_t *qf = qbsp.faces + f;
     xface_t *xf = xbsp_faces + f;
     xf->planenum = qf->planenum;
     xf->side = qf->side;
-    xbsp_face_add(xf, qf, qti, qmt, ledges, edges, verts);
+    xbsp_face_add(xf, qf, &qbsp);
   }
 
   xbsp_lumps[XLMP_FACES].size = xbsp_numfaces * sizeof(xface_t);
@@ -139,27 +114,17 @@ static void do_faces(void) {
 }
 
 static void do_visdata(void) {
-  const int numvisdata = qbsp_header->visilist.len;
-  const u8 *visdata = qbsp_start + qbsp_header->visilist.ofs;
-  xbsp_numvisdata = xbsp_lumps[XLMP_VISILIST].size = numvisdata;
-  memcpy(xbsp_visdata, visdata, numvisdata);
-  printf("visdata size: %d\n", numvisdata);
+  xbsp_numvisdata = xbsp_lumps[XLMP_VISILIST].size = qbsp.numvisdata;
+  memcpy(xbsp_visdata, qbsp.visdata, qbsp.numvisdata);
+  printf("visdata size: %d\n", qbsp.numvisdata);
 }
 
 static void do_nodes(void) {
-  const int numnodes = qbsp_header->nodes.len / sizeof(qnode_t);
-  const qnode_t *nodes = (const qnode_t *)(qbsp_start + qbsp_header->nodes.ofs);
-  const int numcnodes = qbsp_header->clipnodes.len / sizeof (qclipnode_t);
-  const qclipnode_t *cnodes = (const qclipnode_t *)(qbsp_start + qbsp_header->clipnodes.ofs);
-  const int numleafs = qbsp_header->leafs.len / sizeof (qleaf_t);
-  const qleaf_t *leafs = (const qleaf_t *)(qbsp_start + qbsp_header->leafs.ofs);
-  const int nummarksurf = qbsp_header->marksurfaces.len / 2;
-  const u16 *marksurf = (const u16 *)(qbsp_start + qbsp_header->marksurfaces.ofs);
+  printf("converting %d nodes, %d clipnodes, %d leaves, %d marksurfaces\n",
+    qbsp.numnodes, qbsp.numcnodes, qbsp.numleafs, qbsp.nummarksurf);
 
-  printf("converting %d nodes, %d clipnodes, %d leaves, %d marksurfaces\n", numnodes, numcnodes, numleafs, nummarksurf);
-
-  for (int i = 0; i < numnodes; ++i) {
-    const qnode_t *qn = nodes + i;
+  for (int i = 0; i < qbsp.numnodes; ++i) {
+    const qnode_t *qn = qbsp.nodes + i;
     xnode_t *xn = xbsp_nodes + i;
     xn->children[0] = qn->children[0];
     xn->children[1] = qn->children[1];
@@ -174,16 +139,16 @@ static void do_nodes(void) {
     xn->maxs.d[2] = qn->maxs[2];
   }
 
-  for (int i = 0; i < numcnodes; ++i) {
-    const qclipnode_t *qn = cnodes + i;
+  for (int i = 0; i < qbsp.numcnodes; ++i) {
+    const qclipnode_t *qn = qbsp.cnodes + i;
     xclipnode_t *xn = xbsp_clipnodes + i;
     xn->children[0] = qn->children[0];
     xn->children[1] = qn->children[1];
     xn->planenum = qn->planenum;
   }
 
-  for (int i = 0; i < numleafs; ++i) {
-    const qleaf_t *ql = leafs + i;
+  for (int i = 0; i < qbsp.numleafs; ++i) {
+    const qleaf_t *ql = qbsp.leafs + i;
     xleaf_t *xl = xbsp_leafs + i;
     xl->contents = ql->contents;
     xl->visofs = ql->visofs;
@@ -197,26 +162,23 @@ static void do_nodes(void) {
     xl->maxs.d[2] = ql->maxs[2];
   }
 
-  memcpy(xbsp_marksurfs, marksurf, nummarksurf * 2);
+  memcpy(xbsp_marksurfs, qbsp.marksurf, qbsp.nummarksurf * 2);
 
-  xbsp_nummarksurfs = nummarksurf;
-  xbsp_numnodes = numnodes;
-  xbsp_numclipnodes = numcnodes;
-  xbsp_numleafs = numleafs;
-  xbsp_lumps[XLMP_NODES].size = numnodes * sizeof(xnode_t);
-  xbsp_lumps[XLMP_CLIPNODES].size = numcnodes * sizeof(xclipnode_t);
-  xbsp_lumps[XLMP_LEAFS].size = numleafs * sizeof(xleaf_t);
-  xbsp_lumps[XLMP_MARKSURF].size = nummarksurf * 2;
+  xbsp_nummarksurfs = qbsp.nummarksurf;
+  xbsp_numnodes = qbsp.numnodes;
+  xbsp_numclipnodes = qbsp.numcnodes;
+  xbsp_numleafs = qbsp.numleafs;
+  xbsp_lumps[XLMP_NODES].size = qbsp.numnodes * sizeof(xnode_t);
+  xbsp_lumps[XLMP_CLIPNODES].size = qbsp.numcnodes * sizeof(xclipnode_t);
+  xbsp_lumps[XLMP_LEAFS].size = qbsp.numleafs * sizeof(xleaf_t);
+  xbsp_lumps[XLMP_MARKSURF].size = qbsp.nummarksurf * 2;
 }
 
 static void do_models(void) {
-  const int nummodels = qbsp_header->models.len / sizeof(qmodel_t);
-  const qmodel_t *models = (const qmodel_t *)(qbsp_start + qbsp_header->models.ofs);
+  printf("converting %d BSP models\n", qbsp.nummodels);
 
-  printf("converting %d BSP models\n", nummodels);
-
-  for (int i = 0; i < nummodels; ++i) {
-    const qmodel_t *qm = models + i;
+  for (int i = 0; i < qbsp.nummodels; ++i) {
+    const qmodel_t *qm = qbsp.models + i;
     xmodel_t *xm = xbsp_models + i;
     xm->firstface = qm->firstface;
     xm->numfaces = qm->numfaces;
@@ -233,8 +195,8 @@ static void do_models(void) {
     xm->maxs.d[2] = qm->maxs[2];
   }
 
-  xbsp_nummodels = nummodels;
-  xbsp_lumps[XLMP_MODELS].size = nummodels * sizeof(xmodel_t);
+  xbsp_nummodels = qbsp.nummodels;
+  xbsp_lumps[XLMP_MODELS].size = qbsp.nummodels * sizeof(xmodel_t);
 }
 
 static inline const char *get_arg(int c, const char **v, const char *arg) {
@@ -264,18 +226,15 @@ int main(int argc, const char **argv) {
 
   // read palette first
   size_t palsize = 0;
-  qpalette = lmp_read(moddir, "gfx/palette.lmp", &palsize);
+  qbsp.palette = lmp_read(moddir, "gfx/palette.lmp", &palsize);
   if (palsize < (NUM_CLUT_COLORS * 3))
     panic("palette size < %d", NUM_CLUT_COLORS * 3);
-  xbsp_set_palette(qpalette);
+  xbsp_set_palette(qbsp.palette);
 
   // load input map
-  qbsp_start = lmp_read(moddir, inname, &qbsp_size);
-  if (qbsp_size < sizeof(*qbsp_header))
-    panic("malformed Quake BSP: size < %d", sizeof(*qbsp_header));
-  qbsp_header = (qbsp_t *)qbsp_start;
-  if (qbsp_header->ver != QBSPVERSION)
-    panic("malformed Quake BSP: ver != %d", QBSPVERSION);
+  size_t bspsize = 0;
+  u8 *bsp = lmp_read(moddir, inname, &bspsize);
+  qbsp_init(&qbsp, bsp, bspsize);
 
   // prepare lump headers
   for (int i = 0; i < XLMP_COUNT; ++i)

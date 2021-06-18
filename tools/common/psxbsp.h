@@ -19,8 +19,8 @@
 #define MAX_ENTITIES        1024
 #define MAX_SOUNDS          255
 
-#define MAX_TEX_WIDTH       256
-#define MAX_TEX_HEIGHT      256
+#define MAX_TEX_WIDTH       128
+#define MAX_TEX_HEIGHT      128
 
 #define VRAM_XSTART         320
 #define VRAM_NUM_PAGES      2
@@ -147,7 +147,7 @@ typedef struct {
   s16vec3_t mins;
   s16vec3_t maxs;
   s16vec3_t origin;
-  s16 headnode[MAX_MAP_HULLS];
+  s16 headnode[MAX_XMAP_HULLS];
   s16 visleafs;
   u16 firstface;
   u16 numfaces;

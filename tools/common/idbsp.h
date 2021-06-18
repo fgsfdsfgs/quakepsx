@@ -56,9 +56,9 @@ typedef struct {
   qlump_t leafs;
   qlump_t marksurfaces;
   qlump_t edges;
-  qlump_t ledges;
+  qlump_t surfedges;
   qlump_t models;
-} qbsp_t;
+} qbsphdr_t;
 
 typedef struct {
   s32 nummiptex;
