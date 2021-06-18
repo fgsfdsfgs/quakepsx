@@ -320,18 +320,32 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
         fuv[j] = duv[j] / quvsiz[j];
     }
 
-    // TODO: sample the lightmap
     const u16 lmcol = 0x80;
     xvert_t *xv = xbsp_verts + xbsp_numverts++;
     xv->pos = qvec3_to_s16vec3(qvert->v);
     xv->tex.u = (f32)xti->uv.u + fuv[0] * 2.0f * (f32)(xti->size.u - 1);
     xv->tex.v = (f32)xti->uv.v + fuv[1] * 1.0f * (f32)(xti->size.v - 1);
-    xv->col = qbsp_light_for_vert(qbsp, qf, qvert->v, qstmin, qstsiz);
+
+    // sample lightmaps
+    u16 lit[MAX_LIGHTMAPS] = { 0, 0, 0, 0 };
+    qbsp_light_for_vert(qbsp, qf, qvert->v, qstmin, qstsiz, lit);
+    // assume lightstyles come without gaps
+    xv->col[0] = lit[0];
+    xv->col[1] = lit[1];
   }
 
   xf->firstvert = startvert;
   xf->numverts = numverts;
   xf->texinfo = qti->miptex;
+  if ((qti->flags & TEXF_SPECIAL) || qf->lightofs < 0) {
+    // fullbright style
+    xf->styles[0] = 0;
+    xf->styles[1] = 0;
+  } else {
+    // remap undefined style to 64, since we actually put a 0 at that index
+    xf->styles[0] = qf->styles[0] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[0];
+    xf->styles[1] = qf->styles[1] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[1];
+  }
   xbsp_faces[xbsp_numfaces++] = *xf;
 }
 

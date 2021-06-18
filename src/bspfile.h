@@ -15,6 +15,7 @@
 #define MAX_MAP_MODELS     256
 #define MAX_MAP_MARKSURF   65535
 #define MAX_MAP_VISIBILITY 0x40000
+#define MAX_MAP_LIGHTVALS  2 // different light values on a single surface
 
 #pragma pack(push, 1)
 
@@ -61,7 +62,7 @@ enum xbsplump_e {
 typedef struct {
   s16vec3_t pos; // positions are always integer
   u8vec2_t tex;  // 0-255 or 0-size
-  u16 col;       // right now stores 0-255 intensity; could be extended to RGB5551 
+  u8 col[MAX_MAP_LIGHTVALS]; // light values for every lightstyle
 } xbspvert_t;
 
 typedef struct {
@@ -107,6 +108,7 @@ typedef struct {
   s32 firstvert;
   s16 numverts;
   s16 texinfo;
+  u8 styles[MAX_MAP_LIGHTVALS];
 } xbspface_t;
 
 typedef struct {

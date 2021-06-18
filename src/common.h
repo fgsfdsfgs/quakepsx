@@ -7,13 +7,16 @@
 #include "memory.h"
 
 // general limits
-#define MAX_EDICTS     600
-#define MAX_SOUNDS     255 // +1 invalid
-#define MAX_MODELS     255 // +1 invalid
-#define MAX_TEX_WIDTH  256
-#define MAX_TEX_HEIGHT 256
-#define MAX_OSPATH     64
-#define MAX_PLAYERS    2
+#define MAX_EDICTS      600
+#define MAX_SOUNDS      255 // +1 invalid
+#define MAX_MODELS      255 // +1 invalid
+#define MAX_TEX_WIDTH   256
+#define MAX_TEX_HEIGHT  256
+#define MAX_OSPATH      64
+#define MAX_PLAYERS     2
+#define MAX_LIGHTSTYLES 64
+#define MAX_USERSTYLES  16
+#define MAX_STYLESTRING 64
 
 // graphics-related
 #define VID_WIDTH      320
@@ -60,18 +63,8 @@ void COM_DefaultExtension(char *path, char *extension);
 
 char *va(const char *format, ...);
 
-struct cache_user_s;
-
 extern char com_gamedir[MAX_OSPATH];
 
 void COM_Init(void);
-
-int COM_OpenFile(const char *filename, int *hndl);
-void COM_CloseFile(int h);
-
-u8 *COM_LoadStackFile(const char *path, void *buffer, int bufsize);
-u8 *COM_LoadTempFile(const char *path);
-u8 *COM_LoadHunkFile(const char *path);
-void COM_LoadCacheFile(const char *path, struct cache_user_s *cu);
 
 extern qboolean registered;

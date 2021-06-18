@@ -74,13 +74,13 @@ int main(int argc, char **argv) {
   R_NewMap();
 
   x32 then = 0;
-  x32 now = Sys_FixedTime();
   while (1) {
-    TestInput(now - then);
-    then = Sys_FixedTime();
+    then = gs.time;
+    gs.time = Sys_FixedTime();
+    TestInput(gs.time - then);
+    R_UpdateLightStyles(gs.time);
     R_RenderView();
     R_Flip();
-    now = Sys_FixedTime();
   }
 
   return 0;

@@ -77,6 +77,7 @@ struct msurface_s {
   struct msurface_s *texchain;
   u16 firstvert;
   u16 numverts;
+  u8 styles[MAX_MAP_LIGHTVALS];
 };
 
 typedef struct mnode_s {

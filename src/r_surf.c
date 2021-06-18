@@ -54,6 +54,13 @@ typedef struct {
   u8 v;
 } svert_t;
 
+static inline u8 LightVert(const u8 *col, const u8 *styles) {
+  register u16 lit;
+  lit  = col[0] * r_lightstylevalue[styles[0]];
+  lit += col[1] * r_lightstylevalue[styles[1]];
+  return lit >> 8;
+}
+
 void R_RenderBrushPoly(msurface_t *fa) {
   register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
   const u16 tpage = fa->texture->vram_page;
@@ -67,7 +74,7 @@ void R_RenderBrushPoly(msurface_t *fa) {
     sv->pos.vx = v->pos.x;
     sv->pos.vy = v->pos.y;
     sv->pos.vz = v->pos.z;
-    sv->col    = v->col;
+    sv->col    = LightVert(v->col, fa->styles);
     *(u8vec2_t *)&sv->u = v->tex;
   }
   // copy the first poly vert to the end to close the cycle

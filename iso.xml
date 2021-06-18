@@ -14,6 +14,7 @@
       <dir  name="id1psx" srcdir="id1psx">
         <dir  name="maps" srcdir="id1psx/maps">
           <file name="start.psb" type="data"/>
+          <file name="e1m1.psb"  type="data"/>
           <file name="e2m1.psb"  type="data"/>
         </dir>
       </dir>

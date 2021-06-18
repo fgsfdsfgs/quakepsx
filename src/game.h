@@ -11,6 +11,7 @@ typedef struct player_state_s {
 } player_state_t;
 
 typedef struct game_state_s {
+  x32 time;
   qboolean paused;
   model_t *worldmodel;
   player_state_t player[MAX_PLAYERS];

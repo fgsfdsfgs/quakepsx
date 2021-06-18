@@ -121,6 +121,8 @@ void Mod_LoadFaces(model_t *mod, const int fh) {
     out->texture = mod->textures + in.texinfo;
     out->firstvert = in.firstvert;
     out->numverts = in.numverts;
+    out->styles[0] = in.styles[0];
+    out->styles[1] = in.styles[1];
   }
 }
 

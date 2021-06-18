@@ -32,6 +32,8 @@ typedef struct render_state_s {
 
 extern render_state_t rs;
 
+extern u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
+
 extern int c_mark_leaves;
 extern int c_draw_polys;
 
@@ -49,3 +51,7 @@ void R_NewMap(void);
 void R_RenderBrushPoly(msurface_t *surf);
 void R_RenderView(void);
 void R_Flip(void);
+
+void R_InitLightStyles(void);
+void R_UpdateLightStyles(const x32 time);
+void R_SetLightStyle(const int i, const char *map);

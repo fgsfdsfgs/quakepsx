@@ -69,13 +69,20 @@ const qmiptex_t *qbsp_get_miptex(const qbsp_t *qbsp, const int i) {
     NULL;
 }
 
-u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec3_t sorg, qvec3_t sext) {
-  if (qf->lightofs < 0)
-    return 0x80; // no lightmap => fullbright
+u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec3_t sorg, qvec3_t sext, u16 *out) {
+  if (qf->lightofs < 0) {
+    // no lightmap => fullbright
+    out[0] = out[1] = out[2] = out[3] = 0x40;
+    return 0x40;
+  }
 
   const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
-  if (qti->flags & TEXF_SPECIAL)
-    return 0x80; // this is water or sky or some shit => fullbright
+  const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
+  if (qti->flags & TEXF_SPECIAL) {
+    // this is water or sky or some shit => fullbright
+    out[0] = out[1] = out[2] = out[3] = 0x40;
+    return 0x40;
+  }
 
   const u8 *samples = qbsp->lightdata + qf->lightofs;
 
@@ -92,7 +99,9 @@ u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, 
   u32 scale = 264; // max light is slightly overbright I think
   samples += dt * (((int)sext[0] >> 4) + 1) + ds;
   for (int m = 0; m < MAX_LIGHTMAPS && qf->styles[m] != 255; m++) {
-    r += *samples * scale;
+    const u32 v = *samples * scale;
+    r += v;
+    out[m] = v >> 8;
     samples += (((int)sext[0]>>4)+1) * (((int)sext[1]>>4)+1);
   }
   // returns light already in 0-128 range

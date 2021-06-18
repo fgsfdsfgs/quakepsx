@@ -15,13 +15,13 @@ typedef struct {
   DISPENV disp;
   DRAWENV draw;
   u8 gpubuf[GPU_BUFSIZE];
-  s32 gpuot[GPU_OTDEPTH];
+  u32 gpuot[GPU_OTDEPTH];
 } fb_t;
 
 static fb_t fb[2];
 static int fbidx;
 
-int *gpuot;
+u32 *gpuot;
 u8 *gpubuf;
 u8 *gpuptr;
 
@@ -88,6 +88,8 @@ void R_Init(void) {
 
   // enable display
   SetDispMask(1);
+
+  R_InitLightStyles();
 }
 
 void R_UploadClut(const u16 *clut) {
