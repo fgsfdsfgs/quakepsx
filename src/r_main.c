@@ -103,17 +103,18 @@ void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h) {
 }
 
 void R_SetupGPU(void) {
+  // matrix that rotates Z going up (thank you quake very cool)
+  // and scales the world 2x to avoid some (but not all) clipping autism
+  static MATRIX mr = {{
+    { 0,        -2 * ONE, 0        },
+    { 0,        0,        -2 * ONE },
+    { +2 * ONE, 0,        0        },
+  }};
+
   // gotta go fast
   VECTOR  *t = PSX_SCRATCH;
   SVECTOR *r = (SVECTOR *)(t + 1);
   MATRIX  *m = (MATRIX *)(r + 1);
-
-  // rotate Z going up (thank you quake very cool)
-  r->vx = TO_DEG16(90);
-  r->vy = 0;
-  r->vz = TO_DEG16(90);
-  r->pad = 0;
-  RotMatrix(r, &m[2]);
 
   // rotate according to viewangles
   r->vx = rs.viewangles.x;
@@ -121,7 +122,7 @@ void R_SetupGPU(void) {
   r->vz = rs.viewangles.z;
   RotMatrix(r, &m[1]);
   // apply rotation
-  MulMatrix0(&m[1], &m[2], m);
+  MulMatrix0(&m[1], &mr, m);
 
   // set translation vector
   t->vx = -rs.vieworg.x >> FIXSHIFT;
