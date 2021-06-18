@@ -319,7 +319,9 @@ mleaf_t *Mod_PointInLeaf(const x32vec3_t p, model_t *mod) {
 }
 
 static inline const u8 *Mod_DecompressVis(const u8 *in, const model_t *model) {
-  static u8 decompressed[MAX_MAP_LEAFS/8];
+  // we can decompress into scratch since nothing else is using it when we do
+  // and it fits the size exactly (1kb)
+  static u8 *decompressed = PSX_SCRATCH;
   int c;
   u8 *out;
   int row;
