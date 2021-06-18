@@ -57,6 +57,9 @@ int qbsp_init(qbsp_t *qbsp, u8 *bsp, const size_t size) {
 
   qbsp->miptex = (qmiptexlump_t *)(qbsp->start + qbsp->header->miptex.ofs);
 
+  qbsp->numlightdata = qbsp->header->lightmaps.len;
+  qbsp->lightdata = qbsp->start + qbsp->header->lightmaps.ofs;
+
   return 0;
 }
 
@@ -64,4 +67,34 @@ const qmiptex_t *qbsp_get_miptex(const qbsp_t *qbsp, const int i) {
   return (qbsp->miptex->dataofs[i] >= 0) ?
     (const qmiptex_t *)((const u8 *)qbsp->miptex + qbsp->miptex->dataofs[i]) :
     NULL;
+}
+
+u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec3_t sorg, qvec3_t sext) {
+  if (qf->lightofs < 0)
+    return 0x80; // no lightmap => darkness
+
+  const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
+  if (qti->flags & TEXF_SPECIAL)
+    return 0x80; // this is water or sky or some shit => fullbright
+
+  const u8 *samples = qbsp->lightdata + qf->lightofs;
+
+  // don't have to check whether the point is on the surface, since we already know it is
+  const int s = qdot(v, qti->vecs[0]) + qti->vecs[0][3];
+  const int t = qdot(v, qti->vecs[1]) + qti->vecs[1][3];
+  int ds = s - (int)sorg[0];
+  int dt = t - (int)sorg[1];
+
+  ds >>= 4;
+  dt >>= 4;
+
+  u32 r = 0;
+  u32 scale = 264; // max light is slightly overbright I think
+  samples += dt * (((int)sext[0] >> 4) + 1) + ds;
+  for (int m = 0; m < MAX_LIGHTMAPS && qf->styles[m] != 255; m++) {
+    r += *samples * scale;
+    samples += (((int)sext[0]>>4)+1) * (((int)sext[1]>>4)+1);
+  }
+  // returns light already in 0-128 range
+  return r >> 8;
 }

@@ -326,7 +326,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     xv->pos = qvec3_to_s16vec3(qvert->v);
     xv->tex.u = (f32)xti->uv.u + fuv[0] * 2.0f * (f32)(xti->size.u - 1);
     xv->tex.v = (f32)xti->uv.v + fuv[1] * 1.0f * (f32)(xti->size.v - 1);
-    xv->col = lmcol;
+    xv->col = qbsp_light_for_vert(qbsp, qf, qvert->v, qstmin, qstsiz);
   }
 
   xf->firstvert = startvert;

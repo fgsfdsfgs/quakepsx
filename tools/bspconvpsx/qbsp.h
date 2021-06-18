@@ -46,6 +46,9 @@ typedef struct {
   int nummodels;
   qmodel_t *models;
 
+  int numlightdata;
+  u8 *lightdata;
+
   qmiptexlump_t *miptex;
 
   u8 *palette;
@@ -55,3 +58,4 @@ extern qbsp_t qbsp;
 
 int qbsp_init(qbsp_t *qbsp, u8 *bsp, const size_t size);
 const qmiptex_t *qbsp_get_miptex(const qbsp_t *qbsp, const int i);
+u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec3_t sorg, qvec3_t sext);
