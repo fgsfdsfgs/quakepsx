@@ -71,7 +71,7 @@ const qmiptex_t *qbsp_get_miptex(const qbsp_t *qbsp, const int i) {
 
 u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec3_t sorg, qvec3_t sext) {
   if (qf->lightofs < 0)
-    return 0x80; // no lightmap => darkness
+    return 0x80; // no lightmap => fullbright
 
   const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
   if (qti->flags & TEXF_SPECIAL)
