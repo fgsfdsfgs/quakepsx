@@ -61,7 +61,7 @@ void Mem_Free(void *ptr) {
   if (mem_numallocs == 0)
     Sys_Error("Mem_Free: nothing to free");
 
-  const u32 size = mem_allocs[mem_numallocs--];
+  const u32 size = mem_allocs[--mem_numallocs];
   mem_left += size;
   mem_ptr = mem_lastptr;
   mem_lastptr -= size;
