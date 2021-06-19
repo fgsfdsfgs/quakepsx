@@ -68,12 +68,13 @@ void Mem_Free(void *ptr) {
 }
 
 void Mem_SetMark(void) {
-  mem_mark = mem_numallocs;
+  if (mem_numallocs)
+    mem_mark = mem_numallocs - 1;
 }
 
 void Mem_FreeToMark(void) {
-  for (; mem_numallocs > mem_mark; --mem_numallocs) {
-    const u32 size = mem_allocs[mem_numallocs];
+  for (; mem_numallocs > mem_mark; ) {
+    const u32 size = mem_allocs[--mem_numallocs];
     mem_left += size;
     mem_ptr = mem_lastptr;
     mem_lastptr -= size;
