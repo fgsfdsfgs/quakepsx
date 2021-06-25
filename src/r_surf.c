@@ -48,94 +48,40 @@ static qboolean TriClip(const RECT *clip, const DVECTOR *v0, const DVECTOR *v1, 
 }
 
 typedef struct {
-  SVECTOR pos;
-  u16 col;
-  u8 u;
-  u8 v;
+  s16vec3_t pos;
+  u16 pad0;
+  u32 col;
+  u8vec2_t tex;
+  u16 pad1;
 } svert_t;
 
-static inline u8 LightVert(const u8 *col, const u8 *styles) {
-  register u16 lit;
+// see r_surf_a.s
+extern void *R_SortTriangleFan(const svert_t *sv, u16 numverts, u16 tpage);
+
+static inline u32 LightVert(const u8 *col, const u8 *styles) {
+  register u32 lit;
   lit  = col[0] * r_lightstylevalue[styles[0]];
   lit += col[1] * r_lightstylevalue[styles[1]];
-  return lit >> 8;
+  lit  = (lit >> 8);
+  return lit | (lit << 8) | (lit << 16) | (0x34 << 24); // 0x34 = code for POLY_GT3
 }
 
 void R_RenderBrushPoly(msurface_t *fa) {
-  register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
-  const u16 tpage = fa->texture->vram_page;
-  const u16 tclut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
-
   // positions have to be 8-byte aligned I think, so just put them in the scratchpad
   // in advance to avoid raping our tiny I-cache
+  register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
   register const u16 numverts = fa->numverts;
   register svert_t *sv = PSX_SCRATCH;
-  for (int i = 0; i < numverts; ++i, ++v, ++sv) {
-    sv->pos.vx = v->pos.x;
-    sv->pos.vy = v->pos.y;
-    sv->pos.vz = v->pos.z;
-    sv->col    = LightVert(v->col, fa->styles);
-    *(u8vec2_t *)&sv->u = v->tex;
+  for (register int i = 0; i < numverts; ++i, ++v, ++sv) {
+    sv->pos = v->pos;
+    sv->tex = v->tex;
+    sv->col = LightVert(v->col, fa->styles);
   }
   // copy the first poly vert to the end to close the cycle
   *sv = ((svert_t *)PSX_SCRATCH)[1];
   sv = PSX_SCRATCH;
-
-  register POLY_GT3 *p = GPU_GetPtr();
-  register int j = 2; // i + 1
-  int otz = 0;
-
-  for (u16 i = 1; i < numverts; ++i, ++j) {
-    // load verts
-    gte_ldv3(&sv[0].pos, &sv[i].pos, &sv[j].pos);
-
-    // transform verts
-    gte_rtpt();
-
-    // backface cull if needed
-    gte_nclip();
-    gte_stopz(&otz);
-    // even though they're all in the same plane, we can't just bail here
-    // if we do, some tris end up missing, presumably because of inaccuracy
-    if (otz < 0)
-      continue;
-
-    // calculate OT Z
-    gte_avsz3();
-    gte_stotz(&otz);
-
-    // reject polys outside of Z range
-    otz >>= 2;
-    if (otz <= 0 || otz >= GPU_OTDEPTH)
-      continue;
-
-    // initialize primitive with computed vertices
-    setPolyGT3(p);
-    gte_stsxy3_gt3(p);
-
-    // check if it's outside of the screen
-    if (TriClip(&rs.clip, (DVECTOR *)&p->x0, (DVECTOR *)&p->x1, (DVECTOR *)&p->x2))
-      continue;
-
-    // set color
-    setRGB0(p, sv[0].col, sv[0].col, sv[0].col);
-    setRGB1(p, sv[i].col, sv[i].col, sv[i].col);
-    setRGB2(p, sv[j].col, sv[j].col, sv[j].col);
-
-    // set uv
-    p->u0 = sv[0].u;
-    p->v0 = sv[0].v;
-    p->u1 = sv[i].u;
-    p->v1 = sv[i].v;
-    p->u2 = sv[j].u;
-    p->v2 = sv[j].v;
-    p->tpage = tpage;
-    p->clut = tclut;
-
-    // sort it into the OT
-    p = GPU_SortPrim(sizeof(POLY_GT3), otz);
-    ++c_draw_polys;
-  }
+  // render verts as triangle fan
+  R_SortTriangleFan(sv, numverts, fa->texture->vram_page);
 }
 
 static inline void DrawTextureChains(void) {

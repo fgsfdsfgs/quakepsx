@@ -18,28 +18,24 @@ typedef struct {
   u32 gpuot[GPU_OTDEPTH];
 } fb_t;
 
-static fb_t fb[2];
-static int fbidx;
-
-u32 *gpuot;
-u8 *gpubuf;
-u8 *gpuptr;
+u32 *gpu_ot;
+u8 *gpu_buf;
+u8 *gpu_ptr;
 
 render_state_t rs;
 
 int c_mark_leaves = 0;
 int c_draw_polys = 0;
 
-void *GPU_GetPtr(void) {
-  return gpuptr;
-}
+static fb_t fb[2];
+static int fbidx;
 
 void *GPU_SortPrim(const u32 size, const int otz) {
-  u8 *newptr = gpuptr + size;
-  ASSERT(gpuptr <= gpubuf + GPU_BUFSIZE);
-  addPrim(gpuot + otz, gpuptr);
-  gpuptr = newptr;
-  return gpuptr;
+  u8 *newptr = gpu_ptr + size;
+  ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
+  addPrim(gpu_ot + otz, gpu_ptr);
+  gpu_ptr = newptr;
+  return gpu_ptr;
 }
 
 void R_Init(void) {
@@ -75,8 +71,8 @@ void R_Init(void) {
 
   // set default front and back buffer
   fbidx = 0;
-  gpuptr = gpubuf = fb[0].gpubuf;
-  gpuot = fb[0].gpuot;
+  gpu_ptr = gpu_buf = fb[0].gpubuf;
+  gpu_ot = fb[0].gpuot;
   PutDispEnv(&fb[0].disp);
   PutDrawEnv(&fb[0].draw);
 
@@ -106,7 +102,6 @@ void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h) {
 
 void R_SetupGPU(void) {
   // matrix that rotates Z going up (thank you quake very cool)
-  // and scales the world 2x to avoid some (but not all) clipping autism
   static MATRIX mr = {{
     { 0,        -2 * ONE, 0        },
     { 0,        0,        -2 * ONE },
@@ -247,6 +242,8 @@ void R_DrawDebug(const x32 dt) {
 }
 
 void R_Flip(void) {
+  ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
+
   const x32 dt = Sys_FixedTime() - rs.frametime;
   R_DrawDebug(dt);
 
@@ -254,9 +251,9 @@ void R_Flip(void) {
   VSync(0);
 
   fbidx ^= 1;
-  gpubuf = gpuptr = fb[fbidx].gpubuf;
-  gpuot = fb[fbidx].gpuot;
-  ClearOTagR(gpuot, GPU_OTDEPTH);
+  gpu_buf = gpu_ptr = fb[fbidx].gpubuf;
+  gpu_ot = fb[fbidx].gpuot;
+  ClearOTagR(gpu_ot, GPU_OTDEPTH);
 
   PutDrawEnv(&fb[fbidx].draw);
   PutDispEnv(&fb[fbidx].disp);

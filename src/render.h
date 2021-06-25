@@ -8,7 +8,7 @@
 #include "system.h"
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x18000
+#define GPU_BUFSIZE 0x20000
 #define GPU_OTDEPTH 1024
 
 typedef struct render_state_s {
@@ -37,8 +37,9 @@ extern u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
 extern int c_mark_leaves;
 extern int c_draw_polys;
 
-void *GPU_GetPtr(void);
-void *GPU_SortPrim( const u32 size, const int otz);
+extern 
+
+void *GPU_SortPrim(const u32 size, const int otz);
 
 void R_Init(void);
 void R_UploadClut(const u16 *clut);
