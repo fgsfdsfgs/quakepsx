@@ -46,7 +46,7 @@ extern u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
 extern int c_mark_leaves;
 extern int c_draw_polys;
 
-extern u32 *gpu_ot;
+extern u_long *gpu_ot;
 extern u8 *gpu_buf;
 extern u8 *gpu_ptr;
 

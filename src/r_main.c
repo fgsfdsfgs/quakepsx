@@ -15,10 +15,10 @@ typedef struct {
   DISPENV disp;
   DRAWENV draw;
   u8 gpubuf[GPU_BUFSIZE];
-  u32 gpuot[GPU_OTDEPTH];
+  u_long gpuot[GPU_OTDEPTH];
 } fb_t;
 
-u32 *gpu_ot;
+u_long *gpu_ot;
 u8 *gpu_buf;
 u8 *gpu_ptr;
 

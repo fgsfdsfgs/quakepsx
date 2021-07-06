@@ -113,7 +113,7 @@ int Sys_FileOpenRead(const char *fname, int *outhandle) {
 
   // read first sector of the file
   CdControl(CdlSetloc, (u8 *)&f->cdf.pos, 0);
-  CdRead(BUFSECS, (u32 *)f->buf, CdlModeSpeed);
+  CdRead(BUFSECS, (u_long *)f->buf, CdlModeSpeed);
   CdReadSync(0, NULL);
 
   // set fp and shit
@@ -176,7 +176,7 @@ s32 Sys_FileRead(int handle, void *dest, int size) {
       // looks like you need to seek every time when you use CdRead
       CdIntToPos(f->seccur, &pos);
       CdControl(CdlSetloc, (u8 *)&pos, 0);
-      CdRead(BUFSECS, (u32 *)f->buf, CdlModeSpeed);
+      CdRead(BUFSECS, (u_long *)f->buf, CdlModeSpeed);
       CdReadSync(0, 0);
       fleft = f->cdf.size - f->fp;
       f->bufleft = (fleft >= BUFSIZE) ? BUFSIZE: fleft;
@@ -204,7 +204,7 @@ void Sys_FileSeek(int handle, s32 ofs) {
     CdlLOC pos;
     CdIntToPos(fsec, &pos);
     CdControl(CdlSetloc, (u8 *)&pos, 0);
-    CdRead(BUFSECS, (u32 *)f->buf, CdlModeSpeed);
+    CdRead(BUFSECS, (u_long *)f->buf, CdlModeSpeed);
     CdReadSync(0, 0);
     f->seccur = fsec;
     f->bufp = -1; // hack: see below
