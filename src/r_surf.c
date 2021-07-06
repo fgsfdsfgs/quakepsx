@@ -82,7 +82,7 @@ static inline u32 LightVert(const u8 *col, const u8 *styles) {
     } \
   }
 
-void R_RenderBrushPoly(msurface_t *fa) {
+static inline void RenderBrushPoly(msurface_t *fa) {
   register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
   register const u16 tpage = fa->texture->vram_page;
   register const int numverts = fa->numverts;
@@ -104,12 +104,12 @@ void R_RenderBrushPoly(msurface_t *fa) {
 
   // load and transform first 3 verts
   gte_ldv3((SVECTOR *)&sv[0].pos, (SVECTOR *)&sv[1].pos, (SVECTOR *)&sv[2].pos);
-  gte_rtpt();
+  gte_rtpt_b();
   // store XYZ0 for later (Z0 is in SZ1)
   gte_stsxy0_m(xy0);
   gte_stsz1_m(z0);
   // calculate and scale OT Z
-  gte_avsz3();
+  gte_avsz3_b();
   gte_stotz_m(otz);
   otz >>= GPU_OTSHIFT;
   // emit first triangle if it's in range
@@ -121,7 +121,7 @@ void R_RenderBrushPoly(msurface_t *fa) {
     gte_ldsxy1_m(xy0);
     gte_ldsz2_m(z0);
     gte_ldv0((SVECTOR *)&sv[i].pos);
-    gte_rtps();
+    gte_rtps_b();
     gte_avsz3();
     gte_stotz_m(otz);
     otz >>= GPU_OTSHIFT;
@@ -133,7 +133,7 @@ void R_RenderBrushPoly(msurface_t *fa) {
 
 #undef EMIT_BRUSH_TRIANGLE
 
-static inline void DrawTextureChains(void) {
+void R_DrawTextureChains(void) {
   for (int i = 0; i < gs.worldmodel->numtextures; ++i) {
     mtexture_t *t = gs.worldmodel->textures + i;
     if (t->flags & TEX_INVISIBLE) continue;
@@ -143,88 +143,8 @@ static inline void DrawTextureChains(void) {
       // draw sky
     } else {
       for (; s; s = s->texchain)
-        R_RenderBrushPoly(s);
+        RenderBrushPoly(s);
     }
     t->texchain = NULL;
   }
-}
-
-void R_RecursiveWorldNode(mnode_t *node) {
-  if (node->contents == CONTENTS_SOLID)
-    return;
-  if (node->visframe != rs.visframe)
-    return;
-  if (R_CullBox(node->mins, node->maxs))
-    return;
-
-  // if it's a leaf node, draw stuff that's in it
-  if (node->contents < 0) {
-    mleaf_t *pleaf = (mleaf_t *)node;
-    msurface_t **mark = pleaf->firstmarksurf;
-    int c = pleaf->nummarksurf;
-    if (c) {
-      do {
-        (*mark)->visframe = rs.frame;
-        ++mark;
-      } while (--c);
-    }
-    return;
-  }
-
-  // a node is just a decision point
-  mplane_t *plane = node->plane;
-  x32 dot;
-
-  switch (plane->type) {
-  case PLANE_X:
-    dot = rs.modelorg.d[0] - plane->dist;
-    break;
-  case PLANE_Y:
-    dot = rs.modelorg.d[1] - plane->dist;
-    break;
-  case PLANE_Z:
-    dot = rs.modelorg.d[2] - plane->dist;
-    break;
-  default:
-    dot = XVecDotSL(plane->normal, rs.modelorg) - plane->dist;
-    break;
-  }
-
-  int side = !(dot >= 0);
-
-  // recurse down the children, front side first
-  R_RecursiveWorldNode(node->children[side]);
-
-  // draw stuff in the middle
-  int c = node->numsurf;
-  if (c) {
-    msurface_t *surf = gs.worldmodel->surfaces + node->firstsurf;
-    if (dot < -BACKFACE_EPSILON)
-      side = SURF_PLANEBACK;
-    else if (dot > BACKFACE_EPSILON)
-      side = 0;
-    for (; c; --c, ++surf) {
-      if (surf->visframe != rs.frame)
-        continue;
-      // don't backface underwater surfaces, because they warp
-      if (!(surf->flags & SURF_UNDERWATER) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
-        continue;
-      // we always texsort to reduce cache misses
-      surf->texchain = surf->texture->texchain;
-      surf->texture->texchain = surf;
-    }
-  }
-
-  // recurse down the back side
-  R_RecursiveWorldNode(node->children[!side]);
-}
-
-void R_DrawWorld(void) {
-  static edict_t ed;
-  ed.v.model = gs.worldmodel;
-  rs.modelorg = rs.vieworg;
-  rs.cur_entity = &ed;
-  rs.cur_texture = NULL;
-  R_RecursiveWorldNode(gs.worldmodel->nodes);
-  DrawTextureChains();
 }

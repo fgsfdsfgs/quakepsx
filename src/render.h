@@ -60,7 +60,7 @@ void R_SetFrustum(void);
 void R_RenderScene(void);
 void R_DrawWorld(void);
 void R_NewMap(void);
-void R_RenderBrushPoly(msurface_t *surf);
+void R_DrawTextureChains(void);
 void R_RenderView(void);
 void R_Flip(void);
 

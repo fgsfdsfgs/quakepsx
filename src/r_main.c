@@ -262,3 +262,83 @@ void R_Flip(void) {
 
   c_draw_polys = 0;
 }
+
+void R_RecursiveWorldNode(mnode_t *node) {
+  if (node->contents == CONTENTS_SOLID)
+    return;
+  if (node->visframe != rs.visframe)
+    return;
+  if (R_CullBox(node->mins, node->maxs))
+    return;
+
+  // if it's a leaf node, draw stuff that's in it
+  if (node->contents < 0) {
+    mleaf_t *pleaf = (mleaf_t *)node;
+    msurface_t **mark = pleaf->firstmarksurf;
+    int c = pleaf->nummarksurf;
+    if (c) {
+      do {
+        (*mark)->visframe = rs.frame;
+        ++mark;
+      } while (--c);
+    }
+    return;
+  }
+
+  // a node is just a decision point
+  mplane_t *plane = node->plane;
+  x32 dot;
+
+  switch (plane->type) {
+  case PLANE_X:
+    dot = rs.modelorg.d[0] - plane->dist;
+    break;
+  case PLANE_Y:
+    dot = rs.modelorg.d[1] - plane->dist;
+    break;
+  case PLANE_Z:
+    dot = rs.modelorg.d[2] - plane->dist;
+    break;
+  default:
+    dot = XVecDotSL(plane->normal, rs.modelorg) - plane->dist;
+    break;
+  }
+
+  int side = !(dot >= 0);
+
+  // recurse down the children, front side first
+  R_RecursiveWorldNode(node->children[side]);
+
+  // draw stuff in the middle
+  int c = node->numsurf;
+  if (c) {
+    msurface_t *surf = gs.worldmodel->surfaces + node->firstsurf;
+    if (dot < -BACKFACE_EPSILON)
+      side = SURF_PLANEBACK;
+    else if (dot > BACKFACE_EPSILON)
+      side = 0;
+    for (; c; --c, ++surf) {
+      if (surf->visframe != rs.frame)
+        continue;
+      // don't backface underwater surfaces, because they warp
+      if (!(surf->flags & SURF_UNDERWATER) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
+        continue;
+      // we always texsort to reduce cache misses
+      surf->texchain = surf->texture->texchain;
+      surf->texture->texchain = surf;
+    }
+  }
+
+  // recurse down the back side
+  R_RecursiveWorldNode(node->children[!side]);
+}
+
+void R_DrawWorld(void) {
+  static edict_t ed;
+  ed.v.model = gs.worldmodel;
+  rs.modelorg = rs.vieworg;
+  rs.cur_entity = &ed;
+  rs.cur_texture = NULL;
+  R_RecursiveWorldNode(gs.worldmodel->nodes);
+  R_DrawTextureChains();
+}
