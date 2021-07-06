@@ -17,7 +17,8 @@
 
 #define BACKFACE_EPSILON 41 // F1.19.12
 #define GPU_BUFSIZE 0x28000
-#define GPU_OTDEPTH 4096
+#define GPU_OTDEPTH 2048
+#define GPU_OTSHIFT 1
 
 typedef struct render_state_s {
   RECT clip;

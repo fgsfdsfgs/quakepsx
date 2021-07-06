@@ -111,7 +111,7 @@ void R_RenderBrushPoly(msurface_t *fa) {
   // calculate and scale OT Z
   gte_avsz3();
   gte_stotz_m(otz);
-  otz >>= 2;
+  otz >>= GPU_OTSHIFT;
   // emit first triangle if it's in range
   EMIT_BRUSH_TRIANGLE(0, 1, 2);
 
@@ -124,7 +124,7 @@ void R_RenderBrushPoly(msurface_t *fa) {
     gte_rtps();
     gte_avsz3();
     gte_stotz_m(otz);
-    otz >>= 2;
+    otz >>= GPU_OTSHIFT;
     EMIT_BRUSH_TRIANGLE(0, i - 1, i);
   }
 
