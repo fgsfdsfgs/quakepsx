@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "../common/pak.h"
 #include "../common/util.h"
@@ -35,7 +36,8 @@ void *lmp_read(const char *dir, const char *fname, size_t *outsize) {
   if (!f) f = fopen(fname, "rb");
   if (f) {
     fseek(f, 0, SEEK_END);
-    long sz = ftell(f);
+    int sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
     void *buf = malloc(sz);
     assert(buf);
     fread(buf, sz, 1, f);
@@ -48,4 +50,64 @@ void *lmp_read(const char *dir, const char *fname, size_t *outsize) {
 
   // never gets here
   return NULL;
+}
+
+void img_unpalettize(const u8 *src, u8 *dst, const int w, const int h, const u8 *pal) {
+  const u8 *ps = src;
+  u8 *pd = dst;
+  for (int i = 0; i < w * h; ++i, ++ps, pd += 3) {
+    const int c = *ps;
+    pd[0] = pal[3 * c + 0];
+    pd[1] = pal[3 * c + 1];
+    pd[2] = pal[3 * c + 2];
+  }
+}
+
+u8 img_closest_color(const u8 rgb[3], const u8 *pal, const int palsiz) {
+  double mindist = 256.0 * 256.0 * 256.0;
+  int mincol = 0;
+  for (int i = 0; i < palsiz; ++i) {
+    const u8 *prgb = pal + i * 3;
+    if (rgb[0] == prgb[0] && rgb[1] == prgb[1] && rgb[2] == prgb[2])
+      return i;
+    const double dc[3] = {
+      (double)rgb[0] - (double)prgb[0],
+      (double)rgb[1] - (double)prgb[1],
+      (double)rgb[2] - (double)prgb[2],
+    };
+    const double dist = sqrt(dc[0] * dc[0] + dc[1] * dc[1] + dc[2] * dc[2]);
+    if (dist < mindist) {
+      mindist = dist;
+      mincol = i;
+    }
+  }
+  return mincol;
+}
+
+void img_palettize(const u8 *src, u8 *dst, const int w, const int h, const u8 *pal, const int palsiz) {
+  const u8 *ps = src;
+  u8 *pd = dst;
+  for (int i = 0; i < w * h; ++i, ++pd, ps += 3) {
+    const int c = img_closest_color(ps, pal, palsiz);
+    *pd = c;
+  }
+}
+
+int img_quantize(const u8 *src, u8 *dst, const int w, const int h, u8 *outpal) {
+  const u8 *ps = src;
+  u8 *pd = dst;
+  int numc = 0;
+  for (int i = 0; i < w * h; ++i, ++pd, ps += 3) {
+    int c;
+    for (c = 0; c < numc; ++c)
+      if (outpal[c * 3 + 0] == ps[0] && outpal[c * 3 + 1] == ps[1] && outpal[c * 3 + 2] == ps[2])
+        break;
+    if (c == numc) {
+      outpal[c * 3 + 0] = ps[0];
+      outpal[c * 3 + 1] = ps[1];
+      outpal[c * 3 + 2] = ps[2];
+      ++numc;
+    }
+  }
+  return numc;
 }

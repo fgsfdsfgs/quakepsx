@@ -87,8 +87,8 @@ u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, 
   const u8 *samples = qbsp->lightdata + qf->lightofs;
 
   // don't have to check whether the point is on the surface, since we already know it is
-  const int s = qdot(v, qti->vecs[0]) + qti->vecs[0][3];
-  const int t = qdot(v, qti->vecs[1]) + qti->vecs[1][3];
+  const int s = qdot3(v, qti->vecs[0]) + qti->vecs[0][3];
+  const int t = qdot3(v, qti->vecs[1]) + qti->vecs[1][3];
   int ds = s - (int)sorg[0];
   int dt = t - (int)sorg[1];
 

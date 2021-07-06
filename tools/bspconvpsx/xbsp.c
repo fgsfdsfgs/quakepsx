@@ -89,7 +89,7 @@ static int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *
   int besth = VRAM_PAGE_HEIGHT;
 
   // HACK: bruteforce and see if we can exactly fit anywhere in already allocated space
-  for (int sx = 0; sx < VRAM_PAGE_WIDTH - w; ++sx) {
+  for (int sx = 0; sx <= VRAM_PAGE_WIDTH - w; ++sx) {
     for (int sy = 0; sy < xbsp_texalloc[pg][sx] - h; ++sy) {
       if (rect_fits(pg, sx, sy, w, h)) {
         x = sx;
@@ -100,7 +100,7 @@ static int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *
   }
 
   if (besth == VRAM_PAGE_HEIGHT) {
-    for (int i = 0; i < VRAM_PAGE_WIDTH - w; ++i) {
+    for (int i = 0; i <= VRAM_PAGE_WIDTH - w; ++i) {
       int th = 0;
       int j = 0;
       while (j < w) {
@@ -233,6 +233,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   const xtexinfo_t *xti = xbsp_texinfos + qti->miptex;
   const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
   int numverts = qf->numedges + 1;
+  int skipvert0 = 0;
   const qvec2_t texsiz = {
     (qmt && qmt->width) ? qmt->width : 1,
     (qmt && qmt->height) ? qmt->height : 1
@@ -292,7 +293,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   for (int i = 0; i < numverts; ++i) {
     // these are in image space; we'll normalize and upscale later
     for (int j = 0; j < 2; ++j) {
-      qst[i][j] = qdot(qverts[i]->v, qti->vecs[j]) + qti->vecs[j][3];
+      qst[i][j] = qdot3(qverts[i]->v, qti->vecs[j]) + qti->vecs[j][3];
       if (qst[i][j] < qstmin[j]) qstmin[j] = qst[i][j];
       if (qst[i][j] > qstmax[j]) qstmax[j] = qst[i][j];
     }
@@ -305,22 +306,27 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     quvmax[j] = quvmin[j] + quvsiz[j];
   }
 
-  for (int i = 0; i < numverts; ++i) {
+  // if the face is a quad and it's small enough, render it as is
+  if (qf->numedges == 4 && quvsiz[0] <= 1.0f && quvsiz[1] <= 1.0f)
+    skipvert0 = 1;
+
+  for (int i = skipvert0; i < numverts; ++i) {
     const qvert_t *qvert = qverts[i];
     qvec2_t vst = { qst[i][0], qst[i][1] };
     qvec2_t duv = { (vst[0] - qstmin[0]) / texsiz[0], (vst[1] - qstmin[1]) / texsiz[1] };
     qvec2_t fuv;
 
     for (int j = 0; j < 2; ++j) {
-      if (quvmin[j] < 0.0f && quvmax[j] <= 0.0f)
+      if (quvmin[j] >= -1.0f && quvmax[j] <= 0.0f)
         fuv[j] = 1.0f + quvmin[j] + duv[j];
-      else if (quvmin[j] > 0.0f && quvmax[j] <= 1.0f)
+      else if (quvmin[j] >= 0.0f && quvmax[j] <= 1.0f)
         fuv[j] = quvmin[j] + duv[j];
+      else if (quvsiz[j] <= 1.0f)
+        fuv[j] = duv[j];
       else // dunno what to do, just scale it to cover the entire poly
         fuv[j] = duv[j] / quvsiz[j];
     }
 
-    const u16 lmcol = 0x80;
     xvert_t *xv = xbsp_verts + xbsp_numverts++;
     xv->pos = qvec3_to_s16vec3(qvert->v);
     xv->tex.u = (f32)xti->uv.u + fuv[0] * 2.0f * (f32)(xti->size.u - 1);
@@ -335,7 +341,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   }
 
   xf->firstvert = startvert;
-  xf->numverts = numverts;
+  xf->numverts = numverts - skipvert0;
   xf->texinfo = qti->miptex;
   if ((qti->flags & TEXF_SPECIAL) || qf->lightofs < 0) {
     // fullbright style
@@ -368,6 +374,9 @@ int xbsp_write(const char *fname) {
 
   // write sounds
   fwrite(&xbsp_lumps[XLMP_SNDDATA], sizeof(xlump_t), 1, f);
+
+  // write alias models
+  fwrite(&xbsp_lumps[XLMP_MDLDATA], sizeof(xlump_t), 1, f);
 
   #define WRITE_LUMP(index, name, type, f) \
     fwrite(&xbsp_lumps[XLMP_ ## index], sizeof(xlump_t), 1, f); \

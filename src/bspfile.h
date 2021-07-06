@@ -24,6 +24,7 @@
  * xbsplump_t LUMP_CLUTDATA
  * xbsplump_t LUMP_TEXDATA
  * xbsplump_t LUMP_SNDDATA
+ * xbsplump_t LUMP_MDLDATA
  * xbsplump_t LUMP_VERTS
  * xbsplump_t LUMP_PLANES
  * xbsplump_t LUMP_TEXINFO
@@ -43,6 +44,7 @@ enum xbsplump_e {
   LUMP_CLUTDATA,
   LUMP_TEXDATA,
   LUMP_SNDDATA,
+  LUMP_MDLDATA,
 
   LUMP_VERTS,
   LUMP_PLANES,

@@ -26,7 +26,7 @@ static void TestInput(const x32 dt) {
   x32vec3_t upmove = { 0 };
 
   const x32 speed = XMUL16(200 * ONE, dt);
-  const x32 aspeed = XMUL16(TO_DEG16(35), dt);
+  const x32 aspeed = XMUL16(TO_DEG16(45), dt);
 
   if (!(pad->btn & PAD_UP))
     XVecScaleS(rs.vforward, speed, forwardmove)
@@ -66,10 +66,12 @@ int main(int argc, char **argv) {
   R_Init();
   IN_Init();
 
-  gs.worldmodel = Mod_LoadModel(FS_BASE "\\MAPS\\START.PSB;1");
+  gs.worldmodel = Mod_LoadModel(FS_BASE "\\MAPS\\E1M1.PSB;1");
   rs.vieworg = (x32vec3_t){ TO_FIX32(544), TO_FIX32(288), TO_FIX32(32 + 48) };
   rs.viewangles.d[YAW] = TO_DEG16(90);
   Sys_Printf("psb loaded, free mem: %u\n", Mem_GetFreeSpace());
+  Sys_Printf("sizeof(u_long) = %d, sizeof(uint) = %d\n", sizeof(u_long), sizeof(unsigned int));
+
 
   R_NewMap();
 

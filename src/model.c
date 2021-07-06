@@ -56,6 +56,11 @@ static void Mod_LoadSoundData(model_t *mod, const int fh) {
   // TODO
 }
 
+static void Mod_LoadAliasData(model_t *mod, const int fh) {
+  INIT_LUMP(lump, LUMP_MDLDATA, 0, fh);
+  // TODO
+}
+
 void Mod_LoadVertexes(model_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_VERTS, sizeof(xbspvert_t), fh);
   const int numverts = lump.size / sizeof(xbspvert_t);
@@ -272,6 +277,7 @@ void Mod_LoadBrushModel(model_t *mod, const int fh) {
   Mod_LoadClutData(mod, fh);
   Mod_LoadTextureData(mod, fh);
   Mod_LoadSoundData(mod, fh);
+  Mod_LoadAliasData(mod, fh);
 
   // then the map itself
   Mod_LoadVertexes(mod, fh);

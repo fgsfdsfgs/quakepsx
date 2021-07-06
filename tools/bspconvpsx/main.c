@@ -14,6 +14,12 @@
 #include "util.h"
 #include "xbsp.h"
 #include "qbsp.h"
+#include "qmdl.h"
+
+static const char *moddir;
+static const char *inname;
+static const char *outname;
+static const char *vramexp;
 
 static void cleanup(void) {
   if (qbsp.start) free(qbsp.start);
@@ -105,6 +111,7 @@ static void do_faces(void) {
     xf->planenum = qf->planenum;
     xf->side = qf->side;
     xbsp_face_add(xf, qf, &qbsp);
+    printf("* qface %05d numverts %03d -> %03d\n", f, qf->numedges, xf->numverts);
   }
 
   xbsp_lumps[XLMP_FACES].size = xbsp_numfaces * sizeof(xface_t);
@@ -199,6 +206,25 @@ static void do_models(void) {
   xbsp_lumps[XLMP_MODELS].size = qbsp.nummodels * sizeof(xmodel_t);
 }
 
+static void do_entmodel_mdl(const char *name, u8 *data, const size_t size) {
+  qmdl_t qmdl;
+  qmdl_init(&qmdl, data, size);
+  printf("* model '%s':\n", name);
+  printf("* * numverts  = %d\n", qmdl.header->numverts);
+  printf("* * numtris   = %d\n", qmdl.header->numtris);
+  printf("* * numframes = %d\n", qmdl.header->numframes);
+  printf("* * numskins  = %d\n", qmdl.header->numskins);
+  printf("* * skinsize  = %dx%d\n", qmdl.header->skinwidth, qmdl.header->skinheight);
+  printf("* * scale     = %f %f %f\n", qmdl.header->scale[0], qmdl.header->scale[1], qmdl.header->scale[2]);
+  printf("* * size      = %f\n", qmdl.header->size);
+
+}
+
+static void do_entmodels(void) {
+  printf("adding entity models\n");
+
+}
+
 static inline const char *get_arg(int c, const char **v, const char *arg) {
   for (int i = 4; i < c; ++i) {
     if (!strcmp(v[i], arg)) {
@@ -219,10 +245,10 @@ int main(int argc, const char **argv) {
 
   atexit(cleanup);
 
-  const char *moddir = argv[1];
-  const char *inname = argv[2];
-  const char *outname = argv[3];
-  const char *vramexp = get_arg(argc, argv, "--export-vram");
+  moddir = argv[1];
+  inname = argv[2];
+  outname = argv[3];
+  vramexp = get_arg(argc, argv, "--export-vram");
 
   // read palette first
   size_t palsize = 0;
@@ -246,6 +272,7 @@ int main(int argc, const char **argv) {
   do_visdata();
   do_nodes();
   do_models();
+  do_entmodels();
 
   if (xbsp_write(outname) != 0)
     panic("could not write PSX BSP to '%s'", outname);

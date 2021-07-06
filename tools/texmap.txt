@@ -1,9 +1,0 @@
-# 0xFFFF means invalid
-# id   flags(comma-separated) name
-
-0x0000 SKY                    sky
-0x0001                        black
-0x0002 WATER                  *teleport
-0x0003 WATER                  *water0
-0x0004 WATER                  *water1
-0x0005 WATER                  *04water2
