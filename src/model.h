@@ -57,27 +57,28 @@ typedef struct {
 typedef struct msurface_s msurface_t;
 
 typedef struct mtexture_s {
-  u8 flags;
+  struct mtexture_s *anim_next;
+  struct msurface_s *texchain;
   s16 width;
   s16 height;
   u16 vram_page;
   u8 vram_u;
   u8 vram_v;
   s8 anim_total;
-  s8 anim_min, anim_max;
-  struct mtexture_s *anim_next;
-  struct msurface_s *texchain;
+  s8 anim_min;
+  s8 anim_max;
+  u8 flags;
 } mtexture_t;
 
 struct msurface_s {
-  u8 visframe;
-  u8 flags;
   mplane_t *plane;
   mtexture_t *texture;
   struct msurface_s *texchain;
+  u8 styles[MAX_MAP_LIGHTVALS];
   u16 firstvert;
   u16 numverts;
-  u8 styles[MAX_MAP_LIGHTVALS];
+  u8 visframe;
+  u8 flags;
 };
 
 typedef struct mnode_s {
@@ -128,8 +129,7 @@ typedef enum { mod_brush, mod_sprite, mod_alias } modtype_t;
 
 typedef struct model_s {
   s16 id; // <0 == brush models
-  modtype_t type;
-  qboolean  needload; // bmodels and sprites don't cache normally
+  s16 type;
 
   int flags;
 

@@ -2,9 +2,9 @@
 #include <string.h>
 #include <psxgpu.h>
 #include <psxgte.h>
+#include <inline_c.h>
 
 #include "common.h"
-#include "inline_c.h"
 #include "system.h"
 #include "render.h"
 #include "entity.h"
@@ -51,12 +51,9 @@ typedef struct {
   s16vec3_t pos;
   u16 pad0;
   u32 col;
-  u8vec2_t tex;
+  u16 tex;
   u16 pad1;
 } svert_t;
-
-// see r_surf_a.s
-extern void *R_SortTriangleFan(const svert_t *sv, u16 numverts, u16 tpage);
 
 static inline u32 LightVert(const u8 *col, const u8 *styles) {
   register u32 lit;
@@ -66,23 +63,75 @@ static inline u32 LightVert(const u8 *col, const u8 *styles) {
   return lit | (lit << 8) | (lit << 16) | (0x34 << 24); // 0x34 = code for POLY_GT3
 }
 
+#define EMIT_BRUSH_TRIANGLE(i0, i1, i2) \
+  if (otz > 0 && otz < GPU_OTDEPTH) { \
+    gte_stsxy3_gt3(poly); \
+    if (!TriClip(&rs.clip, (const DVECTOR *)&poly->x0, (const DVECTOR *)&poly->x1, (const DVECTOR *)&poly->x2)) { \
+      setPolyGT3(poly); \
+      *(u32 *)&poly->r0 = sv[i0].col; \
+      *(u32 *)&poly->r1 = sv[i1].col; \
+      *(u32 *)&poly->r2 = sv[i2].col; \
+      *(u16 *)&poly->u0 = sv[i0].tex; \
+      *(u16 *)&poly->u1 = sv[i1].tex; \
+      *(u16 *)&poly->u2 = sv[i2].tex; \
+      poly->tpage = tpage; \
+      poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART); \
+      addPrim(gpu_ot + otz, poly); \
+      ++poly; \
+      ++c_draw_polys; \
+    } \
+  }
+
 void R_RenderBrushPoly(msurface_t *fa) {
+  register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
+  register const u16 tpage = fa->texture->vram_page;
+  register const int numverts = fa->numverts;
+  register svert_t *sv = PSX_SCRATCH;
+  register POLY_GT3 *poly = (POLY_GT3 *)gpu_ptr;
+  register int i, xy0, z0, otz;
+
   // positions have to be 8-byte aligned I think, so just put them in the scratchpad
   // in advance to avoid raping our tiny I-cache
-  register const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
-  register const u16 numverts = fa->numverts;
-  register svert_t *sv = PSX_SCRATCH;
-  for (register int i = 0; i < numverts; ++i, ++v, ++sv) {
+  for (i = 0; i < numverts; ++i, ++v, ++sv) {
     sv->pos = v->pos;
-    sv->tex = v->tex;
+    sv->tex = *(const u16 *)&v->tex;
     sv->col = LightVert(v->col, fa->styles);
   }
   // copy the first poly vert to the end to close the cycle
   *sv = ((svert_t *)PSX_SCRATCH)[1];
-  sv = PSX_SCRATCH;
-  // render verts as triangle fan
-  R_SortTriangleFan(sv, numverts, fa->texture->vram_page);
+  // reset pointers
+  sv = (svert_t *)PSX_SCRATCH;
+
+  // load and transform first 3 verts
+  gte_ldv3((SVECTOR *)&sv[0].pos, (SVECTOR *)&sv[1].pos, (SVECTOR *)&sv[2].pos);
+  gte_rtpt();
+  // store XYZ0 for later (Z0 is in SZ1)
+  gte_stsxy0_m(xy0);
+  gte_stsz1_m(z0);
+  // calculate and scale OT Z
+  gte_avsz3();
+  gte_stotz_m(otz);
+  otz >>= 2;
+  // emit first triangle if it's in range
+  EMIT_BRUSH_TRIANGLE(0, 1, 2);
+
+  // now we only have to transform 1 extra vert each iteration
+  // RTPS will push the previous vertices back, so we'll need to restore XYZ0 into slot 1
+  for (i = 3; i <= numverts; ++i) {
+    gte_ldsxy1_m(xy0);
+    gte_ldsz2_m(z0);
+    gte_ldv0((SVECTOR *)&sv[i].pos);
+    gte_rtps();
+    gte_avsz3();
+    gte_stotz_m(otz);
+    otz >>= 2;
+    EMIT_BRUSH_TRIANGLE(0, i - 1, i);
+  }
+
+  gpu_ptr = (void *)poly;
 }
+
+#undef EMIT_BRUSH_TRIANGLE
 
 static inline void DrawTextureChains(void) {
   for (int i = 0; i < gs.worldmodel->numtextures; ++i) {

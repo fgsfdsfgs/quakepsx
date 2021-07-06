@@ -1,15 +1,23 @@
 #pragma once
 
 #include <psxgpu.h>
+#include <psxgte.h>
 
 #include "common.h"
 #include "entity.h"
 #include "model.h"
 #include "system.h"
 
+// some GTE macro variations that use registers instead of pointers
+#define gte_stotz_m(r0)  __asm__ volatile( "mfc2   %0, $7;"  : "=r"( r0 ) : )
+#define gte_stsxy0_m(r0) __asm__ volatile( "mfc2   %0, $12;" : "=r"( r0 ) : )
+#define gte_stsz1_m(r0)  __asm__ volatile( "mfc2   %0, $17;" : "=r"( r0 ) : )
+#define gte_ldsxy1_m(r0) __asm__ volatile( "mtc2   %0, $13;" : : "r"( r0 ) )
+#define gte_ldsz2_m(r0)  __asm__ volatile( "mtc2   %0, $18;" : : "r"( r0 ) )
+
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x20000
-#define GPU_OTDEPTH 1024
+#define GPU_BUFSIZE 0x28000
+#define GPU_OTDEPTH 4096
 
 typedef struct render_state_s {
   RECT clip;
@@ -37,7 +45,9 @@ extern u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
 extern int c_mark_leaves;
 extern int c_draw_polys;
 
-extern 
+extern u32 *gpu_ot;
+extern u8 *gpu_buf;
+extern u8 *gpu_ptr;
 
 void *GPU_SortPrim(const u32 size, const int otz);
 
