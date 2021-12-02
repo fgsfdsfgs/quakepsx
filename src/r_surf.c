@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <inline_c.h>
+#include <sys/types.h>
+#include <libgte.h>
+#include <libgpu.h>
+#include <inline_n.h>
 
 #include "common.h"
 #include "system.h"

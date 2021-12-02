@@ -1,11 +1,41 @@
-#include <psxpad.h>
-#include <psxapi.h>
+#include <sys/types.h>
+#include <libpad.h>
+#include <libapi.h>
 
 #include "common.h"
 #include "system.h"
 #include "model.h"
 #include "render.h"
 #include "game.h"
+
+// psyq lacks these
+enum pad_buttons {
+  PAD_SELECT = 1,
+  PAD_L3 = 2,
+  PAD_R3 = 4,
+  PAD_START = 8,
+  PAD_UP = 16,
+  PAD_RIGHT = 32,
+  PAD_DOWN = 64,
+  PAD_LEFT = 128,
+  PAD_L2 = 256,
+  PAD_R2 = 512,
+  PAD_L1 = 1024,
+  PAD_R1 = 2048,
+  PAD_TRIANGLE = 4096,
+  PAD_CIRCLE = 8192,
+  PAD_CROSS = 16384,
+  PAD_SQUARE = 32768,
+};
+
+typedef struct {
+  u8  stat;       // Status
+  u8  len : 4;    // Data length (in halfwords)
+  u8  type : 4;   // Device type
+  u16 btn;        // Button states
+  u8  rs_x, rs_y; // Right stick coordinates
+  u8  ls_x, ls_y; // Left stick coordinates
+} PADTYPE;
 
 static char pad_buff[2][34];
 static PADTYPE *pad;
@@ -66,12 +96,13 @@ int main(int argc, char **argv) {
   R_Init();
   IN_Init();
 
+  Mem_SetMark(MEM_MARK_LO);
+
   gs.worldmodel = Mod_LoadModel(FS_BASE "\\MAPS\\E1M1.PSB;1");
   rs.vieworg = (x32vec3_t){ TO_FIX32(544), TO_FIX32(288), TO_FIX32(32 + 48) };
   rs.viewangles.d[YAW] = TO_DEG16(90);
   Sys_Printf("psb loaded, free mem: %u\n", Mem_GetFreeSpace());
   Sys_Printf("sizeof(u_long) = %d, sizeof(uint) = %d\n", sizeof(u_long), sizeof(unsigned int));
-
 
   R_NewMap();
 

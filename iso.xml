@@ -10,7 +10,7 @@
     />
     <directory_tree>
       <file name="system.cnf"   type="data" source="system.cnf"/>
-      <file name="quakepsx.exe" type="data" source="quakepsx.exe"/>
+      <file name="quakepsx.exe" type="data" source="quakepsx.ps-exe"/>
       <dir  name="id1psx" srcdir="id1psx">
         <dir  name="maps" srcdir="id1psx/maps">
           <file name="start.psb" type="data"/>

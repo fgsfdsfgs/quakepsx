@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <psxetc.h>
-#include <psxapi.h>
-#include <psxgpu.h>
-#include <psxcd.h>
+#include <sys/types.h>
+#include <libetc.h>
+#include <libapi.h>
+#include <libgte.h>
+#include <libgpu.h>
+#include <libcd.h>
 
 #include "common.h"
 #include "system.h"
+
+char sys_errormsg[MAX_ERROR];
 
 #define TICKS_PER_SECOND (60 << FIXSHIFT) // NTSC on NTSC console, 1.19.12 fixed point
 #define SECONDS_PER_TICK XDIV(ONE, TICKS_PER_SECOND) // 1.19.12 fixed point
@@ -21,31 +25,29 @@ void Sys_Init(void) {
   // initialize interrupts n shit
   ResetGraph(3);
 
-  // start up the CD drive
-  CdInit();
+  Sys_InstallExceptionHandler();
+
+  // see if there was a CD in the drive during init, die if there wasn't
+  if (!CdInit())
+    Sys_Error("bad CD or no CD in drive");
+
   // look alive
   CdControl(CdlNop, 0, 0);
   CdStatus();
+
   // set hispeed mode
-  u32 cdmode = CdlModeSpeed;
-  CdControlB(CdlSetmode, (u8 *)&cdmode, 0);
+  u_long cdmode = CdlModeSpeed;
+  CdControlB(CdlSetmode, (u_char *)&cdmode, 0);
   Sys_Wait(3); // have to do this to not explode the drive apparently
 }
 
-void Sys_Error(const char *error, ...) {
-  char buf[1024];
-
+void Sys_Panic(const char *error) {
   VSyncCallback(NULL); // disable ticker
-
-  va_list args;
-  va_start(args, error);
-  vsnprintf(buf, sizeof(buf), error, args);
-  va_end(args);
 
   const x32 xtime = Sys_FixedTime();
 
   // spew to TTY
-  Sys_Printf("ERROR (T%d.%04d): %s\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), buf);
+  Sys_Printf("ERROR (T%d.%04d): %s\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), error);
 
   // setup graphics viewport and clear screen
   SetDispMask(0);
@@ -62,7 +64,7 @@ void Sys_Error(const char *error, ...) {
   FntOpen(0, 8, 320, 224, 0, 100);
 
   // draw
-  FntPrint(-1, "ERROR (T%d.%04d):\n%s", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), buf);
+  FntPrint(-1, "ERROR (T%d.%04d):\n%s", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), error);
   FntFlush(-1);
   DrawSync(0);
   VSync(0);

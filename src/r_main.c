@@ -1,7 +1,9 @@
 #include <stdlib.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <inline_c.h>
+#include <sys/types.h>
+#include <libetc.h>
+#include <libgte.h>
+#include <libgpu.h>
+#include <inline_n.h>
 
 #include "common.h"
 #include "system.h"
@@ -222,23 +224,24 @@ void R_RenderView(void) {
 
 void R_DrawDebug(const x32 dt) {
   static int fontloaded = 0;
+  static long fontstream = 0;
   if (!fontloaded) {
     fontloaded = 1;
     // open font
     FntLoad(960, 256);
-    FntOpen(0, 8, 320, 216, 0, 255);
+    fontstream = FntOpen(0, 8, 320, 216, 0, 255);
   }
 
-  FntPrint(-1, "X=%04d Y=%04d Z=%04d\n",
+  FntPrint(fontstream, "X=%04d Y=%04d Z=%04d\n",
     rs.vieworg.x>>12, 
     rs.vieworg.y>>12, 
     rs.vieworg.z>>12);
-  FntPrint(-1, "RX=%05d RY=%05d\n",
+  FntPrint(fontstream, "RX=%05d RY=%05d\n",
     rs.viewangles.x, 
     rs.viewangles.y);
-  FntPrint(-1, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
-  FntPrint(-1, "FRAME=%3d.%04d\n", dt >> 12, dt & 4095);
-  FntFlush(-1);
+  FntPrint(fontstream, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
+  FntPrint(fontstream, "FRAME=%3d.%04d\n", dt >> 12, dt & 4095);
+  FntFlush(fontstream);
 }
 
 void R_Flip(void) {

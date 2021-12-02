@@ -8,21 +8,14 @@
 
 qboolean registered = false;
 
+char com_vastring[MAX_VA_STRING];
+
 static void COM_InitFilesystem(void) {
   registered = Sys_FileExists(FS_BASE "\\MAPS\\E2M1.PSB;1");
 }
 
 void COM_Init(void) {
   COM_InitFilesystem();
-}
-
-char *va(const char *format, ...) {
-  va_list argptr;
-  static char string[512];
-  va_start(argptr, format);
-  vsnprintf(string, sizeof(string), format,argptr);
-  va_end(argptr);
-  return string;  
 }
 
 void ClearLink(link_t *l) {

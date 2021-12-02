@@ -17,6 +17,7 @@
 #define MAX_LIGHTSTYLES 64
 #define MAX_USERSTYLES  16
 #define MAX_STYLESTRING 64
+#define MAX_VA_STRING   1024
 
 // graphics-related
 #define VID_WIDTH      320
@@ -50,6 +51,8 @@
 // filesystem stuff
 #define FS_BASE "\\ID1PSX"
 
+#define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
+
 // common.c
 void ClearLink(link_t *l);
 void RemoveLink(link_t *l);
@@ -61,9 +64,10 @@ void COM_StripExtension(char *in, char *out);
 void COM_FileBase(char *in, char *out);
 void COM_DefaultExtension(char *path, char *extension);
 
-char *va(const char *format, ...);
-
 extern char com_gamedir[MAX_OSPATH];
+extern char com_vastring[MAX_VA_STRING];
+
+#define VA(...) ({ sprintf(com_vastring, __VA_ARGS__); com_vastring; })
 
 void COM_Init(void);
 

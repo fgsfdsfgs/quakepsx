@@ -1,64 +1,35 @@
-include psn00bsdk-setup.mk
-
-# Project target name
 TARGET		= quakepsx
+TYPE			= ps-exe
 
-# Searches for C, C++ and S (assembler) files in specified directory
+LTOFLAGS	?= -flto
+
+CFLAGS		:= -Inugget/psyq/include -Isrc
+ASFLAGS		:= -Inugget/psyq/include -Isrc
+CFLAGS		+= -Wall -Wno-missing-braces -mno-check-zero-division
+
+LDFLAGS		:= -Lnugget/psyq/lib -Wl,--start-group -lcard -lapi -lc2 -lcd -letc -lgte -lgpu -lspu -Wl,--end-group
+LDFLAGS		+= $(LTOFLAGS)
+
 SRCDIR		= src
-CFILES		= $(patsubst $(SRCDIR)/%,%,$(shell find $(SRCDIR) -name "*.c"))
-CPPFILES 	= $(patsubst $(SRCDIR)/%,%,$(shell find $(SRCDIR) -name "*.cpp"))
-AFILES		= $(patsubst $(SRCDIR)/%,%,$(shell find $(SRCDIR) -name "*.s"))
+SRCSUB		= game
 
-# Create names for object files
-OFILES		= $(addprefix build/,$(CFILES:.c=.o)) \
-			$(addprefix build/,$(CPPFILES:.cpp=.o)) \
-			$(addprefix build/,$(AFILES:.s=.o))
+SRCDIRS		= $(foreach dir,$(SRCSUB),$(SRCDIR)/$(dir)) $(SRCDIR)
+CFILES		= $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.c))
+CPPFILES 	= $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.cpp))
+AFILES		= $(foreach dir,$(SRCDIRS),$(wildcard $(dir)/*.s))
+SRCS			= $(CFILES) $(CPPFILES) $(AFILES)
+SRCS			+= nugget/common/crt0/crt0.s
 
-# Project specific include and library directories
-# (use -I for include dirs, -L for library dirs)
-INCLUDE	 	+= -Isrc
-LIBDIRS		+=
-
-# Libraries to link
-LIBS		= -lpsxgte -lpsxgpu -lpsxspu -lpsxetc -lpsxapi -lpsxcd -lc
-
-# C compiler flags
-CFLAGS		= -g -O2 -fno-builtin -fdata-sections -ffunction-sections
-
-# C++ compiler flags
-CPPFLAGS	= $(CFLAGS) -fno-exceptions
-
-# Assembler flags
-AFLAGS		= -g
-
-# Linker flags (-Ttext specifies the program text address)
-LDFLAGS		= -g -Ttext=0x80010000 -gc-sections \
-			-T $(GCC_BASE)/$(PREFIX)/lib/ldscripts/elf32elmip.x
-
-all: $(TARGET).exe
+default: all
 
 iso: $(TARGET).iso
 
-$(TARGET).iso: $(TARGET).exe
+$(TARGET).iso: all
 	mkpsxiso -y -q iso.xml
 
-$(TARGET).exe: $(OFILES)
-	$(LD) $(LDFLAGS) $(LIBDIRS) $(OFILES) $(LIBS) -o $(TARGET).elf
-	elf2x -q $(TARGET).elf
+.PHONY: iso
 
-build/%.o: $(SRCDIR)/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
-	
-build/%.o: $(SRCDIR)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(AFLAGS) $(INCLUDE) -c $< -o $@
-	
-build/%.o: $(SRCDIR)/%.s
-	@mkdir -p $(dir $@)
-	$(CC) $(AFLAGS) $(INCLUDE) -c $< -o $@
-	
-clean:
-	rm -rf build $(TARGET).elf $(TARGET).exe $(TARGET).iso
+include nugget/common.mk
 
-.PHONY: all iso clean
+CPPFLAGS_Release	+= -O3 $(LTOFLAGS)
+LDFLAGS_Release		+= -O3 $(LTOFLAGS)

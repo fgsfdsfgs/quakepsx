@@ -1,6 +1,7 @@
 #pragma once
 
-#include <psxgte.h>
+#include <sys/types.h>
+#include <libgte.h>
 
 #define PSX_SCRATCH ((void *)0x1F800000)
 

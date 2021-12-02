@@ -3,18 +3,18 @@
 #include "model.h"
 
 void AngleVectors(const x16vec3_t angles, x16vec3_t *forward, x16vec3_t *right, x16vec3_t *up) {
-  x16 angle;
+  register x16 angle;
   x32 sr, sp, sy, cr, cp, cy;
 
   angle = angles.d[YAW];
-  sy = isin(angle);
-  cy = icos(angle);
+  sy = csin(angle);
+  cy = ccos(angle);
   angle = angles.d[PITCH];
-  sp = isin(angle);
-  cp = icos(angle);
+  sp = csin(angle);
+  cp = ccos(angle);
   angle = angles.d[ROLL];
-  sr = isin(angle);
-  cr = icos(angle);
+  sr = csin(angle);
+  cr = ccos(angle);
 
   forward->d[0] = XMUL16(cp, cy);
   forward->d[1] = XMUL16(cp, sy);

@@ -69,7 +69,7 @@ const qmiptex_t *qbsp_get_miptex(const qbsp_t *qbsp, const int i) {
     NULL;
 }
 
-u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec3_t sorg, qvec3_t sext, u16 *out) {
+u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec2_t sorg, qvec2_t sext, u16 *out) {
   if (qf->lightofs < 0) {
     // no lightmap => fullbright
     out[0] = out[1] = out[2] = out[3] = 0x40;

@@ -47,7 +47,6 @@ u16         xbsp_clutdata[NUM_CLUT_COLORS];
 u16         xbsp_texatlas[VRAM_TOTAL_HEIGHT][VRAM_TOTAL_WIDTH];
 xlump_t     xbsp_lumps[XLMP_COUNT];
 
-static u16 xbsp_texalloc[VRAM_NUM_PAGES][VRAM_PAGE_WIDTH];
 static u8  xbsp_texbitmap[VRAM_NUM_PAGES][VRAM_PAGE_WIDTH][VRAM_PAGE_HEIGHT];
 static u16 xbsp_texmaxy = 0;
 static u32 xbsp_sndalloc = SPURAM_BASE;
@@ -65,10 +64,12 @@ xmapsnd_t *xbsp_spu_fit(const u8 *data, u32 size) {
 }
 
 static inline int rect_fits(const int pg, int sx, int sy, int w, int h) {
-  for (int x = sx; x < sx + w; ++x)
-    for (int y = sy; y < sy + h; ++y)
+  for (int x = sx; x < sx + w; ++x) {
+    for (int y = sy; y < sy + h; ++y) {
       if (xbsp_texbitmap[pg][x][y])
         return 0;
+    }
+  }
   return 1;
 }
 
@@ -76,50 +77,33 @@ static inline void rect_fill(const int pg, int sx, int sy, int w, int h) {
   for (int x = sx; x < sx + w; ++x) {
     for (int y = sy; y < sy + h; ++y)
       xbsp_texbitmap[pg][x][y] = 1;
-    if (xbsp_texalloc[pg][x] < sy + h)
-      xbsp_texalloc[pg][x] = sy + h;
   }
 }
 
-// fits w x h texture into vram image
-// main algorithm stolen from Quake2 lightmap packing
+// tries to fit w x h texture into vram image
 static int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, int *outy) {
-  int x = 0;
-  int y = 0;
-  int besth = VRAM_PAGE_HEIGHT;
+  int x = -1;
+  int y = -1;
 
-  // HACK: bruteforce and see if we can exactly fit anywhere in already allocated space
-  for (int sx = 0; sx <= VRAM_PAGE_WIDTH - w; ++sx) {
-    for (int sy = 0; sy < xbsp_texalloc[pg][sx] - h; ++sy) {
+  // bruteforce and see if we can exactly fit anywhere
+  const int xalign = 4;
+  const int yalign = 1;
+  for (int sx = 0; sx <= VRAM_PAGE_WIDTH - w && x < 0; sx += xalign) {
+    for (int sy = 0; sy <= VRAM_PAGE_HEIGHT - h; sy += yalign) {
+      // skip if crossing texpage boundary
+      const int vrx = sx - (sx & 0x3C0);
+      if (vrx + w > VRAM_TEXPAGE_WIDTH * 4)
+        continue;
       if (rect_fits(pg, sx, sy, w, h)) {
         x = sx;
-        y = besth = sy;
+        y = sy;
         break;
       }
     }
   }
 
-  if (besth == VRAM_PAGE_HEIGHT) {
-    for (int i = 0; i <= VRAM_PAGE_WIDTH - w; ++i) {
-      int th = 0;
-      int j = 0;
-      while (j < w) {
-        if (xbsp_texalloc[pg][i + j] >= besth)
-          break;
-        if (xbsp_texalloc[pg][i + j] > th)
-          th = xbsp_texalloc[pg][i + j];
-        ++j;
-      }
-      if (j == w) {
-        x = i;
-        besth = th;
-        y = th;
-      }
-    }
-
-    if (besth + h > VRAM_PAGE_HEIGHT)
-      return -1;
-  }
+  if (x == -1 || y == -1)
+    return -1;
 
   rect_fill(pg, x, y, w, h);
 

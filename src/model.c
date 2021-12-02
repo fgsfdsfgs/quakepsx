@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <psxgpu.h>
 
 #include "common.h"
 #include "system.h"

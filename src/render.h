@@ -1,12 +1,23 @@
 #pragma once
 
-#include <psxgpu.h>
-#include <psxgte.h>
+#include <sys/types.h>
+#include <libgpu.h>
+#include <libgte.h>
 
 #include "common.h"
 #include "entity.h"
 #include "model.h"
 #include "system.h"
+
+// block fill primitive
+// taken from psn00bsdk
+typedef struct _FILL {
+  u_long tag;
+  u_char r0, g0, b0, code;
+  u_short x0, y0;
+  u_short w, h;
+} FILL;
+#define setFill(p) setlen(p, 3), setcode(p, 0x02)
 
 // some GTE macro variations that use registers instead of pointers
 #define gte_stotz_m(r0)  __asm__ volatile( "mfc2   %0, $7;"  : "=r"( r0 ) : )
@@ -17,9 +28,10 @@
 #define gte_ldsz2_m(r0)  __asm__ volatile( "mtc2   %0, $18;" : : "r"( r0 ) )
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x28000
+#define GPU_BUFSIZE 0x30000
 #define GPU_OTDEPTH 2048
 #define GPU_OTSHIFT 1
+#define GPU_SUBDIV_DIST 250
 
 typedef struct render_state_s {
   RECT clip;

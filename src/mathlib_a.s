@@ -1,29 +1,16 @@
 .set noreorder
 
-.include "gtereg.h"
-.include "inline_s.h"
+.macro nSQR sf
+  nop
+  nop
+  cop2	0x0A00428|(\sf<<19)
+.endm
+
+.set C2_IR1,	$9
+.set C2_IR2,	$10
+.set C2_IR3,	$11
 
 .section .text
-
-# psn00bsdk lacks this one, gotta do it ourselves
-.global Square12
-.type Square12, @function
-Square12:
-  # a0 - Pointer to input vector (v0)
-  # a1 - Pointer to output vector (v1)
-
-  lwc2  C2_IR1, 0($a0)
-  lwc2  C2_IR2, 4($a0)
-  lwc2  C2_IR3, 8($a0)
-
-  nSQR(1)
-
-  swc2  C2_IR1, 0($a1)
-  swc2  C2_IR2, 4($a1)
-  swc2  C2_IR3, 8($a1)
-
-  jr    $ra
-  nop
 
 # calculates `(x * y) >> 12`, where x and y are F1.19.12 fixed points
 .global xmul32
