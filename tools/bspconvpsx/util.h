@@ -6,6 +6,8 @@
 #include "../common/psxtypes.h"
 #include "../common/idbsp.h"
 
+#define XBSP_SCALE 1
+
 #define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
 #define PSXRGB(r, g, b) ((((b) >> 3) << 10) | (((g) >> 3) << 5) | ((r) >> 3))
 #define PSXTPAGE(tp, abr, x, y) ((((x)&0x3FF)>>6) | (((y)>>8)<<4) | (((abr)&0x3)<<5) | (((tp)&0x3)<<7))
@@ -30,7 +32,7 @@ static inline u8vec2_t qvec2_to_u8vec2(const qvec2_t v) {
 }
 
 static inline s16vec3_t qvec3_to_s16vec3(const qvec3_t v) {
-  return (s16vec3_t){ (s16)round(v[0]), (s16)round(v[1]), (s16)round(v[2]) };
+  return (s16vec3_t){ (s16)round(v[0]) * XBSP_SCALE, (s16)round(v[1]) * XBSP_SCALE, (s16)round(v[2]) * XBSP_SCALE };
 }
 
 static inline x16vec3_t qvec3_to_x16vec3(const qvec3_t v) {

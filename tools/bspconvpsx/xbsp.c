@@ -216,7 +216,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   const int startvert = xbsp_numverts;
   const xtexinfo_t *xti = xbsp_texinfos + qti->miptex;
   const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
-  int numverts = qf->numedges + 1;
+  int numverts = qf->numedges;
   int skipvert0 = 0;
   const qvec2_t texsiz = {
     (qmt && qmt->width) ? qmt->width : 1,
@@ -224,30 +224,19 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   };
   qvert_t *qverts[numverts];
   qvec2_t qst[numverts];
-  qvert_t qcent = {{ 0.f, 0.f, 0.f }};
   qvec2_t qstmin = { 999999.0f, 999999.0f };
   qvec2_t qstmax = { -99999.0f, -99999.0f };
   qvec2_t qstsiz;
   qvec2_t quvmin, quvmax, quvsiz;
 
-  qverts[0] = &qcent;
-
-  // get verts and calculate centroid
-  // we need a vert at the centroid to subdivide stuff a little bit
+  // get verts
   for (int i = 0; i < qf->numedges; ++i) {
     const int e = qbsp->surfedges[qf->firstedge + i];
     if (e >= 0)
-      qverts[1 + i] = &qbsp->verts[qbsp->edges[e].v[0]];
+      qverts[i] = &qbsp->verts[qbsp->edges[e].v[0]];
     else
-      qverts[1 + i] = &qbsp->verts[qbsp->edges[-e].v[1]];
-    qcent.v[0] += qverts[1 + i]->v[0];
-    qcent.v[1] += qverts[1 + i]->v[1];
-    qcent.v[2] += qverts[1 + i]->v[2];
+      qverts[i] = &qbsp->verts[qbsp->edges[-e].v[1]];
   }
-  // average
-  qcent.v[0] /= (f32)qf->numedges;
-  qcent.v[1] /= (f32)qf->numedges;
-  qcent.v[2] /= (f32)qf->numedges;
 
   // remove t-junctions if needed
 #ifdef REMOVE_TJUNCTIONS
@@ -290,11 +279,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     quvmax[j] = quvmin[j] + quvsiz[j];
   }
 
-  // if the face is a quad and it's small enough, render it as is
-  if (qf->numedges == 4 && quvsiz[0] <= 1.0f && quvsiz[1] <= 1.0f)
-    skipvert0 = 1;
-
-  for (int i = skipvert0; i < numverts; ++i) {
+  for (int i = 0; i < numverts; ++i) {
     const qvert_t *qvert = qverts[i];
     qvec2_t vst = { qst[i][0], qst[i][1] };
     qvec2_t duv = { (vst[0] - qstmin[0]) / texsiz[0], (vst[1] - qstmin[1]) / texsiz[1] };

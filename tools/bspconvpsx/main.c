@@ -94,7 +94,7 @@ static void do_planes(void) {
   for (int i = 0; i < qbsp.numplanes; ++i) {
     xplane_t *xp = xbsp_planes + i;
     xp->type = qbsp.planes[i].type;
-    xp->dist = f32_to_x32(qbsp.planes[i].dist);
+    xp->dist = f32_to_x32(qbsp.planes[i].dist * XBSP_SCALE);
     xp->normal = qvec3_to_x16vec3(qbsp.planes[i].normal);
   }
 
@@ -138,12 +138,12 @@ static void do_nodes(void) {
     xn->firstface = qn->firstface;
     xn->numfaces = qn->numfaces;
     xn->planenum = qn->planenum;
-    xn->mins.d[0] = qn->mins[0];
-    xn->mins.d[1] = qn->mins[1];
-    xn->mins.d[2] = qn->mins[2];
-    xn->maxs.d[0] = qn->maxs[0];
-    xn->maxs.d[1] = qn->maxs[1];
-    xn->maxs.d[2] = qn->maxs[2];
+    xn->mins.d[0] = qn->mins[0] * XBSP_SCALE;
+    xn->mins.d[1] = qn->mins[1] * XBSP_SCALE;
+    xn->mins.d[2] = qn->mins[2] * XBSP_SCALE;
+    xn->maxs.d[0] = qn->maxs[0] * XBSP_SCALE;
+    xn->maxs.d[1] = qn->maxs[1] * XBSP_SCALE;
+    xn->maxs.d[2] = qn->maxs[2] * XBSP_SCALE;
   }
 
   for (int i = 0; i < qbsp.numcnodes; ++i) {
@@ -161,12 +161,12 @@ static void do_nodes(void) {
     xl->visofs = ql->visofs;
     xl->firstmarksurface = ql->firstmarksurface;
     xl->nummarksurfaces = ql->nummarksurfaces;
-    xl->mins.d[0] = ql->mins[0];
-    xl->mins.d[1] = ql->mins[1];
-    xl->mins.d[2] = ql->mins[2];
-    xl->maxs.d[0] = ql->maxs[0];
-    xl->maxs.d[1] = ql->maxs[1];
-    xl->maxs.d[2] = ql->maxs[2];
+    xl->mins.d[0] = ql->mins[0] * XBSP_SCALE;
+    xl->mins.d[1] = ql->mins[1] * XBSP_SCALE;
+    xl->mins.d[2] = ql->mins[2] * XBSP_SCALE;
+    xl->maxs.d[0] = ql->maxs[0] * XBSP_SCALE;
+    xl->maxs.d[1] = ql->maxs[1] * XBSP_SCALE;
+    xl->maxs.d[2] = ql->maxs[2] * XBSP_SCALE;
   }
 
   memcpy(xbsp_marksurfs, qbsp.marksurf, qbsp.nummarksurf * 2);
@@ -194,12 +194,12 @@ static void do_models(void) {
     xm->headnode[1] = qm->headnode[1];
     xm->headnode[2] = qm->headnode[2];
     xm->headnode[3] = qm->headnode[3];
-    xm->mins.d[0] = qm->mins[0];
-    xm->mins.d[1] = qm->mins[1];
-    xm->mins.d[2] = qm->mins[2];
-    xm->maxs.d[0] = qm->maxs[0];
-    xm->maxs.d[1] = qm->maxs[1];
-    xm->maxs.d[2] = qm->maxs[2];
+    xm->mins.d[0] = qm->mins[0] * XBSP_SCALE;
+    xm->mins.d[1] = qm->mins[1] * XBSP_SCALE;
+    xm->mins.d[2] = qm->mins[2] * XBSP_SCALE;
+    xm->maxs.d[0] = qm->maxs[0] * XBSP_SCALE;
+    xm->maxs.d[1] = qm->maxs[1] * XBSP_SCALE;
+    xm->maxs.d[2] = qm->maxs[2] * XBSP_SCALE;
   }
 
   xbsp_nummodels = qbsp.nummodels;
