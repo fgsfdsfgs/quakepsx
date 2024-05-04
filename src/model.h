@@ -74,16 +74,16 @@ struct msurface_s {
   mplane_t *plane;
   mtexture_t *texture;
   struct msurface_s *texchain;
+  u32 visframe;
   u8 styles[MAX_MAP_LIGHTVALS];
   u16 firstvert;
   u16 numverts;
-  u8 visframe;
   u8 flags;
 };
 
 typedef struct mnode_s {
   s8 contents;
-  u8 visframe;
+  u32 visframe;
   x32vec3_t mins;
   x32vec3_t maxs;
   struct mnode_s *parent;
@@ -95,7 +95,7 @@ typedef struct mnode_s {
 
 typedef struct mleaf_s {
   s8 contents;
-  u8 visframe;
+  u32 visframe;
   x32vec3_t mins;
   x32vec3_t maxs;
   struct mnode_s *parent;

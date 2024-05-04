@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "system.h"
@@ -106,6 +107,7 @@ void Mod_LoadTexinfo(model_t *mod, const int fh) {
     out->vram_v = in.uv.v;
     out->anim_total = 0;
     out->flags = in.flags;
+    out->texchain = NULL;
   }
 }
 
@@ -127,6 +129,8 @@ void Mod_LoadFaces(model_t *mod, const int fh) {
     out->numverts = in.numverts;
     out->styles[0] = in.styles[0];
     out->styles[1] = in.styles[1];
+    out->texchain = NULL;
+    out->visframe = 0;
   }
 }
 
@@ -160,6 +164,7 @@ void Mod_LoadNodes(model_t *mod, const int fh) {
     out->plane = mod->planes + in.planenum;
     out->firstsurf = in.firstface;
     out->numsurf = in.numfaces;
+    out->visframe = 0;
     for (int j = 0; j < 2; j++) {
       const int p = in.children[j];
       if (p >= 0)
@@ -190,11 +195,11 @@ void Mod_LoadClipnodes(model_t *mod, const int fh) {
   hull->mins = (x32vec3_t){ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) };
   hull->maxs = (x32vec3_t){ TO_FIX32(+16), TO_FIX32(+16), TO_FIX32(+32) };
 
-	hull = &mod->hulls[2];
-	hull->clipnodes = out;
-	hull->firstclipnode = 0;
-	hull->lastclipnode = numclipnodes - 1;
-	hull->planes = mod->planes;
+  hull = &mod->hulls[2];
+  hull->clipnodes = out;
+  hull->firstclipnode = 0;
+  hull->lastclipnode = numclipnodes - 1;
+  hull->planes = mod->planes;
   hull->mins = (x32vec3_t){ TO_FIX32(-32), TO_FIX32(-32), TO_FIX32(-24) };
   hull->maxs = (x32vec3_t){ TO_FIX32(+32), TO_FIX32(+32), TO_FIX32(+64) };
 }
@@ -214,6 +219,7 @@ void Mod_LoadLeafs(model_t *mod, const int fh) {
     out->firstmarksurf = mod->marksurfaces + in.firstmarksurface;
     out->nummarksurf = in.nummarksurfaces;
     out->compressed_vis = in.visofs < 0 ? NULL : mod->visdata + in.visofs;
+    out->visframe = 0;
   }
 }
 
@@ -322,7 +328,7 @@ mleaf_t *Mod_PointInLeaf(const x32vec3_t p, model_t *mod) {
       node = node->children[1];
   }
 
-  return NULL;	// never reached
+  return NULL; // never reached
 }
 
 static inline const u8 *Mod_DecompressVis(const u8 *in, const model_t *model) {
@@ -333,17 +339,8 @@ static inline const u8 *Mod_DecompressVis(const u8 *in, const model_t *model) {
   u8 *out;
   int row;
 
-  row = (model->numleafs + 7) >> 3;	
+  row = (model->numleafs + 7) >> 3;
   out = decompressed;
-
-  if (!in) {
-    // no vis info, so make all visible
-    while (row) {
-      *out++ = 0xff;
-      row--;
-    }
-    return decompressed;
-  }
 
   do {
     if (*in) {
@@ -362,8 +359,10 @@ static inline const u8 *Mod_DecompressVis(const u8 *in, const model_t *model) {
 }
 
 const u8 *Mod_LeafPVS(const mleaf_t *leaf, const model_t *model) {
-  static const u8 novis[MAX_MAP_LEAFS / 8] = { 0xFF };
-  if (leaf == model->leafs)
-    return novis;
+  if (leaf == model->leafs || !leaf->compressed_vis) {
+    // nothing is visible
+    memset(PSX_SCRATCH, 0, 1024);
+    return PSX_SCRATCH;
+  }
   return Mod_DecompressVis(leaf->compressed_vis, model);
 }

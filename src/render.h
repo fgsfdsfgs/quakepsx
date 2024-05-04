@@ -25,13 +25,24 @@ typedef struct _FILL {
 #define gte_stsxy0_m(r0) __asm__ volatile( "mfc2   %0, $12;" : "=r"( r0 ) : )
 #define gte_stsz1_m(r0)  __asm__ volatile( "mfc2   %0, $17;" : "=r"( r0 ) : )
 #define gte_ldsxy1_m(r0) __asm__ volatile( "mtc2   %0, $13;" : : "r"( r0 ) )
+#define gte_ldsz1_m(r0)  __asm__ volatile( "mtc2   %0, $17;" : : "r"( r0 ) )
 #define gte_ldsz2_m(r0)  __asm__ volatile( "mtc2   %0, $18;" : : "r"( r0 ) )
+#define gte_ldzsf3_m(r0) __asm__ volatile( "mtc2   %0, $29;" : : "r"( r0 ) )
+#define gte_ldzsf4_m(r0) __asm__ volatile( "mtc2   %0, $30;" : : "r"( r0 ) )
+
+#define gte_stsz01(r1,r2) { \
+  __asm__ volatile ("move  $12,%0": :"r"(r1):"$12","$13","memory"); \
+  __asm__ volatile ("move  $13,%0": :"r"(r2):"$12","$13","memory"); \
+  __asm__ volatile ("swc2  $17,($12)": : :"$12","$13","memory"); \
+  __asm__ volatile ("swc2  $18,($13)": : :"$12","$13","memory"); \
+}
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x30000
-#define GPU_OTDEPTH 2048
-#define GPU_OTSHIFT 1
-#define GPU_SUBDIV_DIST 250
+#define GPU_BUFSIZE 0x20000
+#define GPU_OTDEPTH 4096
+
+#define GPU_SUBDIV_DIST_1 80
+#define GPU_SUBDIV_DIST_2 20
 
 typedef struct render_state_s {
   RECT clip;
@@ -47,9 +58,9 @@ typedef struct render_state_s {
   mplane_t frustum[4];
   mleaf_t *oldviewleaf;
   mleaf_t *viewleaf;
-  u8 frame;
-  u8 visframe;
   x32 frametime;
+  u32 frame;
+  u32 visframe;
 } render_state_t;
 
 extern render_state_t rs;

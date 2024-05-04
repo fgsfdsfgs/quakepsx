@@ -55,7 +55,7 @@ static void TestInput(const x32 dt) {
   x32vec3_t sidemove = { 0 };
   x32vec3_t upmove = { 0 };
 
-  const x32 speed = XMUL16(200 * ONE, dt);
+  const x32 speed = XMUL16(400 * ONE, dt);
   const x32 aspeed = XMUL16(TO_DEG16(45), dt);
 
   if (!(pad->btn & PAD_UP))

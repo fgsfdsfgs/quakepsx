@@ -57,8 +57,8 @@ void R_Init(void) {
   setRGB0(&fb[1].draw, 63, 0, 127);
 
   // clear both ordering tables
-	ClearOTagR(fb[0].gpuot, GPU_OTDEPTH);
-	ClearOTagR(fb[1].gpuot, GPU_OTDEPTH);
+  ClearOTagR(fb[0].gpuot, GPU_OTDEPTH);
+  ClearOTagR(fb[1].gpuot, GPU_OTDEPTH);
 
   // clear screen ASAP
   // need two FILL primitives because h=512 doesn't work correctly
@@ -240,7 +240,7 @@ void R_DrawDebug(const x32 dt) {
     rs.viewangles.x, 
     rs.viewangles.y);
   FntPrint(fontstream, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
-  FntPrint(fontstream, "FRAME=%3d.%04d\n", dt >> 12, dt & 4095);
+  FntPrint(fontstream, "DT=%3d.%04d FRAME=%3d VISFRAME=%3d\n", dt >> 12, dt & 4095, rs.frame, rs.visframe);
   FntFlush(fontstream);
 }
 
