@@ -11,11 +11,12 @@
     <directory_tree>
       <file name="system.cnf"   type="data" source="system.cnf"/>
       <file name="quakepsx.exe" type="data" source="quakepsx.ps-exe"/>
-      <dir  name="id1psx" srcdir="id1psx">
-        <dir  name="maps" srcdir="id1psx/maps">
-          <file name="start.psb" type="data"/>
-          <file name="e1m1.psb"  type="data"/>
-          <file name="e2m1.psb"  type="data"/>
+      <dir  name="id1psx" source="id1psx">
+        <dir name="maps" source="id1psx/maps">
+          <file name="start.psb" type="data" source="id1psx/maps/start.psb"/>
+          <file name="e1m1.psb"  type="data" source="id1psx/maps/e1m1.psb"/>
+          <file name="e1m2.psb"  type="data" source="id1psx/maps/e1m2.psb"/>
+          <file name="e2m1.psb"  type="data" source="id1psx/maps/e2m1.psb"/>
         </dir>
       </dir>
       <dummy sectors="1024"/>
