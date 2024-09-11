@@ -51,7 +51,6 @@ typedef unsigned char  qboolean;
 #define XDIV16(x, y) (((x32)(x) * FIXSCALE) / (x32)(y))
 
 extern x32 xmul32(const x32 x, const x32 y);
-extern x32 xmul16x32(const x16 x, const x32 y);
 extern x32 xdiv32(const x32 x, const x32 y);
 
 #define FIX(x) (x << FIXSHIFT)

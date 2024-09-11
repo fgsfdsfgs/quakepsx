@@ -79,7 +79,7 @@ void *GPU_SortPrim(const u32 size, const int otz);
 void R_Init(void);
 void R_UploadClut(const u16 *clut);
 void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h);
-qboolean R_CullBox(const x32vec3_t mins, const x32vec3_t maxs);
+qboolean R_CullBox(const x32vec3_t *mins, const x32vec3_t *maxs);
 void R_SetFrustum(void);
 void R_RenderScene(void);
 void R_DrawWorld(void);

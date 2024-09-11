@@ -13,7 +13,7 @@
 #define MAX_TEX_WIDTH   256
 #define MAX_TEX_HEIGHT  256
 #define MAX_OSPATH      64
-#define MAX_PLAYERS     2
+#define MAX_PLAYERS     1
 #define MAX_LIGHTSTYLES 64
 #define MAX_USERSTYLES  16
 #define MAX_STYLESTRING 64

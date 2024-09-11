@@ -172,5 +172,5 @@ typedef struct model_s {
 } model_t;
 
 model_t *Mod_LoadModel(const char *name);
-mleaf_t *Mod_PointInLeaf(const x32vec3_t p, model_t *mod);
+mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, model_t *mod);
 const u8 *Mod_LeafPVS(const mleaf_t *leaf, const model_t *model);

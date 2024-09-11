@@ -137,7 +137,7 @@ void R_SetupGPU(void) {
   gte_SetTransMatrix(m);
 }
 
-qboolean R_CullBox(const x32vec3_t mins, const x32vec3_t maxs) {
+qboolean R_CullBox(const x32vec3_t *mins, const x32vec3_t *maxs) {
   for (int i = 0; i < 4; ++i)
     if (BoxOnPlaneSide(mins, maxs, &rs.frustum[i]) == 2)
       return true;
@@ -155,13 +155,13 @@ static inline u8 SignbitsForPlane (mplane_t *out) {
 
 void R_SetFrustum(void) {
   // always assume FOV=90
-  XVecAdd(rs.vforward, rs.vright, rs.frustum[0].normal);
-  XVecSub(rs.vforward, rs.vright, rs.frustum[1].normal);
-  XVecAdd(rs.vforward, rs.vup, rs.frustum[2].normal);
-  XVecSub(rs.vforward, rs.vup, rs.frustum[3].normal);
+  XVecAdd(&rs.vforward, &rs.vright, &rs.frustum[0].normal);
+  XVecSub(&rs.vforward, &rs.vright, &rs.frustum[1].normal);
+  XVecAdd(&rs.vforward, &rs.vup, &rs.frustum[2].normal);
+  XVecSub(&rs.vforward, &rs.vup, &rs.frustum[3].normal);
   for (int i = 0; i < 4; ++i) {
     rs.frustum[i].type = PLANE_ANYZ;
-    rs.frustum[i].dist = XVecDotSL(rs.frustum[i].normal, rs.origin);
+    rs.frustum[i].dist = XVecDotSL(&rs.frustum[i].normal, &rs.origin);
     rs.frustum[i].signbits = SignbitsForPlane(&rs.frustum[i]);
   }
 }
@@ -170,10 +170,10 @@ void R_SetupFrame(void) {
   ++rs.frame;
 
   rs.origin = rs.vieworg;
-  AngleVectors(rs.viewangles, &rs.vforward, &rs.vright, &rs.vup);
+  AngleVectors(&rs.viewangles, &rs.vforward, &rs.vright, &rs.vup);
 
   rs.oldviewleaf = rs.viewleaf;
-  rs.viewleaf = Mod_PointInLeaf(rs.origin, gs.worldmodel);
+  rs.viewleaf = Mod_PointInLeaf(&rs.origin, gs.worldmodel);
 }
 
 void R_MarkLeaves(void) {
@@ -218,7 +218,12 @@ void R_NewMap(void) {
 void R_RenderView(void) {
   if (!gs.worldmodel)
     Sys_Error("R_RenderView: NULL worldmodel");
+
+  XVecAdd(&gs.player[0].ent->v.origin, &gs.player[0].viewofs, &rs.vieworg);
+  rs.viewangles = gs.player[0].viewangles;
+
   rs.frametime = Sys_FixedTime();
+
   R_RenderScene();
 }
 
@@ -232,15 +237,16 @@ void R_DrawDebug(const x32 dt) {
     fontstream = FntOpen(0, 8, 320, 216, 0, 255);
   }
 
-  FntPrint(fontstream, "X=%04d Y=%04d Z=%04d\n",
+  FntPrint(fontstream, "X=%04d Y=%04d Z=%04d G=%d\n",
     rs.vieworg.x>>12, 
     rs.vieworg.y>>12, 
-    rs.vieworg.z>>12);
+    rs.vieworg.z>>12,
+    (int)(gs.player->ent->v.flags & FL_ONGROUND));
   FntPrint(fontstream, "RX=%05d RY=%05d\n",
     rs.viewangles.x, 
     rs.viewangles.y);
-  FntPrint(fontstream, "LEAF=%05d MARK=%05d DRAW=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
-  FntPrint(fontstream, "DT=%3d.%04d FRAME=%3d VISFRAME=%3d\n", dt >> 12, dt & 4095, rs.frame, rs.visframe);
+  FntPrint(fontstream, "L=%05d M=%05d D=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
+  FntPrint(fontstream, "DT=%3d.%04d F=%3d VF=%3d\n", dt >> 12, dt & 4095, rs.frame, rs.visframe);
   FntFlush(fontstream);
 }
 
@@ -271,7 +277,7 @@ void R_RecursiveWorldNode(mnode_t *node) {
     return;
   if (node->visframe != rs.visframe)
     return;
-  if (R_CullBox(node->mins, node->maxs))
+  if (R_CullBox(&node->mins, &node->maxs))
     return;
 
   // if it's a leaf node, draw stuff that's in it
@@ -303,7 +309,7 @@ void R_RecursiveWorldNode(mnode_t *node) {
     dot = rs.modelorg.d[2] - plane->dist;
     break;
   default:
-    dot = XVecDotSL(plane->normal, rs.modelorg) - plane->dist;
+    dot = XVecDotSL(&plane->normal, &rs.modelorg) - plane->dist;
     break;
   }
 

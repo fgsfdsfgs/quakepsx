@@ -7,11 +7,11 @@
 #include "render.h"
 #include "model.h"
 
-static x32 RadiusFromBounds(const x32vec3_t mins, const x32vec3_t maxs) {
+static x32 RadiusFromBounds(const x32vec3_t *mins, const x32vec3_t *maxs) {
   x32vec3_t corner;
   for (int i = 0; i < 3; i++)
-    corner.d[i] = abs(mins.d[i]) > abs(maxs.d[i]) ? abs(mins.d[i]) : abs(maxs.d[i]);
-  return XVecLengthL(corner);
+    corner.d[i] = abs(mins->d[i]) > abs(maxs->d[i]) ? abs(mins->d[i]) : abs(maxs->d[i]);
+  return XVecLengthL(&corner);
 }
 
 void Mod_SetParent(mnode_t *node, mnode_t *parent) {
@@ -297,6 +297,40 @@ void Mod_LoadBrushModel(model_t *mod, const int fh) {
   Mod_LoadSubmodels(mod, fh);
   Mod_LoadEntities(mod, fh);
   Mod_MakeHull0(mod);
+
+  //
+  // set up the submodels (FIXME: this is confusing)
+  //
+  for (int i = 0; i < 1; i++)
+  {
+    xbspmodel_t *bm = &mod->submodels[i];
+
+    mod->hulls[0].firstclipnode = bm->headnode[0];
+    for (int j = 1; j < MAX_MAP_HULLS; j++)
+    {
+      mod->hulls[j].firstclipnode = bm->headnode[j];
+      mod->hulls[j].lastclipnode = mod->numclipnodes-1;
+    }
+
+    mod->firstmodelsurface = bm->firstface;
+    mod->nummodelsurfaces = bm->numfaces;
+
+    mod->maxs.x = TO_FIX32(bm->maxs.x);
+    mod->maxs.y = TO_FIX32(bm->maxs.y);
+    mod->maxs.z = TO_FIX32(bm->maxs.z);
+
+    Sys_Printf("psb maxs: %d %d %d\n", mod->maxs.x >> FIXSHIFT, mod->maxs.y >> FIXSHIFT, mod->maxs.z >> FIXSHIFT);
+
+    mod->mins.x = TO_FIX32(bm->mins.x);
+    mod->mins.y = TO_FIX32(bm->mins.y);
+    mod->mins.z = TO_FIX32(bm->mins.z);
+
+    Sys_Printf("psb mins: %d %d %d\n", mod->mins.x >> FIXSHIFT, mod->mins.y >> FIXSHIFT, mod->mins.z >> FIXSHIFT);
+
+    mod->radius = RadiusFromBounds(&mod->mins, &mod->maxs);
+
+    mod->numleafs = bm->visleafs;
+  }
 }
 
 model_t *Mod_LoadModel(const char *name) {
@@ -311,7 +345,7 @@ model_t *Mod_LoadModel(const char *name) {
   return model;
 }
 
-mleaf_t *Mod_PointInLeaf(const x32vec3_t p, model_t *mod) {
+mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, model_t *mod) {
   if (!mod || !mod->nodes)
     Sys_Error("Mod_PointInLeaf: bad model %p", mod);
 
@@ -321,7 +355,7 @@ mleaf_t *Mod_PointInLeaf(const x32vec3_t p, model_t *mod) {
     if (node->contents < 0)
       return (mleaf_t *)node;
     const mplane_t *plane = node->plane;
-    const x32 d = XVecDotSL(plane->normal, p) - plane->dist;
+    const x32 d = XVecDotSL(&plane->normal, p) - plane->dist;
     if (d > 0)
       node = node->children[0];
     else
