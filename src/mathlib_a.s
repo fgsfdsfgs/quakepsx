@@ -3,12 +3,15 @@
 .macro nSQR sf
   nop
   nop
-  cop2	0x0A00428|(\sf<<19)
+  cop2 0x0A00428|(\sf<<19)
 .endm
 
-.set C2_IR1,	$9
-.set C2_IR2,	$10
-.set C2_IR3,	$11
+.set C2_IR1, $9
+.set C2_IR2, $10
+.set C2_IR3, $11
+.set C2_D1,  $0
+.set C2_D2,  $2
+.set C2_D3,  $4
 
 .section .text
 
@@ -142,3 +145,33 @@ XVecLengthSqr32:
   addu  $v0, $t1
   jr    $ra
   addu  $v0, $t2
+
+# calculates cross product of two x16vec3s pointed to by a0 and a1 and puts it in a2
+.global XVecCross16
+.type XVecCross16, @function
+XVecCross16:
+  # a0     - pointer to x16vec3_t
+  # a1     - pointer to x16vec3_t
+  # a2     - pointer to output x16vec3_t
+  lh    $t0, 0($a0)
+  lh    $t1, 2($a0)
+  ctc2  $t0, C2_D1
+  lh    $t2, 4($a0)
+  ctc2  $t1, C2_D2
+  ctc2  $t2, C2_D3
+  lh    $t3, 0($a1)
+  lh    $t4, 2($a1)
+  ctc2  $t3, C2_IR1
+  lh    $t5, 4($a1)
+  ctc2  $t4, C2_IR2
+  ctc2  $t5, C2_IR3
+  nop
+  nop
+  cop2 0x0178000C
+  mfc2  $t0, C2_IR1
+  mfc2  $t1, C2_IR2
+  mfc2  $t2, C2_IR3
+  sh    $t0, 0($a2)
+  sh    $t1, 2($a2)
+  jr    $ra
+  sh    $t2, 4($a2)
