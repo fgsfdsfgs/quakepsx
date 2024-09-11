@@ -123,19 +123,30 @@ static int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *
   return 0;
 }
 
-int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy) {
-  int w = qti->width >> 1; // width is in 16bpp pixels, we have 8-bit indexed
-  int h = qti->height;
-
-  if (qti->width > MAX_TEX_WIDTH || qti->height > MAX_TEX_HEIGHT) {
-    printf("! texture larger than %dx%d, using miplevel 1\n", MAX_TEX_WIDTH, MAX_TEX_HEIGHT);
-    w >>= 1;
-    h >>= 1;
+int xbsp_texture_shrink(int *w, int *h) {
+  int i = 0;
+  while ((*w > MAX_TEX_WIDTH || *h > MAX_TEX_HEIGHT) && *w > 2 && *h > 1 && i < NUM_MIPLEVELS - 1) {
+    ++i;
+    *w >>= 1;
+    *h >>= 1;
   }
+  return i;
+}
+
+int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy) {
+  int w = qti->width;
+  int h = qti->height;
+  int i = xbsp_texture_shrink(&w, &h);
+  if (i) {
+    printf("    ! larger than %dx%d, using miplevel %d\n", MAX_TEX_WIDTH, MAX_TEX_HEIGHT, i);
+  }
+
+  // width is in 16bpp pixels, we have 8-bit indexed
+  w >>= 1;
 
   // available VRAM is organized in two pages: first 256 lines and second 256 lines
   // try fitting into the first one, if that doesn't work, try the second one
-  for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
+  for (i = 0; i < VRAM_NUM_PAGES; ++i) {
     if (xbsp_vram_page_fit(xti, i, w, h, outx, outy) == 0)
       return 0;
   }
@@ -155,19 +166,18 @@ void xbsp_set_palette(const u8 *pal) {
 }
 
 void xbsp_vram_store(const qmiptex_t *qti, int x, int y) {
-  int w, h;
+  int w, h, i;
   const u8 *data;
-  if (qti->width <= MAX_TEX_WIDTH && qti->height <= MAX_TEX_HEIGHT) {
-    w = qti->width;
-    h = qti->height;
-    data = (const u8 *)qti + qti->offsets[0];
-  } else {
-    w = qti->width >> 1;
-    h = qti->height >> 1;
-    data = (const u8 *)qti + qti->offsets[1];
-  }
+
+  w = qti->width;
+  h = qti->height;
+  i = xbsp_texture_shrink(&w, &h);
+  assert(i < NUM_MIPLEVELS - 1);
+  data = (const u8 *)qti + qti->offsets[i];
+
   if (y + h > xbsp_texmaxy)
     xbsp_texmaxy = y + h;
+
   for (; h > 0; --h, ++y, data += w)
     memcpy(&xbsp_texatlas[y][x], data, w);
 }
@@ -217,7 +227,6 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   const xtexinfo_t *xti = xbsp_texinfos + qti->miptex;
   const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
   int numverts = qf->numedges;
-  int skipvert0 = 0;
   const qvec2_t texsiz = {
     (qmt && qmt->width) ? qmt->width : 1,
     (qmt && qmt->height) ? qmt->height : 1
@@ -310,7 +319,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   }
 
   xf->firstvert = startvert;
-  xf->numverts = numverts - skipvert0;
+  xf->numverts = numverts;
   xf->texinfo = qti->miptex;
   if ((qti->flags & TEXF_SPECIAL) || qf->lightofs < 0) {
     // fullbright style

@@ -31,15 +31,25 @@ struct texsort { const qmiptex_t *qtex; int id; };
 static int tex_sort(const struct texsort *a, const struct texsort *b) {
   if (a->qtex == NULL) {
     return 1;
-  } else if (b->qtex == NULL) {
+  }
+  if (b->qtex == NULL) {
     return -1;
-  } else if (a->qtex->height > b->qtex->height) {
+  }
+
+  int aw = a->qtex->width;
+  int ah = a->qtex->height;
+  xbsp_texture_shrink(&aw, &ah);
+  int bw = b->qtex->width;
+  int bh = b->qtex->height;
+  xbsp_texture_shrink(&bw, &bh);
+
+  if (ah > bh) {
     return -1;
-  } else if (a->qtex->height == b->qtex->height) {
-    if (b->qtex->width == a->qtex->width)
+  } else if (ah == bh) {
+    if (bw == aw)
       return a->id - b->id;
     else
-      return b->qtex->width - a->qtex->width;
+      return bw - aw;
   } else {
     return 1;
   }
@@ -111,7 +121,7 @@ static void do_faces(void) {
     xf->planenum = qf->planenum;
     xf->side = qf->side;
     xbsp_face_add(xf, qf, &qbsp);
-    printf("* qface %05d numverts %03d -> %03d\n", f, qf->numedges, xf->numverts);
+    // printf("* qface %05d numverts %03d -> %03d\n", f, qf->numedges, xf->numverts);
   }
 
   xbsp_lumps[XLMP_FACES].size = xbsp_numfaces * sizeof(xface_t);

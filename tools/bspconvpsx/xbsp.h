@@ -40,6 +40,7 @@ int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy);
 void xbsp_vram_store(const qmiptex_t *qti, int x, int y);
 void xbsp_vram_export(const char *fname, const u8 *pal);
 u16 xbsp_texture_flags(const qmiptex_t *qti);
+int xbsp_texture_shrink(int *w, int *h);
 int xbsp_vram_height(void);
 void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp);
 int xbsp_write(const char *fname);

@@ -21,8 +21,8 @@
 #define MAX_SOUNDS          255
 #define MAX_LIGHTSTYLES     64
 
-#define MAX_TEX_WIDTH       128
-#define MAX_TEX_HEIGHT      128
+#define MAX_TEX_WIDTH       64
+#define MAX_TEX_HEIGHT      64
 
 #define VRAM_XSTART         320
 #define VRAM_NUM_PAGES      2
