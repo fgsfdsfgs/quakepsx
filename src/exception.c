@@ -1,17 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <kernel.h>
-#include <libapi.h>
-#include <libetc.h>
-#include <libgte.h>
-#include <libgpu.h>
+#include <psxapi.h>
+#include <psxetc.h>
+#include <psxgte.h>
+#include <psxgpu.h>
 
 #include "common.h"
+#include "exception.h"
 
-static unsigned long exception_event;
+static u32 exception_event;
 
-static inline const char *ExceptionCause(const unsigned long cr) {
+static inline const char *ExceptionCause(const u32 cr) {
   static const char *msg[] = {
     "EXT INT",
     "?",
@@ -30,13 +30,19 @@ static inline const char *ExceptionCause(const unsigned long cr) {
   return msg[(cr & 63) >> 2];
 }
 
-static long ExceptionFunc(void) {
+static u32 GetCause(void) {
+  u32 cr = 0;
+  __asm__ volatile("mfc0 %0, $13": "=r"(cr) ::);
+  return cr;
+}
+
+static void ExceptionFunc(void) {
   // get current thread's TCB
   const struct ToT *tot = (const struct ToT *)0x100;
   const struct TCB *tcb_list = (const struct TCB *)tot[2].head;
-  const unsigned long status = tcb_list[0].status;
-  const unsigned long cr = GetCr();
-  const unsigned long *regs = tcb_list[0].reg;
+  const u32 status = tcb_list[0].status;
+  const u32 cr = GetCause();
+  const u32 *regs = tcb_list[0].reg;
 
   // spew to tty
   printf("UH OH ZONE\nSTATUS=%08x\nCR=%08x\nPC=%08x\nRA=%08x\n", status, cr, regs[R_EPC], regs[R_RA]); 
@@ -86,8 +92,6 @@ static long ExceptionFunc(void) {
   SetDispMask(1);
 
   while (1);
-
-  return 0; // never gets here
 }
 
 void Sys_InstallExceptionHandler(void) {

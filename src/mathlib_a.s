@@ -1,45 +1,14 @@
 .set noreorder
+.set noat
 
-.macro nSQR sf
-  nop
-  nop
-  cop2 0x0A00428|(\sf<<19)
-.endm
+.include "gtereg.inc"
+.include "inline_s.inc"
 
-.set C2_IR1, $9
-.set C2_IR2, $10
-.set C2_IR3, $11
-.set C2_D1,  $0
-.set C2_D2,  $2
-.set C2_D3,  $4
+.set C2_D1, $0
+.set C2_D2, $2
+.set C2_D3, $4
 
 .section .text
-
-# calculates `(x * y) >> 12`, where x and y are F1.19.12 fixed points
-.global xmul32
-.type xmul32, @function
-xmul32:
-  # a0, a1 - numbers
-  # v0     - return
-  mult  $a0, $a1    # multiply; 64-bit result is now in $lo + $hi
-  mflo  $v0         # get the lo and hi words of result
-  mfhi  $t0
-  srl   $v0, 12     # >> 12
-  and   $t0, 0x0FFF
-  sll   $t0, 20
-  jr    $ra
-  or    $v0, $t0    # combine hi word with lo word
-
-# calculates `(x * 4096) / y`, where x and y are F1.19.12 fixed points
-.global xdiv32
-.type xdiv32, @function
-xdiv32:
-  # a0, a1 - numbers
-  # v0     - return
-  sll   $a0, 12
-  div   $a0, $a1
-  jr    $ra
-  mflo  $v0
 
 # calculates dot product of two x32vec3s pointed to by a0 and a1
 .global XVecDot32x32

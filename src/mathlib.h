@@ -1,8 +1,8 @@
 #pragma once
 
 #include <sys/types.h>
-#include <libgte.h>
-#include <inline_n.h>
+#include <psxgte.h>
+#include <inline_c.h>
 #include "types.h"
 #include "model.h"
 

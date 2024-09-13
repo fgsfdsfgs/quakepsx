@@ -1,14 +1,8 @@
-#include <sys/types.h>
-#include <libpad.h>
-#include <libapi.h>
-
 #include "common.h"
 #include "system.h"
-#include "model.h"
 #include "render.h"
 #include "input.h"
 #include "game.h"
-#include "world.h"
 
 static void TestInput(const x16 dt) {
   const int fwd = IN_ButtonHeld(PAD_UP) -  IN_ButtonHeld(PAD_DOWN);

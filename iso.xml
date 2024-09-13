@@ -2,21 +2,22 @@
   <iso_project image_name="quakepsx.iso">
   <track type="data">
     <identifiers
-      system      ="PLAYSTATION"
-      application ="PLAYSTATION"
-      volume      ="QUAKEPSX"
-      volume_set  ="QUAKEPSX"
-      publisher   ="FGSFDS"
+      system        ="PLAYSTATION"
+      application   ="PLAYSTATION"
+      volume        ="QUAKEPSX"
+      volume_set    ="QUAKEPSX"
+      publisher     ="FGSFDS"
+      data_preparer ="PSN00BSDK ${PSN00BSDK_VERSION}"
     />
     <directory_tree>
-      <file name="system.cnf"   type="data" source="system.cnf"/>
-      <file name="quakepsx.exe" type="data" source="quakepsx.ps-exe"/>
-      <dir  name="id1psx" source="id1psx">
-        <dir name="maps" source="id1psx/maps">
-          <file name="start.psb" type="data" source="id1psx/maps/start.psb"/>
-          <file name="e1m1.psb"  type="data" source="id1psx/maps/e1m1.psb"/>
-          <file name="e1m2.psb"  type="data" source="id1psx/maps/e1m2.psb"/>
-          <file name="e2m1.psb"  type="data" source="id1psx/maps/e2m1.psb"/>
+      <file name="system.cnf"   type="data" source="${PROJECT_SOURCE_DIR}/system.cnf"/>
+      <file name="quakepsx.exe" type="data" source="quakepsx.exe"/>
+      <dir  name="id1psx" source="${PROJECT_SOURCE_DIR}/id1psx">
+        <dir name="maps" source="${PROJECT_SOURCE_DIR}/id1psx/maps">
+          <file name="start.psb" type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/start.psb"/>
+          <file name="e1m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m1.psb"/>
+          <file name="e1m2.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m2.psb"/>
+          <file name="e2m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m1.psb"/>
         </dir>
       </dir>
       <dummy sectors="1024"/>

@@ -2,19 +2,18 @@
 #include <stdarg.h>
 #include <string.h>
 #include <sys/types.h>
-#include <libetc.h>
-#include <libapi.h>
-#include <libgte.h>
-#include <libgpu.h>
-#include <libcd.h>
+#include <psxetc.h>
+#include <psxapi.h>
+#include <psxgte.h>
+#include <psxgpu.h>
+#include <psxcd.h>
 
 #include "common.h"
 #include "system.h"
 
-char sys_errormsg[MAX_ERROR];
+static char sys_errormsg[MAX_ERROR];
 
-#define TICKS_PER_SECOND (60 << FIXSHIFT) // NTSC on NTSC console, 1.19.12 fixed point
-#define SECONDS_PER_TICK XDIV(ONE, TICKS_PER_SECOND) // 1.19.12 fixed point
+#define TICKS_PER_SECOND 60 // NTSC on NTSC console
 
 void Sys_Wait(int n) {
   while (n--) VSync(0);
@@ -41,13 +40,18 @@ void Sys_Init(void) {
   Sys_Wait(3); // have to do this to not explode the drive apparently
 }
 
-void Sys_Panic(const char *error) {
+void Sys_Error(const char *error, ...) {
+  va_list args;
+  va_start(args, error);
+  vsnprintf(sys_errormsg, sizeof(sys_errormsg), error, args);
+  va_end(args);
+
   VSyncCallback(NULL); // disable ticker
 
   const x32 xtime = Sys_FixedTime();
 
   // spew to TTY
-  Sys_Printf("ERROR (T%d.%04d): %s\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), error);
+  Sys_Printf("ERROR (T%d.%04d): %s\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), sys_errormsg);
 
   // setup graphics viewport and clear screen
   SetDispMask(0);
@@ -64,7 +68,7 @@ void Sys_Panic(const char *error) {
   FntOpen(0, 8, 320, 224, 0, 100);
 
   // draw
-  FntPrint(-1, "ERROR (T%d.%04d):\n%s", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), error);
+  FntPrint(-1, "ERROR (T%d.%04d):\n%s", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), sys_errormsg);
   FntFlush(-1);
   DrawSync(0);
   VSync(0);
@@ -75,7 +79,7 @@ void Sys_Panic(const char *error) {
 
 x32 Sys_FixedTime(void) {
   // number of vblanks -> seconds
-  return XDIV16(FIX(VSync(-1)), TICKS_PER_SECOND);
+  return (VSync(-1) << FIXSHIFT) / TICKS_PER_SECOND;
 }
 
 // TEMPORARY CD FILE READING API WITH BUFFERS AND SHIT
@@ -115,7 +119,7 @@ int Sys_FileOpenRead(const char *fname, int *outhandle) {
 
   // read first sector of the file
   CdControl(CdlSetloc, (u8 *)&f->cdf.pos, 0);
-  CdRead(BUFSECS, (u_long *)f->buf, CdlModeSpeed);
+  CdRead(BUFSECS, (u32 *)f->buf, CdlModeSpeed);
   CdReadSync(0, NULL);
 
   // set fp and shit
@@ -148,7 +152,7 @@ void Sys_FileClose(int h) {
   num_fhandles--;
 }
 
-s32 Sys_FileRead(int handle, void *dest, int size) {
+int Sys_FileRead(int handle, void *dest, int size) {
   if (handle <= 0 || !dest) return -1;
   if (!size) return 0;
 
@@ -178,7 +182,7 @@ s32 Sys_FileRead(int handle, void *dest, int size) {
       // looks like you need to seek every time when you use CdRead
       CdIntToPos(f->seccur, &pos);
       CdControl(CdlSetloc, (u8 *)&pos, 0);
-      CdRead(BUFSECS, (u_long *)f->buf, CdlModeSpeed);
+      CdRead(BUFSECS, (u32 *)f->buf, CdlModeSpeed);
       CdReadSync(0, 0);
       fleft = f->cdf.size - f->fp;
       f->bufleft = (fleft >= BUFSIZE) ? BUFSIZE: fleft;
@@ -189,7 +193,7 @@ s32 Sys_FileRead(int handle, void *dest, int size) {
   return rx;
 }
 
-void Sys_FileSeek(int handle, s32 ofs) {
+void Sys_FileSeek(int handle, int ofs) {
   if (handle <= 0) return;
 
   cd_file_t *f = &fhandle;
@@ -206,7 +210,7 @@ void Sys_FileSeek(int handle, s32 ofs) {
     CdlLOC pos;
     CdIntToPos(fsec, &pos);
     CdControl(CdlSetloc, (u8 *)&pos, 0);
-    CdRead(BUFSECS, (u_long *)f->buf, CdlModeSpeed);
+    CdRead(BUFSECS, (u32 *)f->buf, CdlModeSpeed);
     CdReadSync(0, 0);
     f->seccur = fsec;
     f->bufp = -1; // hack: see below

@@ -1,6 +1,6 @@
 #include <sys/types.h>
-#include <libpad.h>
-#include <libapi.h>
+#include <psxpad.h>
+#include <psxapi.h>
 #include "common.h"
 #include "input.h"
 

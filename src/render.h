@@ -1,23 +1,13 @@
 #pragma once
 
 #include <sys/types.h>
-#include <libgpu.h>
-#include <libgte.h>
+#include <psxgpu.h>
+#include <psxgte.h>
 
 #include "common.h"
 #include "entity.h"
 #include "model.h"
 #include "system.h"
-
-// block fill primitive
-// taken from psn00bsdk
-typedef struct _FILL {
-  u_long tag;
-  u_char r0, g0, b0, code;
-  u_short x0, y0;
-  u_short w, h;
-} FILL;
-#define setFill(p) setlen(p, 3), setcode(p, 0x02)
 
 // some GTE macro variations that use registers instead of pointers
 #define gte_stotz_m(r0)  __asm__ volatile( "mfc2   %0, $7;"  : "=r"( r0 ) : )
@@ -70,7 +60,7 @@ extern u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
 extern int c_mark_leaves;
 extern int c_draw_polys;
 
-extern u_long *gpu_ot;
+extern u32 *gpu_ot;
 extern u8 *gpu_buf;
 extern u8 *gpu_ptr;
 

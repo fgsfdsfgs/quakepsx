@@ -1,9 +1,9 @@
 #include <string.h>
 #include <sys/types.h>
-#include <libetc.h>
-#include <libgte.h>
-#include <libgpu.h>
-#include <inline_n.h>
+#include <psxetc.h>
+#include <psxgte.h>
+#include <psxgpu.h>
+#include <inline_c.h>
 
 #include "common.h"
 #include "entity.h"

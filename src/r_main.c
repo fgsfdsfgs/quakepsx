@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
-#include <libetc.h>
-#include <libgte.h>
-#include <libgpu.h>
-#include <inline_n.h>
+#include <psxetc.h>
+#include <psxgte.h>
+#include <psxgpu.h>
+#include <inline_c.h>
 
 #include "common.h"
 #include "system.h"
@@ -17,10 +17,10 @@ typedef struct {
   DISPENV disp;
   DRAWENV draw;
   u8 gpubuf[GPU_BUFSIZE];
-  u_long gpuot[GPU_OTDEPTH];
+  u32 gpuot[GPU_OTDEPTH];
 } fb_t;
 
-u_long *gpu_ot;
+u32 *gpu_ot;
 u8 *gpu_buf;
 u8 *gpu_ptr;
 
@@ -66,9 +66,9 @@ void R_Init(void) {
   setFill(&fill);
   fill.w = 512;
   fill.h = 256;
-  DrawPrim(&fill);
+  DrawPrim((u32 *)&fill);
   fill.y0 = 256;
-  DrawPrim(&fill);
+  DrawPrim((u32 *)&fill);
   DrawSync(0);
 
   // set default front and back buffer
