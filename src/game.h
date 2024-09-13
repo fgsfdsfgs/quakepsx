@@ -3,13 +3,6 @@
 #include "common.h"
 #include "entity.h"
 
-#define PLAYER_WALK_SPEED TO_FIX32(400)
-#define PLAYER_JUMP_SPEED TO_FIX32(200)
-#define PLAYER_LOOK_SPEED TO_DEG16(60)
-
-#define PLAYER_ACCELERATION TO_FIX32(600)
-#define PLAYER_FRICTION     TO_FIX32(400)
-
 typedef struct player_state_s {
   x16vec3_t viewangles;
   x16vec3_t punchangle;
@@ -33,4 +26,4 @@ typedef struct game_state_s {
 extern game_state_t gs;
 
 void G_StartMap(const char *path);
-void G_PlayerMove(const x16 dt);
+void G_Update(const x16 dt);

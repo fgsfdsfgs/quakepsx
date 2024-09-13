@@ -1,26 +1,9 @@
-#include <string.h>
-#include <sys/types.h>
-#include <psxetc.h>
-#include <psxgte.h>
-#include <psxgpu.h>
-#include <inline_c.h>
-
 #include "common.h"
 #include "entity.h"
 #include "model.h"
 #include "game.h"
 #include "system.h"
 #include "world.h"
-
-typedef struct {
-  x32vec3_t boxmins, boxmaxs; // enclose the test object along entire move
-  x32vec3_t *mins, *maxs;     // size of the moving object
-  x32vec3_t mins2, maxs2;     // size when clipping against mosnters
-  x32vec3_t *start, *end;
-  trace_t trace;
-  int type;
-  edict_t *passedict;
-} moveclip_t;
 
 static hull_t box_hull;
 static xbspclipnode_t box_clipnodes[6];
@@ -70,7 +53,7 @@ int G_HullPointContents(hull_t *hull, int num, x32vec3_t *p)
     if (plane->type < 3)
       d = p->d[plane->type] - plane->dist;
     else
-      d = XVecDot16x32(&plane->normal, p) - plane->dist;
+      d = XVecDotSL(&plane->normal, p) - plane->dist;
     if (d < 0)
       num = node->children[1];
     else
@@ -140,8 +123,8 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
   }
   else
   {
-    t1 = XVecDot16x32(&plane->normal, p1) - plane->dist;
-    t2 = XVecDot16x32(&plane->normal, p2) - plane->dist;
+    t1 = XVecDotSL(&plane->normal, p1) - plane->dist;
+    t2 = XVecDotSL(&plane->normal, p2) - plane->dist;
   }
 
   if (t1 >= 0 && t2 >= 0)
@@ -240,77 +223,4 @@ hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_
   }
 
   return hull;
-}
-
-static void G_ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, trace_t *trace)
-{
-  x32vec3_t offset;
-  x32vec3_t start_l, end_l;
-  hull_t *hull;
-
-  // fill in a default trace
-  trace->fraction = ONE;
-  trace->allsolid = true;
-  trace->startsolid = false;
-  trace->endpos = *end;
-
-  // get the clipping hull
-  hull = G_HullForEntity(ent, mins, maxs, &offset);
-
-  XVecSub(start, &offset, &start_l);
-  XVecSub(end, &offset, &end_l);
-
-  // trace a line through the apropriate clipping hull
-  G_RecursiveHullCheck(hull, hull->firstclipnode, 0, ONE, &start_l, &end_l, trace);
-
-  // fix trace up by the offset
-  if (trace->fraction != ONE)
-    XVecAdd(&trace->endpos, &offset, &trace->endpos);
-
-  // did we clip the move?
-  if (trace->fraction < ONE || trace->startsolid)
-    trace->ent = ent;
-}
-
-// NOTE: uses scratch to store the result
-const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict)
-{
-  moveclip_t *clip = PSX_SCRATCH;
-  int i;
-
-  memset(clip, 0, sizeof(moveclip_t));
-
-  // clip to world
-  G_ClipMoveToEntity(gs.edicts, start, mins, maxs, end, &clip->trace);
-
-  clip->start = start;
-  clip->end = end;
-  clip->mins = mins;
-  clip->maxs = maxs;
-  clip->type = type;
-  clip->passedict = passedict;
-
-  /*
-  if (type == MOVE_MISSILE)
-  {
-    for (i=0 ; i<3 ; i++)
-    {
-      clip.mins2[i] = -15;
-      clip.maxs2[i] = 15;
-    }
-  }
-  else
-  {
-    VectorCopy (mins, clip.mins2);
-    VectorCopy (maxs, clip.maxs2);
-  }
-
-  // create the bounding box of the entire move
-  SV_MoveBounds ( start, clip.mins2, clip.maxs2, end, clip.boxmins, clip.boxmaxs );
-
-  // clip to entities
-  SV_ClipToLinks ( sv_areanodes, &clip );
-  */
-
-  return &clip->trace;
 }

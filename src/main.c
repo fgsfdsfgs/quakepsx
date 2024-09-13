@@ -3,6 +3,7 @@
 #include "render.h"
 #include "input.h"
 #include "game.h"
+#include "move.h"
 
 static void TestInput(const x16 dt) {
   const int fwd = IN_ButtonHeld(PAD_UP) -  IN_ButtonHeld(PAD_DOWN);
@@ -12,11 +13,11 @@ static void TestInput(const x16 dt) {
   const int yaw = IN_ButtonHeld(PAD_SQUARE) -  IN_ButtonHeld(PAD_CIRCLE);
 
   player_state_t *plr = &gs.player[0];
-  plr->move.x = fwd * PLAYER_ACCELERATION;
-  plr->move.y = side * PLAYER_ACCELERATION;
-  plr->move.z = up * PLAYER_ACCELERATION;
-  plr->anglemove.x = -pitch * PLAYER_LOOK_SPEED;
-  plr->anglemove.y = yaw * PLAYER_LOOK_SPEED;
+  plr->move.x = fwd * G_FORWARDSPEED;
+  plr->move.y = side * G_FORWARDSPEED;
+  plr->move.z = up * G_FORWARDSPEED;
+  plr->anglemove.x = -pitch * G_PITCHSPEED;
+  plr->anglemove.y = yaw * G_YAWSPEED;
 
   if (IN_ButtonPressed(PAD_L2))
   {
@@ -44,7 +45,7 @@ int main(int argc, char **argv) {
     gs.frametime = gs.time - then;
     IN_Update();
     TestInput(gs.frametime);
-    G_PlayerMove(gs.frametime);
+    G_Update(gs.frametime);
     R_UpdateLightStyles(gs.time);
     R_RenderView();
     R_Flip();

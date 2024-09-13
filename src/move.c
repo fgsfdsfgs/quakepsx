@@ -1,10 +1,14 @@
+#include <string.h>
+
 #include "common.h"
 #include "world.h"
-#include "render.h"
 #include "entity.h"
 #include "game.h"
+#include "move.h"
 
-#define MAX_CLIP_PLANES 3
+movevars_t *const movevars = PSX_SCRATCH;
+
+#define MAX_CLIP_PLANES 4
 #define STOP_EPSILON 256
 
 static int ClipVelocity(x32vec3_t *in, x16vec3_t *normal, x32vec3_t *out, const x16 overbounce)
@@ -19,7 +23,7 @@ static int ClipVelocity(x32vec3_t *in, x16vec3_t *normal, x32vec3_t *out, const 
   else if (!normal->z)
     blocked |= 2; // step
 
-  backoff = xmul32(overbounce, XVecDot16x32(normal, in));
+  backoff = xmul32(overbounce, XVecDotSL(normal, in));
 
   for (i = 0; i < 3; i++)
   {
@@ -32,6 +36,78 @@ static int ClipVelocity(x32vec3_t *in, x16vec3_t *normal, x32vec3_t *out, const 
   return blocked;
 }
 
+static void G_ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, trace_t *trace)
+{
+  x32vec3_t offset;
+  x32vec3_t start_l, end_l;
+  hull_t *hull;
+
+  // fill in a default trace
+  trace->fraction = ONE;
+  trace->allsolid = true;
+  trace->startsolid = false;
+  trace->endpos = *end;
+
+  // get the clipping hull
+  hull = G_HullForEntity(ent, mins, maxs, &offset);
+
+  XVecSub(start, &offset, &start_l);
+  XVecSub(end, &offset, &end_l);
+
+  // trace a line through the apropriate clipping hull
+  G_RecursiveHullCheck(hull, hull->firstclipnode, 0, ONE, &start_l, &end_l, trace);
+
+  // fix trace up by the offset
+  if (trace->fraction != ONE)
+    XVecAdd(&trace->endpos, &offset, &trace->endpos);
+
+  // did we clip the move?
+  if (trace->fraction < ONE || trace->startsolid)
+    trace->ent = ent;
+}
+
+const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict)
+{
+  moveclip_t *clip = &movevars->clip;
+  int i;
+
+  memset(clip, 0, sizeof(moveclip_t));
+
+  // clip to world
+  G_ClipMoveToEntity(gs.edicts, start, mins, maxs, end, &clip->trace);
+
+  clip->start = start;
+  clip->end = end;
+  clip->mins = mins;
+  clip->maxs = maxs;
+  clip->type = type;
+  clip->passedict = passedict;
+
+  /*
+  if (type == MOVE_MISSILE)
+  {
+    for (i=0 ; i<3 ; i++)
+    {
+      clip.mins2[i] = -15;
+      clip.maxs2[i] = 15;
+    }
+  }
+  else
+  {
+    VectorCopy (mins, clip.mins2);
+    VectorCopy (maxs, clip.maxs2);
+  }
+
+  // create the bounding box of the entire move
+  SV_MoveBounds ( start, clip.mins2, clip.maxs2, end, clip.boxmins, clip.boxmaxs );
+
+  // clip to entities
+  SV_ClipToLinks ( sv_areanodes, &clip );
+  */
+
+  return &clip->trace;
+}
+
 int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
 {
   int bumpcount;
@@ -39,7 +115,8 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
   x32 d;
   int numplanes;
   x16vec3_t planes[MAX_CLIP_PLANES];
-  x32vec3_t primal_velocity, original_velocity, new_velocity;
+  x16vec3_t original_signs;
+  x32vec3_t original_velocity, new_velocity;
   int i, j;
   const trace_t *trace;
   x32vec3_t end;
@@ -47,9 +124,9 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
   int blocked;
 
   blocked = 0;
-  original_velocity = ent->v.velocity;
-  primal_velocity = ent->v.velocity;
   numplanes = 0;
+  original_velocity = ent->v.velocity;
+  XVecSignLS(&ent->v.velocity, &original_signs);
 
   time_left = time;
 
@@ -119,7 +196,7 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
       {
         if (j != i)
         {
-          if (XVecDot16x32(&planes[j], &new_velocity) < 0)
+          if (XVecDotSL(&planes[j], &new_velocity) < 0)
             break; // not ok
         }
       }
@@ -140,8 +217,8 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
         ent->v.velocity = x32vec3_origin;
         return 7;
       }
-      XVecCross16(&planes[0], &planes[1], &dir);
-      d = XVecDot16x32(&dir, &ent->v.velocity);
+      XVecCrossSS(&planes[0], &planes[1], &dir);
+      d = XVecDotSL(&dir, &ent->v.velocity);
       XVecScaleSL(&dir, d, &ent->v.velocity);
     }
 
@@ -149,7 +226,7 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
     // if original velocity is against the original velocity, stop dead
     // to avoid tiny occilations in sloping corners
     //
-    if (XVecDot32x32(&ent->v.velocity, &primal_velocity) <= 0)
+    if (XVecDotSL(&original_signs, &ent->v.velocity) <= 0)
     {
       ent->v.velocity = x32vec3_origin;
       return blocked;

@@ -21,9 +21,9 @@ typedef int32_t x32; // 1.19.12 fixed point
 
 // these will almost always overflow with 32-bit stuff, so only use them for x16 * x16 or x16 * x32
 #define XMUL16(x, y) (((x32)(x) * (x32)(y)) >> FIXSHIFT)
-#define XDIV16(x, y) (((x32)(x) * FIXSCALE) / (x32)(y))
+#define XDIV16(x, y) (((x32)(x) << FIXSHIFT) / (x32)(y))
 
-__attribute__((always_inline)) inline x32 xmul32(const x32 x, const x32 y) {
+FORCEINLINE x32 xmul32(const x32 x, const x32 y) {
   x32 r;
   __asm__ volatile(
     "mult %1, %2;"
@@ -40,15 +40,10 @@ __attribute__((always_inline)) inline x32 xmul32(const x32 x, const x32 y) {
   return r;
 }
 
-__attribute__((always_inline)) inline x32 xdiv32(const x32 x, const x32 y) {
-  x32 r;
-  __asm__ volatile(
-    "sll  %1, 12;"
-    "div  %1, %2;"
-    "mflo %0;"
-    : "=r"(r)
-    : "r"(x), "r"(y)
-    :
-  );
-  return r;
+FORCEINLINE x32 xdiv32(const x32 x, const x32 y) {
+  return ((x << FIXSHIFT) / y);
+}
+
+FORCEINLINE x32 xsign32(const x32 x) {
+  return (x > 0) - (x < 0);
 }

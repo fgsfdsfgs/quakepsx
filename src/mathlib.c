@@ -1,5 +1,7 @@
 #include "mathlib.h"
 #include "types.h"
+#include "fixed.h"
+#include "vector.h"
 #include "model.h"
 
 const x32vec3_t x32vec3_origin = { 0 };

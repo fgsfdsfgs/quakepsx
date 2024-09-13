@@ -3,8 +3,17 @@
 #include <stdio.h>
 
 #include "types.h"
+#include "fixed.h"
+#include "vector.h"
 #include "mathlib.h"
 #include "memory.h"
+
+// extra types
+typedef struct link_s {
+  struct link_s *prev, *next;
+} link_t;
+
+#define STRUCT_FROM_LINK(l, t, m) ((t *)((u8 *)l - (int)&(((t *)0)->m)))
 
 // general limits
 #define MAX_EDICTS      600
