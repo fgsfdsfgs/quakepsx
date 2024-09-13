@@ -29,6 +29,8 @@ render_state_t rs;
 int c_mark_leaves = 0;
 int c_draw_polys = 0;
 
+int r_debugstream = -1;
+
 static fb_t fb[2];
 static int fbidx;
 
@@ -38,6 +40,11 @@ void *GPU_SortPrim(const u32 size, const int otz) {
   addPrim(gpu_ot + otz, gpu_ptr);
   gpu_ptr = newptr;
   return gpu_ptr;
+}
+
+void R_InitDebug(void) {
+  FntLoad(960, 256);
+  r_debugstream = FntOpen(0, 8, 320, 216, 0, 255);
 }
 
 void R_Init(void) {
@@ -83,6 +90,9 @@ void R_Init(void) {
   gte_SetGeomOffset(VID_CENTER_X, VID_CENTER_Y);
   gte_SetGeomScreen(VID_CENTER_X); // approx 90 degrees?
   gte_SetBackColor(0xFF, 0xFF, 0xFF);
+
+  // load debug font
+  R_InitDebug();
 
   // enable display
   SetDispMask(1);
@@ -228,26 +238,23 @@ void R_RenderView(void) {
 }
 
 void R_DrawDebug(const x32 dt) {
-  static int fontloaded = 0;
-  static long fontstream = 0;
-  if (!fontloaded) {
-    fontloaded = 1;
-    // open font
-    FntLoad(960, 256);
-    fontstream = FntOpen(0, 8, 320, 216, 0, 255);
-  }
+  player_state_t *p = gs.player;
 
-  FntPrint(fontstream, "X=%04d Y=%04d Z=%04d G=%d\n",
+  FntPrint(r_debugstream, "X=%04d Y=%04d Z=%04d\n",
     rs.vieworg.x>>12, 
     rs.vieworg.y>>12, 
-    rs.vieworg.z>>12,
-    (int)(gs.player->ent->v.flags & FL_ONGROUND));
-  FntPrint(fontstream, "RX=%05d RY=%05d\n",
+    rs.vieworg.z>>12);
+  FntPrint(r_debugstream, "VX=%04d VY=%04d VZ=%04d G=%d\n",
+    p->ent->v.velocity.x>>12, 
+    p->ent->v.velocity.y>>12, 
+    p->ent->v.velocity.z>>12,
+    (int)(p->ent->v.flags & FL_ONGROUND));
+  FntPrint(r_debugstream, "RX=%05d RY=%05d\n",
     rs.viewangles.x, 
     rs.viewangles.y);
-  FntPrint(fontstream, "L=%05d M=%05d D=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
-  FntPrint(fontstream, "DT=%3d.%04d F=%3d VF=%3d\n", dt >> 12, dt & 4095, rs.frame, rs.visframe);
-  FntFlush(fontstream);
+  FntPrint(r_debugstream, "L=%05d M=%05d D=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
+  FntPrint(r_debugstream, "DT=%3d.%04d F=%3d VF=%3d\n", dt >> 12, dt & 4095, rs.frame, rs.visframe);
+  FntFlush(r_debugstream);
 }
 
 void R_Flip(void) {

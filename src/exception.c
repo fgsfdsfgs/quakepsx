@@ -9,6 +9,8 @@
 #include "common.h"
 #include "exception.h"
 
+extern int r_debugstream;
+
 static u32 exception_event;
 
 static inline const char *ExceptionCause(const u32 cr) {
@@ -37,6 +39,14 @@ static u32 GetCause(void) {
 }
 
 static void ExceptionFunc(void) {
+  // don't double except
+  static int inexception = false;
+  if (inexception) {
+    printf("DOUBLE FAULT\n");
+    while (1);
+  }
+  inexception = true;
+
   // get current thread's TCB
   const struct ToT *tot = (const struct ToT *)0x100;
   const struct TCB *tcb_list = (const struct TCB *)tot[2].head;
@@ -48,24 +58,33 @@ static void ExceptionFunc(void) {
   printf("UH OH ZONE\nSTATUS=%08x\nCR=%08x\nPC=%08x\nRA=%08x\n", status, cr, regs[R_EPC], regs[R_RA]); 
 
   // setup graphics viewport and clear screen
-  SetDispMask(0);
   DISPENV disp;
   DRAWENV draw;
+  ResetGraph(3);
+  SetDispMask(0);
   SetDefDispEnv(&disp, 0, 0, VID_WIDTH, VID_HEIGHT);
   SetDefDrawEnv(&draw, 0, 0, VID_WIDTH, VID_HEIGHT);
   setRGB0(&draw, 0x40, 0x00, 0x00); draw.isbg = 1;
   PutDispEnv(&disp);
   PutDrawEnv(&draw);
 
-  // load built in font
-  FntLoad(960, 0);
-  long stream = FntOpen(8, 16, VID_WIDTH - 8, VID_HEIGHT - 16, 0, 800);
+  // if not already loaded, load built in font
+  int stream;
+  if (r_debugstream >= 0) {
+    stream = r_debugstream;
+  } else {
+    FntLoad(960, 0);
+    stream = FntOpen(8, 16, VID_WIDTH - 8, VID_HEIGHT - 16, 0, 1024);
+  }
 
   // the most important info
   const char *cause = ExceptionCause(cr);
   FntPrint(stream, "UH OH ZONE\n\n");
   FntPrint(stream, "CAUSE:  %s (%08x)\nSTATUS: %08x\n\n", cause, cr, status);
   FntPrint(stream, "PC=%08x  RA=%08x\n\n", regs[R_EPC],regs[R_RA]);
+
+  FntFlush(stream);
+  SetDispMask(1);
 
   // GPR dump
   FntPrint(stream, "AT=%08x  K0=%08x  K1=%08x\n", regs[R_AT],  regs[R_K0],  regs[R_K1]);
