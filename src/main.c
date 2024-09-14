@@ -6,6 +6,8 @@
 #include "move.h"
 
 static void TestInput(const x16 dt) {
+  static int onspeed = 0;
+
   const int fwd = IN_ButtonHeld(PAD_UP) -  IN_ButtonHeld(PAD_DOWN);
   const int side = IN_ButtonHeld(PAD_RIGHT) -  IN_ButtonHeld(PAD_LEFT);
   const int up = IN_ButtonHeld(PAD_R1) -  IN_ButtonHeld(PAD_L1);
@@ -18,6 +20,7 @@ static void TestInput(const x16 dt) {
   plr->move.z = up * G_FORWARDSPEED;
   plr->anglemove.x = -pitch * G_PITCHSPEED;
   plr->anglemove.y = yaw * G_YAWSPEED;
+  plr->movespeed = G_FORWARDSPEED << onspeed;
 
   if (IN_ButtonPressed(PAD_L2))
   {
@@ -25,6 +28,11 @@ static void TestInput(const x16 dt) {
       plr->ent->v.movetype = MOVETYPE_NOCLIP;
     else
       plr->ent->v.movetype = MOVETYPE_WALK;
+  }
+
+  if (IN_ButtonPressed(PAD_R2))
+  {
+    onspeed = !onspeed;
   }
 }
 

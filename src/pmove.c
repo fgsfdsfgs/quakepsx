@@ -87,19 +87,19 @@ static void PM_AirAccelerate(x32vec3_t *wishveloc)
 
 static void PM_AirMove(void)
 {
-  int i;
   player_state_t *plr = &gs.player[0];
   x32vec3_t *wishvel = &movevars->pm.wishvel;
 
-  wishvel->x = xmul32(movevars->pm.wishdir.x, G_FORWARDSPEED);
-  wishvel->y = xmul32(movevars->pm.wishdir.y, G_FORWARDSPEED);
+  // assume movespeed is either G_FORWARDSPEED or 2 * G_FORWARDSPEED
+  wishvel->x = xmul32(movevars->pm.wishdir.x, plr->movespeed);
+  wishvel->y = xmul32(movevars->pm.wishdir.y, plr->movespeed);
 
   if (plr->ent->v.movetype != MOVETYPE_WALK)
     wishvel->z = plr->move.z;
   else
     wishvel->z = 0;
 
-  movevars->pm.wishspeed = G_FORWARDSPEED;
+  movevars->pm.wishspeed = plr->movespeed;
 
   if (movevars->pm.wishspeed > G_MAXSPEED)
   {
