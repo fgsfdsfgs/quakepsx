@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "alias.h"
 
 #define PSXBSPVERSION 0x1D585350
 
@@ -130,18 +131,20 @@ typedef struct {
   s16 visleafs;
   u16 firstface;
   u16 numfaces;
-} xbspmodel_t;
-
-typedef struct {
-  u16 ofs;
-  s32 val;
-} xbspentfield_t;
+} xmodel_t;
 
 typedef struct {
   u8 classname;
-  u8 numfields;
-  xbspentfield_t fields[];
+  u8 spawnflags;
+  s16 model; // negative = brush models, positive = alias models
+  x32vec3_t origin;
+  x16vec3_t angles;
 } xbspent_t;
+
+typedef struct {
+  u32 nummdls;
+  aliashdr_t mdls[];
+} xmdllump_t;
 
 typedef struct {
   u8 soundid;

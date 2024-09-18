@@ -17,20 +17,34 @@ typedef struct {
 } qtrivertx_t;
 
 typedef struct {
-  s32 firstpose;
-  s32 numposes;
-  f32 interval;
-  qtrivertx_t bboxmin;
-  qtrivertx_t bboxmax;
-  int frame;
+  s32 onseam;
+  s32 s;
+  s32 t;
+} qaliastexcoord_t;
+
+typedef struct {
+  s32 front;
+  s32 vertex[3];
+} qaliastri_t;
+
+typedef struct {
+  s32 type;
+  qtrivertx_t min;
+  qtrivertx_t max;
   char name[MAX_FRAMENAME];
-} qaliasframedesc_t;
+  qtrivertx_t *verts;
+} qaliasframe_t;
+
+typedef struct {
+  s32 group;
+  u8 *data;
+} qaliasskin_t;
 
 typedef struct {
   s32 ident;
   s32 version;
   qvec3_t scale;
-  qvec3_t scale_origin;
+  qvec3_t translate;
   f32 boundingradius;
   qvec3_t eyeposition;
   s32 numskins;

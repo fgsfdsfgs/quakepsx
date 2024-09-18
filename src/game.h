@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "model.h"
 #include "entity.h"
 
 typedef struct player_state_s {
@@ -17,9 +18,11 @@ typedef struct game_state_s {
   x32 time;
   x16 frametime;
   s16 num_edicts;
+  s16 max_edict;
   qboolean paused;
-  model_t *worldmodel;
-  model_t **models;
+  bmodel_t *worldmodel;
+  bmodel_t **bmodels;
+  amodel_t *amodels;
   edict_t *edicts;
   player_state_t player[MAX_PLAYERS];
 } game_state_t;
@@ -28,3 +31,4 @@ extern game_state_t gs;
 
 void G_StartMap(const char *path);
 void G_Update(const x16 dt);
+void G_SetModel(edict_t *ed, s16 modelnum);

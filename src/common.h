@@ -62,11 +62,28 @@ typedef struct link_s {
 
 #define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
 
-// common.c
-void ClearLink(link_t *l);
-void RemoveLink(link_t *l);
-void InsertLinkBefore(link_t *l, link_t *before);
-void InsertLinkAfter(link_t *l, link_t *after);
+FORCEINLINE void ClearLink(link_t *l) {
+  l->prev = l->next = l;
+}
+
+FORCEINLINE void RemoveLink(link_t *l) {
+  l->next->prev = l->prev;
+  l->prev->next = l->next;
+}
+
+FORCEINLINE void InsertLinkBefore(link_t *l, link_t *before) {
+  l->next = before;
+  l->prev = before->prev;
+  l->prev->next = l;
+  l->next->prev = l;
+}
+
+FORCEINLINE void InsertLinkAfter(link_t *l, link_t *after) {
+  l->next = after->next;
+  l->prev = after;
+  l->prev->next = l;
+  l->next->prev = l;
+}
 
 char *COM_SkipPath(char *pathname);
 void COM_StripExtension(char *in, char *out);

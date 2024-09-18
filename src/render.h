@@ -28,14 +28,16 @@
 }
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x20000
-#define GPU_OTDEPTH 4096
+#define GPU_BUFSIZE 0x28000
+#define GPU_OTDEPTH 2048
 
 #define GPU_SUBDIV_DIST_1 80
 #define GPU_SUBDIV_DIST_2 20
 
 typedef struct render_state_s {
   RECT clip;
+  MATRIX matrix;
+  MATRIX entmatrix;
   edict_t *cur_entity;
   mtexture_t *cur_texture;
   x32vec3_t origin;
@@ -74,6 +76,8 @@ void R_SetFrustum(void);
 void R_RenderScene(void);
 void R_DrawWorld(void);
 void R_NewMap(void);
+void R_DrawAliasModel(amodel_t *model, int frame);
+void R_DrawBrushModel(bmodel_t *model);
 void R_DrawTextureChains(void);
 void R_RenderView(void);
 void R_Flip(void);

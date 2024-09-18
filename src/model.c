@@ -34,14 +34,14 @@ static inline void CheckLumpHeader(xbsplump_t *lump, const int etype, const int 
   xbsplump_t lump; \
   CheckLumpHeader(&lump, etype, esize, fh)
 
-static void Mod_LoadClutData(model_t *mod, const int fh) {
+static void Mod_LoadClutData(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_CLUTDATA, VID_NUM_COLORS * 2, fh);
   u16 clut[VID_NUM_COLORS];
   Sys_FileRead(fh, clut, VID_NUM_COLORS * 2);
   R_UploadClut(clut);
 }
 
-static void Mod_LoadTextureData(model_t *mod, const int fh) {
+static void Mod_LoadTextureData(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_TEXDATA, 0, fh);
   const int lines = lump.size / (VRAM_TEX_WIDTH * 2);
   ASSERT(lines <= VRAM_TEX_HEIGHT);
@@ -51,17 +51,34 @@ static void Mod_LoadTextureData(model_t *mod, const int fh) {
   Mem_Free(data);
 }
 
-static void Mod_LoadSoundData(model_t *mod, const int fh) {
+static void Mod_LoadSoundData(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_SNDDATA, 0, fh);
   // TODO
 }
 
-static void Mod_LoadAliasData(model_t *mod, const int fh) {
+static void Mod_LoadAliasData(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_MDLDATA, 0, fh);
-  // TODO
+
+  u32 num_mdls = 0;
+  Sys_FileRead(fh, &num_mdls, sizeof(u32));
+
+  amodel_t *mdls = Mem_Alloc(lump.size - sizeof(u32));
+  Sys_FileRead(fh, mdls, lump.size - sizeof(u32)); // same structs
+
+  u8 *mdldata = (u8 *)(mdls + num_mdls);
+
+  // fixup offsets
+  for (u32 i = 0; i < num_mdls; ++i) {
+    mdls[i].frames = (void *)((uintptr_t)mdls[i].frames + (u8 *)mdldata);
+    mdls[i].tris = (void *)((uintptr_t)mdls[i].tris + (u8 *)mdldata);
+    mdls[i].texcoords = (void *)((uintptr_t)mdls[i].texcoords + (u8 *)mdldata);
+  }
+
+  mod->numamodels = num_mdls;
+  mod->amodels = mdls;
 }
 
-void Mod_LoadVertexes(model_t *mod, const int fh) {
+void Mod_LoadVertexes(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_VERTS, sizeof(xbspvert_t), fh);
   const int numverts = lump.size / sizeof(xbspvert_t);
   mvert_t *out = Mem_Alloc(sizeof(mvert_t) * numverts);
@@ -70,7 +87,7 @@ void Mod_LoadVertexes(model_t *mod, const int fh) {
   mod->numverts = numverts;
 }
 
-void Mod_LoadPlanes(model_t *mod, const int fh) {
+void Mod_LoadPlanes(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_PLANES, sizeof(xbspplane_t), fh);
   const int numplanes = lump.size / sizeof(xbspplane_t);
   mplane_t *out = Mem_Alloc(sizeof(mplane_t) * numplanes);
@@ -91,7 +108,7 @@ void Mod_LoadPlanes(model_t *mod, const int fh) {
   }
 }
 
-void Mod_LoadTexinfo(model_t *mod, const int fh) {
+void Mod_LoadTexinfo(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_TEXINFO, sizeof(xbsptexinfo_t), fh);
   const int numtexinfo = lump.size / sizeof(xbsptexinfo_t);
   mtexture_t *out = Mem_Alloc(sizeof(mtexture_t) * numtexinfo);
@@ -111,7 +128,7 @@ void Mod_LoadTexinfo(model_t *mod, const int fh) {
   }
 }
 
-void Mod_LoadFaces(model_t *mod, const int fh) {
+void Mod_LoadFaces(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_FACES, sizeof(xbspface_t), fh);
   const int numfaces = lump.size / sizeof(xbspface_t);
   msurface_t *out = Mem_Alloc(sizeof(msurface_t) * numfaces);
@@ -134,7 +151,7 @@ void Mod_LoadFaces(model_t *mod, const int fh) {
   }
 }
 
-void Mod_LoadMarksurfaces(model_t *mod, const int fh) {
+void Mod_LoadMarksurfaces(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_MARKSURF, sizeof(u16), fh);
   const int nummarksurf = lump.size / sizeof(u16);
   msurface_t **out = Mem_Alloc(sizeof(msurface_t *) * nummarksurf);
@@ -150,7 +167,7 @@ void Mod_LoadMarksurfaces(model_t *mod, const int fh) {
   Mem_Free(in);
 }
 
-void Mod_LoadNodes(model_t *mod, const int fh) {
+void Mod_LoadNodes(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_NODES, sizeof(xbspnode_t), fh);
   const int numnodes = lump.size / sizeof(xbspnode_t);
   mnode_t *out = Mem_Alloc(sizeof(mnode_t) * numnodes);
@@ -176,7 +193,7 @@ void Mod_LoadNodes(model_t *mod, const int fh) {
   Mod_SetParent(mod->nodes, NULL); // sets nodes and leafs
 }
 
-void Mod_LoadClipnodes(model_t *mod, const int fh) {
+void Mod_LoadClipnodes(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_CLIPNODES, sizeof(xbspclipnode_t), fh);
   const int numclipnodes = lump.size / sizeof(xbspclipnode_t);
   mclipnode_t *out = Mem_Alloc(sizeof(mclipnode_t) * numclipnodes);
@@ -204,7 +221,7 @@ void Mod_LoadClipnodes(model_t *mod, const int fh) {
   hull->maxs = (x32vec3_t){ TO_FIX32(+32), TO_FIX32(+32), TO_FIX32(+64) };
 }
 
-void Mod_LoadLeafs(model_t *mod, const int fh) {
+void Mod_LoadLeafs(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_LEAFS, sizeof(xbspleaf_t), fh);
   const int numleafs = lump.size / sizeof(xbspleaf_t);
   mleaf_t *out = Mem_Alloc(sizeof(mleaf_t) * numleafs);
@@ -223,7 +240,7 @@ void Mod_LoadLeafs(model_t *mod, const int fh) {
   }
 }
 
-void Mod_LoadVisibility(model_t *mod, const int fh) {
+void Mod_LoadVisibility(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_VISILIST, 0, fh);
   if (!lump.size) {
     // no vis information
@@ -235,21 +252,92 @@ void Mod_LoadVisibility(model_t *mod, const int fh) {
   Sys_FileRead(fh, out, lump.size);
 }
 
-void Mod_LoadSubmodels(model_t *mod, const int fh) {
-  INIT_LUMP(lump, LUMP_MODELS, sizeof(xbspmodel_t), fh);
-  const int nummodels = lump.size / sizeof(xbspmodel_t);
-  xbspmodel_t *out = Mem_Alloc(sizeof(xbspmodel_t) * nummodels);
+void Mod_LoadSubmodels(bmodel_t *mod, const int fh) {
+  INIT_LUMP(lump, LUMP_MODELS, sizeof(xmodel_t), fh);
+  const int nummodels = lump.size / sizeof(xmodel_t);
+
+  // allocate space for the extra bmodel_t array first, since they're not gonna be freed until later
+  mod->bmodels = Mem_ZeroAlloc(sizeof(bmodel_t) * (nummodels - 1));
+  mod->bmodelptrs = Mem_ZeroAlloc(sizeof(bmodel_t*) * nummodels);
+
+  xmodel_t *out = Mem_Alloc(sizeof(xmodel_t) * nummodels);
   mod->submodels = out;
   mod->numsubmodels = nummodels;
   Sys_FileRead(fh, out, lump.size); // same struct
 }
 
-void Mod_LoadEntities(model_t *mod, const int fh) {
-  INIT_LUMP(lump, LUMP_ENTITIES, 0, fh);
-  // TODO
+void Mod_LoadEntities(bmodel_t *mod, const int fh) {
+  INIT_LUMP(lump, LUMP_ENTITIES, sizeof(xbspent_t), fh);
+  const int numents = lump.size / sizeof(xbspent_t);
+  xbspent_t *out = Mem_Alloc(sizeof(xbspent_t) * numents);
+  mod->mapents = out;
+  mod->nummapents = numents;
+  Sys_FileRead(fh, out, lump.size); // same struct
 }
 
-void Mod_MakeHull0(model_t *mod) {
+bmodel_t **Mod_SetupSubmodels(bmodel_t *worldmodel) {
+  const int numsubmodels = worldmodel->numsubmodels;
+  bmodel_t **submodelptrs = worldmodel->bmodelptrs;
+  submodelptrs[0] = worldmodel;
+  if (numsubmodels == 1) {
+    // don't need these after this is done
+    Mem_Free(worldmodel->submodels);
+    worldmodel->submodels = NULL;
+    return submodelptrs;
+  }
+
+  bmodel_t *submodels = worldmodel->bmodels;
+  for (int i = 1; i < numsubmodels; ++i)
+    submodelptrs[i] = &submodels[i - 1];
+
+  for (int i = 0; i < numsubmodels; ++i) {
+    bmodel_t *mod = submodelptrs[i];
+    xmodel_t *bm = &worldmodel->submodels[i];
+
+    // duplicate the basic information
+    *mod = *worldmodel;
+
+    mod->type = mod_brush;
+    mod->id = -i;
+
+    mod->hulls[0].firstclipnode = bm->headnode[0];
+    for (int j = 1; j < MAX_MAP_HULLS; ++j) {
+      mod->hulls[j].firstclipnode = bm->headnode[j];
+      mod->hulls[j].lastclipnode = mod->numclipnodes - 1;
+    }
+
+    mod->firstmodelsurface = bm->firstface;
+    mod->nummodelsurfaces = bm->numfaces;
+
+    mod->maxs.x = TO_FIX32(bm->maxs.x);
+    mod->maxs.y = TO_FIX32(bm->maxs.y);
+    mod->maxs.z = TO_FIX32(bm->maxs.z);
+
+    mod->mins.x = TO_FIX32(bm->mins.x);
+    mod->mins.y = TO_FIX32(bm->mins.y);
+    mod->mins.z = TO_FIX32(bm->mins.z);
+
+    mod->radius = RadiusFromBounds(&mod->mins, &mod->maxs);
+
+    mod->numleafs = bm->visleafs;
+
+    if (i) {
+      // submodels don't have submodels
+      mod->submodels = NULL;
+      mod->bmodels = NULL;
+      mod->bmodelptrs = NULL;
+      mod->numsubmodels = 0;
+    }
+  }
+
+  // don't need these after this is done
+  Mem_Free(worldmodel->submodels);
+  worldmodel->submodels = NULL;
+
+  return submodelptrs;
+}
+
+void Mod_MakeHull0(bmodel_t *mod) {
   hull_t *hull = &mod->hulls[0];
   const int count = mod->numnodes;
   mnode_t *in = mod->nodes;
@@ -270,7 +358,7 @@ void Mod_MakeHull0(model_t *mod) {
   }
 }
 
-void Mod_LoadBrushModel(model_t *mod, const int fh) {
+static void Mod_ParseBrushModel(bmodel_t *mod, const int fh) {
   mod->type = mod_brush;
 
   xbsphdr_t header;
@@ -295,57 +383,26 @@ void Mod_LoadBrushModel(model_t *mod, const int fh) {
   Mod_LoadNodes(mod, fh);
   Mod_LoadClipnodes(mod, fh);
   Mod_LoadSubmodels(mod, fh);
-  Mod_LoadEntities(mod, fh);
+  Mod_SetupSubmodels(mod);
   Mod_MakeHull0(mod);
 
-  //
-  // set up the submodels (FIXME: this is confusing)
-  //
-  for (int i = 0; i < 1; i++)
-  {
-    xbspmodel_t *bm = &mod->submodels[i];
-
-    mod->hulls[0].firstclipnode = bm->headnode[0];
-    for (int j = 1; j < MAX_MAP_HULLS; j++)
-    {
-      mod->hulls[j].firstclipnode = bm->headnode[j];
-      mod->hulls[j].lastclipnode = mod->numclipnodes-1;
-    }
-
-    mod->firstmodelsurface = bm->firstface;
-    mod->nummodelsurfaces = bm->numfaces;
-
-    mod->maxs.x = TO_FIX32(bm->maxs.x);
-    mod->maxs.y = TO_FIX32(bm->maxs.y);
-    mod->maxs.z = TO_FIX32(bm->maxs.z);
-
-    Sys_Printf("psb maxs: %d %d %d\n", mod->maxs.x >> FIXSHIFT, mod->maxs.y >> FIXSHIFT, mod->maxs.z >> FIXSHIFT);
-
-    mod->mins.x = TO_FIX32(bm->mins.x);
-    mod->mins.y = TO_FIX32(bm->mins.y);
-    mod->mins.z = TO_FIX32(bm->mins.z);
-
-    Sys_Printf("psb mins: %d %d %d\n", mod->mins.x >> FIXSHIFT, mod->mins.y >> FIXSHIFT, mod->mins.z >> FIXSHIFT);
-
-    mod->radius = RadiusFromBounds(&mod->mins, &mod->maxs);
-
-    mod->numleafs = bm->visleafs;
-  }
+  // load entities last so we can free the data after parsing it
+  Mod_LoadEntities(mod, fh);
 }
 
-model_t *Mod_LoadModel(const char *name) {
+bmodel_t *Mod_LoadXBSP(const char *name) {
   int fhandle;
   const int fsize = Sys_FileOpenRead(name, &fhandle);
   if (fsize < 0) Sys_Error("Mod_LoadModel: couldn't open");
 
-  model_t *model = Mem_Alloc(sizeof(model_t));
-  Mod_LoadBrushModel(model, fhandle);
+  bmodel_t *model = Mem_Alloc(sizeof(bmodel_t));
+  Mod_ParseBrushModel(model, fhandle);
   Sys_FileClose(fhandle);
 
   return model;
 }
 
-mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, model_t *mod) {
+mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, bmodel_t *mod) {
   if (!mod || !mod->nodes)
     Sys_Error("Mod_PointInLeaf: bad model %p", mod);
 
@@ -365,7 +422,7 @@ mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, model_t *mod) {
   return NULL; // never reached
 }
 
-static inline const u8 *Mod_DecompressVis(const u8 *in, const model_t *model) {
+static inline const u8 *Mod_DecompressVis(const u8 *in, const bmodel_t *model) {
   // we can decompress into scratch since nothing else is using it when we do
   // and it fits the size exactly (1kb)
   static u8 *decompressed = PSX_SCRATCH;
@@ -392,7 +449,7 @@ static inline const u8 *Mod_DecompressVis(const u8 *in, const model_t *model) {
   return decompressed;
 }
 
-const u8 *Mod_LeafPVS(const mleaf_t *leaf, const model_t *model) {
+const u8 *Mod_LeafPVS(const mleaf_t *leaf, const bmodel_t *model) {
   if (leaf == model->leafs || !leaf->compressed_vis) {
     // nothing is visible
     memset(PSX_SCRATCH, 0, 1024);

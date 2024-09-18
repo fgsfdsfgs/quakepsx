@@ -1,6 +1,7 @@
 #pragma once
 
 #include "psxtypes.h"
+#include "psxmdl.h"
 
 #define PSXBSPVERSION 0x1D585350
 
@@ -14,6 +15,8 @@
 #define MAX_XMAP_FACES      32767
 #define MAX_XMAP_MODELS     256
 #define MAX_XMAP_MARKSURF   65535
+#define MAX_XMAP_ENTITIES   512
+#define MAX_XMAP_ENTMODELS  128
 #define MAX_XMAP_VISIBILITY 0x40000
 #define MAX_XMAP_LIGHTVALS  2
 
@@ -161,14 +164,11 @@ typedef struct {
 } xmodel_t;
 
 typedef struct {
-  u16 ofs;
-  s32 val;
-} xmapentfield_t;
-
-typedef struct {
   u8 classname;
-  u8 numfields;
-  xmapentfield_t fields[];
+  u8 spawnflags;
+  s16 model; // negative = brush models, positive = alias models
+  x32vec3_t origin;
+  x16vec3_t angles;
 } xmapent_t;
 
 typedef struct {
@@ -177,5 +177,10 @@ typedef struct {
   u32 size;
   u8 data[];
 } xmapsnd_t;
+
+typedef struct {
+  u32 nummdls;
+  xaliashdr_t mdls[];
+} xmdllump_t;
 
 #pragma pack(pop)

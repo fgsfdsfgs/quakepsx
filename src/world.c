@@ -190,7 +190,7 @@ hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs)
 
 hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *offset)
 {
-  model_t *model;
+  bmodel_t *bmodel;
   x32vec3_t size;
   x32vec3_t hullmins, hullmaxs;
   hull_t *hull;
@@ -199,15 +199,15 @@ hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_
   if (ent->v.solid == SOLID_BSP)
   {
     // explicit hulls in the BSP model
-    model = ent->v.model;
+    bmodel = ent->v.model;
 
     XVecSub(maxs, mins, &size);
     if (size.d[0] < TO_FIX32(3))
-      hull = &model->hulls[0];
+      hull = &bmodel->hulls[0];
     else if (size.d[0] <= TO_FIX32(32))
-      hull = &model->hulls[1];
+      hull = &bmodel->hulls[1];
     else
-      hull = &model->hulls[2];
+      hull = &bmodel->hulls[2];
 
     // calculate an offset value to center the origin
     XVecSub(&hull->mins, mins, offset);
@@ -223,4 +223,79 @@ hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_
   }
 
   return hull;
+}
+
+void G_FindTouchedLeafs(edict_t *ent, mnode_t *node)
+{
+  mplane_t *splitplane;
+  mleaf_t *leaf;
+  int sides;
+  int leafnum;
+
+  if (node->contents == CONTENTS_SOLID)
+    return;
+
+  if (node->contents < 0)
+  {
+    if (ent->num_leafs == MAX_ENT_LEAFS)
+      return;
+    leaf = (mleaf_t *)node;
+    leafnum = leaf - gs.worldmodel->leafs - 1;
+    ent->leafnums[ent->num_leafs] = leafnum;
+    ent->num_leafs++;
+    return;
+  }
+
+  splitplane = node->plane;
+  sides = BoxOnPlaneSide(&ent->v.absmin, &ent->v.absmax, splitplane);
+
+  // recurse down the contacted sides
+  if (sides & 1)
+    G_FindTouchedLeafs(ent, node->children[0]);
+
+  if (sides & 2)
+    G_FindTouchedLeafs(ent, node->children[1]);
+}
+
+void G_UnlinkEdict(edict_t *ent)
+{
+  if (!ent->area.prev)
+    return; // not linked in anywhere
+  RemoveLink(&ent->area);
+  ent->area.prev = ent->area.next = NULL;
+}
+
+void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
+{
+  if (ent->area.prev)
+    G_UnlinkEdict(ent); // unlink from old position
+
+  if (ent == gs.edicts)
+    return; // don't add the world
+
+  if (ent->free)
+    return;
+
+  // set the abs box
+  XVecAdd(&ent->v.origin, &ent->v.mins, &ent->v.absmin);
+  XVecAdd(&ent->v.origin, &ent->v.maxs, &ent->v.absmax);
+
+  // because movement is clipped an epsilon away from an actual edge,
+  // we must fully check even when bounding boxes don't quite touch
+  ent->v.absmin.x -= 1;
+  ent->v.absmin.y -= 1;
+  ent->v.absmin.z -= 1;
+  ent->v.absmax.x += 1;
+  ent->v.absmax.y += 1;
+  ent->v.absmax.z += 1;
+
+  // link to PVS leafs
+  ent->num_leafs = 0;
+  if (ent->v.model)
+    G_FindTouchedLeafs(ent, gs.worldmodel->nodes);
+
+  if (ent->v.solid == SOLID_NOT)
+    return;
+
+  // TODO: area node shit
 }

@@ -1,9 +1,12 @@
 #pragma once
 
 #include "../common/psxbsp.h"
+#include "../common/psxmdl.h"
 #include "../common/idbsp.h"
+#include "../common/idmdl.h"
 
 #include "qbsp.h"
+#include "qmdl.h"
 
 extern xbsphdr_t   xbsp_header;
 extern xvert_t     xbsp_verts[MAX_XMAP_VERTS];
@@ -26,7 +29,11 @@ extern u8          xbsp_visdata[MAX_XMAP_VISIBILITY];
 extern int         xbsp_numvisdata;
 extern xmodel_t    xbsp_models[MAX_XMAP_MODELS];
 extern int         xbsp_nummodels;
-extern xmapent_t  *xbsp_entities[MAX_ENTITIES];
+extern xaliashdr_t xbsp_entmodels[MAX_XMAP_ENTMODELS];
+extern u8          xbsp_entmodeldata[1 * 1024 * 1024];
+extern u8         *xbsp_entmodeldataptr;
+extern int         xbsp_numentmodels;
+extern xmapent_t   xbsp_entities[MAX_ENTITIES];
 extern int         xbsp_numentities;
 extern xmapsnd_t  *xbsp_sounds[MAX_SOUNDS];
 extern int         xbsp_numsounds;
@@ -37,10 +44,12 @@ extern xlump_t     xbsp_lumps[XLMP_COUNT];
 void xbsp_set_palette(const u8 *pal);
 xmapsnd_t *xbsp_spu_fit(const u8 *data, u32 size);
 int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy);
-void xbsp_vram_store(const qmiptex_t *qti, int x, int y);
+void xbsp_vram_store_miptex(const qmiptex_t *qti, int x, int y);
+void xbsp_vram_store_mdltex(const u8 *data, int x, int y, int w, int h);
 void xbsp_vram_export(const char *fname, const u8 *pal);
 u16 xbsp_texture_flags(const qmiptex_t *qti);
 int xbsp_texture_shrink(int *w, int *h);
 int xbsp_vram_height(void);
 void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp);
+void xbsp_entmodel_add(qmdl_t *qm);
 int xbsp_write(const char *fname);

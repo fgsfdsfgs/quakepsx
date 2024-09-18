@@ -6,6 +6,8 @@
 #include "../common/psxtypes.h"
 #include "../common/idbsp.h"
 
+#define MAX_TOKEN 2048
+
 #define XBSP_SCALE 1
 
 #define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
@@ -19,8 +21,14 @@ void img_palettize(const u8 *src, u8 *dst, const int w, const int h, const u8 *p
 void img_unpalettize(const u8 *src, u8 *dst, const int w, const int h, const u8 *pal);
 int img_quantize(const u8 *src, u8 *dst, const int w, const int h, u8 *outpal);
 
+const char *com_parse(const char *data, char *com_token);
+
 static inline x32 f32_to_x32(const f32 x) {
   return (x32)(x * (f32)FIXSCALE);
+}
+
+static inline x16 f32_to_x16deg(const f32 x) {
+  return (x16)(x * (f32)FIXSCALE / 360.f);
 }
 
 static inline s16vec2_t qvec2_to_s16vec2(const qvec2_t v) {
@@ -39,6 +47,13 @@ static inline x16vec3_t qvec3_to_x16vec3(const qvec3_t v) {
   const x16 x = f32_to_x32(v[0]);
   const x16 y = f32_to_x32(v[1]);
   const x16 z = f32_to_x32(v[2]);
+  return (x16vec3_t){ x, y, z };
+}
+
+static inline x16vec3_t qvec3_to_x16vec3_angles(const qvec3_t v) {
+  const x16 x = f32_to_x16deg(v[0]);
+  const x16 y = f32_to_x16deg(v[1]);
+  const x16 z = f32_to_x16deg(v[2]);
   return (x16vec3_t){ x, y, z };
 }
 
@@ -138,3 +153,4 @@ static inline f32 ffract(const float x) {
 static inline f32 fsfract(const float x) {
   return x - (long)(x);
 }
+

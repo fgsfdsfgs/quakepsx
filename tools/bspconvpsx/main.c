@@ -15,6 +15,7 @@
 #include "xbsp.h"
 #include "qbsp.h"
 #include "qmdl.h"
+#include "qent.h"
 
 static const char *moddir;
 static const char *inname;
@@ -55,7 +56,7 @@ static int tex_sort(const struct texsort *a, const struct texsort *b) {
   }
 }
 
-static inline void do_textures(const char *export) {
+static inline void do_textures(void) {
   const int numtex = qbsp.miptex->nummiptex;
 
   if (numtex > MAX_XMAP_TEXTURES)
@@ -83,19 +84,16 @@ static inline void do_textures(const char *export) {
       int vry = 0;
       if (xbsp_vram_fit(qtex, &xti, &vrx, &vry))
         panic("VRAM atlas can't fit '%s'", qtex->name);
-      xbsp_vram_store(qtex, vrx, vry);
+      xbsp_vram_store_miptex(qtex, vrx, vry);
     }
     // store texinfo in normal order
     xbsp_texinfos[sorted[i].id] = xti;
   }
 
   xbsp_numtexinfos = numtex;
-  xbsp_lumps[XLMP_TEXINFO].size = numtex * sizeof(xtexinfo_t);
   xbsp_lumps[XLMP_TEXDATA].size = 2 * VRAM_TOTAL_WIDTH * xbsp_vram_height();
+  xbsp_lumps[XLMP_TEXINFO].size = numtex * sizeof(xtexinfo_t);
   xbsp_lumps[XLMP_CLUTDATA].size = 2 * NUM_CLUT_COLORS;
-
-  if (export && *export)
-    xbsp_vram_export(export, qbsp.palette);
 }
 
 static void do_planes(void) {
@@ -216,23 +214,112 @@ static void do_models(void) {
   xbsp_lumps[XLMP_MODELS].size = qbsp.nummodels * sizeof(xmodel_t);
 }
 
-static void do_entmodel_mdl(const char *name, u8 *data, const size_t size) {
-  qmdl_t qmdl;
-  qmdl_init(&qmdl, data, size);
-  printf("* model '%s':\n", name);
-  printf("* * numverts  = %d\n", qmdl.header->numverts);
-  printf("* * numtris   = %d\n", qmdl.header->numtris);
-  printf("* * numframes = %d\n", qmdl.header->numframes);
-  printf("* * numskins  = %d\n", qmdl.header->numskins);
-  printf("* * skinsize  = %dx%d\n", qmdl.header->skinwidth, qmdl.header->skinheight);
-  printf("* * scale     = %f %f %f\n", qmdl.header->scale[0], qmdl.header->scale[1], qmdl.header->scale[2]);
-  printf("* * size      = %f\n", qmdl.header->size);
+static void do_entities(void) {
+  printf("parsing entities\n");
 
+  qent_load(qbsp.start + qbsp.header->entities.ofs, qbsp.header->entities.len);
+
+  printf("loaded %d entities, converting...\n", num_qents);
+
+  assert(num_qents > 0);
+
+  qent_t *qent = qents;
+  xmapent_t *xent = xbsp_entities;
+
+  // 0 - worldspawn
+  assert(!strcmp(qent->classname, "worldspawn"));
+  xent->classname = 0;
+  ++xent; ++qent;
+  ++xbsp_numentities;
+
+  // 1 - player spawn, we'll fill it in later
+  xent->classname = 1;
+  ++xbsp_numentities;
+
+  // the rest
+  const char *tmpstr;
+  qvec3_t tmpvec;
+  float tmpfloat;
+  int tmpint;
+  for (int i = 1; i < num_qents; ++i, ++qent) {
+    // filter some entities that we don't need
+    if (!strcmp(qent->classname, "info_player_deathmatch") ||
+        !strcmp(qent->classname, "info_player_coop") ||
+        !strcmp(qent->classname, "info_player_start2"))
+      continue;
+
+    // don't care about lights that don't get triggered
+    if (!strcmp(qent->classname, "light") && !qent_get_string(qent, "targetname"))
+      continue;
+
+    // if this is a player start, fill in entity 1; otherwise alloc a new one
+    if (!strcmp(qent->classname, "info_player_start")) {
+      xent = &xbsp_entities[1];
+    } else {
+      assert(xbsp_numentities < MAX_XMAP_ENTITIES);
+      xent = &xbsp_entities[xbsp_numentities++];
+      xent->classname = qent->info->classnum;
+    }
+
+    // origin
+    if (qent_get_vector(qent, "origin", tmpvec))
+      xent->origin = qvec3_to_x32vec3(tmpvec);
+
+    // angles
+    if (qent_get_vector(qent, "angles", tmpvec))
+      xent->angles = qvec3_to_x16vec3_angles(tmpvec);
+    else if (qent_get_float(qent, "angle", &tmpfloat))
+      xent->angles.y = f32_to_x16deg(tmpfloat);
+
+    // model: models beginning with * are brush models
+    xent->model = 0;
+    tmpstr = qent_get_string(qent, "model");
+    if (tmpstr) {
+      if (tmpstr[0] == '*') {
+        xent->model = -atoi(tmpstr + 1);
+      } else {
+        xent->model = qmdl_id_for_name(tmpstr);
+      }
+    }
+
+    // default to whatever we have in the model slot, for renderer testing purposes
+    if (!xent->model) {
+      if (strncmp(qent->classname, "info_", 5) != 0 && qent->info->mdls[0]) {
+        xent->model = qmdl_id_for_name(qent->info->mdls[0]);
+      }
+    }
+  }
+
+  xbsp_lumps[XLMP_ENTITIES].size = sizeof(*xent) * xbsp_numentities;
+  printf("converted to %d entities, entity lump size = %d\n", xbsp_numentities, xbsp_lumps[XLMP_ENTITIES].size);
+}
+
+static void load_entmodel(const char *mdlname) {
+  if (qmdl_find(mdlname))
+    return;
+  printf("* loading model %s\n", mdlname);
+  size_t mdlsize = 0;
+  u8 *mdl = lmp_read(moddir, mdlname, &mdlsize);
+  qmdl_t *qmdl = qmdl_add(mdlname, mdl, mdlsize);
+  xbsp_entmodel_add(qmdl);
 }
 
 static void do_entmodels(void) {
   printf("adding entity models\n");
 
+  for (int i = 1; i < num_qents; ++i) {
+    // add any models tied to the classname
+    for (int j = 0; j < MAX_ENT_MDLS && qents[i].info->mdls[j]; ++j)
+      load_entmodel(qents[i].info->mdls[j]);
+    // also add any extra models
+    const char *model = qent_get_string(&qents[i], "model");
+    if (model && model[0] != '*')
+      load_entmodel(model);
+  }
+
+  xbsp_lumps[XLMP_TEXDATA].size = 2 * VRAM_TOTAL_WIDTH * xbsp_vram_height();
+  xbsp_lumps[XLMP_MDLDATA].size = sizeof(xmdllump_t) + sizeof(xaliashdr_t) * xbsp_numentmodels + (xbsp_entmodeldataptr - xbsp_entmodeldata);
+  printf("loaded %d entity models, mdl lump size = %u\n", num_qmdls, xbsp_lumps[XLMP_MDLDATA].size);
 }
 
 static inline const char *get_arg(int c, const char **v, const char *arg) {
@@ -276,13 +363,17 @@ int main(int argc, const char **argv) {
   for (int i = 0; i < XLMP_COUNT; ++i)
     xbsp_lumps[i].type = i;
 
-  do_textures(vramexp);
+  do_textures();
   do_planes();
   do_faces();
   do_visdata();
   do_nodes();
   do_models();
+  do_entities();
   do_entmodels();
+
+  if (vramexp && *vramexp)
+    xbsp_vram_export(vramexp, qbsp.palette);
 
   if (xbsp_write(outname) != 0)
     panic("could not write PSX BSP to '%s'", outname);

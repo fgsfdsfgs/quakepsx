@@ -17,6 +17,12 @@
           <file name="start.psb" type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/start.psb"/>
           <file name="e1m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m1.psb"/>
           <file name="e1m2.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m2.psb"/>
+          <file name="e1m3.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m3.psb"/>
+          <file name="e1m4.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m4.psb"/>
+          <file name="e1m5.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m5.psb"/>
+          <file name="e1m6.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m6.psb"/>
+          <file name="e1m7.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m7.psb"/>
+          <file name="e1m8.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m8.psb"/>
           <file name="e2m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m1.psb"/>
         </dir>
       </dir>

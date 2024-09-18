@@ -56,6 +56,7 @@ static void ExceptionFunc(void) {
 
   // spew to tty
   printf("UH OH ZONE\nSTATUS=%08x\nCR=%08x\nPC=%08x\nRA=%08x\n", status, cr, regs[R_EPC], regs[R_RA]); 
+  while (1) { }
 
   // setup graphics viewport and clear screen
   DISPENV disp;

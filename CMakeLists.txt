@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(quakepsx LANGUAGES C ASM)
 
-file(GLOB _sources src/*.c src/game/*.c src/*.s)
+file(GLOB _sources src/*.c src/progs/*.c src/*.s)
 
 include_directories(src)
 

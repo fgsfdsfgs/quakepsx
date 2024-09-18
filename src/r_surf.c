@@ -366,3 +366,67 @@ void R_DrawTextureChains(void) {
     t->texchain = NULL;
   }
 }
+
+void R_DrawAliasModel(amodel_t *model, int frame) {
+  register int otz;
+  const u16 tpage = model->tpage;
+  const int numverts = model->numverts;
+  const int numtris = model->numtris;
+  svert_t *sv = PSX_SCRATCH;
+  POLY_GT3 *poly = (POLY_GT3 *)gpu_ptr;
+
+  u8vec3_t *averts = model->frames + (frame * numverts);
+  const atri_t *tri = model->tris;
+  const u8vec3_t *av;
+  for (int i = 0; i < numtris; ++i, ++tri) {
+    for (int j = 0; j < 3; ++j) {
+      const u8vec3_t *uv = &model->texcoords[tri->verts[j]];
+      av = &averts[tri->verts[j]];
+      sv[j].pos.x = (av->x * model->scale.x) >> FIXSHIFT;
+      sv[j].pos.y = (av->y * model->scale.y) >> FIXSHIFT;
+      sv[j].pos.z = (av->z * model->scale.z) >> FIXSHIFT;
+      sv[j].col.r = 0x80;
+      sv[j].col.g = 0x80;
+      sv[j].col.b = 0x80;
+      sv[j].tex.u = (tri->fnorm & 0x80) ? uv->p : uv->u;
+      sv[j].tex.v = uv->v;
+    }
+
+    // transform the triangle
+    gte_ldv3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+    gte_rtpt();
+    gte_stsxy3_gt3(poly);
+
+    // calculate OT Z for the big triangle
+    gte_avsz3();
+    gte_stotz_m(otz);
+
+    // clip off if out of Z range
+    if (otz <= 0 || otz >= GPU_OTDEPTH)
+      continue;
+
+    poly = EmitBrushTriangle(poly, tpage, otz, sv + 0, sv + 1, sv + 2);
+  }
+
+  gpu_ptr = (u8 *)poly;
+}
+
+void R_DrawBrushModel(bmodel_t *model) {
+  msurface_t *psurf;
+  mplane_t *pplane;
+  x32 dot;
+
+  psurf = &model->surfaces[model->firstmodelsurface];
+
+  for (int i = 0; i < model->nummodelsurfaces; ++i, ++psurf) {
+    // find which side of the node we are on
+    pplane = psurf->plane;
+    dot = XVecDotSL(&pplane->normal, &rs.vieworg) - pplane->dist;
+    // draw the polygon
+    if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
+      (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON))) {
+      psurf->texchain = psurf->texture->texchain;
+      psurf->texture->texchain = psurf;
+    }
+  }
+}

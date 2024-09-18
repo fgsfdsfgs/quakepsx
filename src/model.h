@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "bspfile.h"
+#include "alias.h"
 
 // 0-2 are axial planes
 #define PLANE_X 0
@@ -40,6 +41,10 @@
 #define SURF_UNDERWATER     0x80
 
 // in memory representations of bspfile.h structs
+
+/* ALIAS MODELS */
+
+typedef aliashdr_t amodel_t;
 
 /* BSP MODELS */
 
@@ -127,9 +132,11 @@ typedef enum { mod_brush, mod_sprite, mod_alias } modtype_t;
 #define EF_TRACER2 64  // orange split trail + rotate
 #define EF_TRACER3 128 // purple trail
 
-typedef struct model_s {
-  s16 id; // <0 == brush models
+// somewhat confusingly our brush model struct also contains alias models
+
+typedef struct bmodel_s {
   s16 type;
+  s16 id; // <0 == brush models
 
   int flags;
 
@@ -140,7 +147,7 @@ typedef struct model_s {
   int nummodelsurfaces;
 
   int numsubmodels;
-  xbspmodel_t *submodels;
+  xmodel_t *submodels;
 
   int numplanes;
   mplane_t *planes;
@@ -168,9 +175,18 @@ typedef struct model_s {
   int numtextures;
   mtexture_t *textures;
 
-  u8 *visdata;
-} model_t;
+  int nummapents;
+  xbspent_t *mapents;
 
-model_t *Mod_LoadModel(const char *name);
-mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, model_t *mod);
-const u8 *Mod_LeafPVS(const mleaf_t *leaf, const model_t *model);
+  int numamodels;
+  amodel_t *amodels;
+
+  struct bmodel_s *bmodels;
+  struct bmodel_s **bmodelptrs;
+
+  u8 *visdata;
+} bmodel_t;
+
+bmodel_t *Mod_LoadXBSP(const char *name);
+mleaf_t *Mod_PointInLeaf(const x32vec3_t *p, bmodel_t *mod);
+const u8 *Mod_LeafPVS(const mleaf_t *leaf, const bmodel_t *model);

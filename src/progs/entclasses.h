@@ -3,6 +3,7 @@
 #include "entity.h"
 
 enum entclass_e {
+  ENT_INVALID_CLASS = 0xff,
   ENT_WORLDSPAWN = 0x00,
   ENT_PLAYER = 0x01,
   ENT_AIR_BUBBLES = 0x02,

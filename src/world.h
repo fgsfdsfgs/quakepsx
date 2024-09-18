@@ -27,3 +27,6 @@ int G_PointContents(x32vec3_t *p);
 int G_TruePointContents(x32vec3_t *p);
 
 qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t *p1, x32vec3_t *p2, trace_t *trace);
+
+void G_UnlinkEdict(edict_t *ent);
+void G_LinkEdict(edict_t *ent, qboolean touch_triggers);

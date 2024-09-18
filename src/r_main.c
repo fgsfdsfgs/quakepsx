@@ -44,7 +44,8 @@ void *GPU_SortPrim(const u32 size, const int otz) {
 
 void R_InitDebug(void) {
   FntLoad(960, 256);
-  r_debugstream = FntOpen(0, 8, 320, 216, 0, 255);
+  if (r_debugstream < 0)
+    r_debugstream = FntOpen(0, 8, 320, 216, 0, 255);
 }
 
 void R_Init(void) {
@@ -91,6 +92,12 @@ void R_Init(void) {
   gte_SetGeomScreen(VID_CENTER_X); // approx 90 degrees?
   gte_SetBackColor(0xFF, 0xFF, 0xFF);
 
+  // scale Z to fit the entire range of our OT
+  const register s16 zsf3 = GPU_OTDEPTH / 3;
+  const register s16 zsf4 = GPU_OTDEPTH / 4;
+  gte_ldzsf3_m(zsf3);
+  gte_ldzsf4_m(zsf4);
+
   // load debug font
   R_InitDebug();
 
@@ -123,7 +130,7 @@ void R_SetupGPU(void) {
   // gotta go fast
   VECTOR  *t = PSX_SCRATCH;
   SVECTOR *r = (SVECTOR *)(t + 1);
-  MATRIX  *m = (MATRIX *)(r + 1);
+  MATRIX  *m = &rs.matrix;
 
   // rotate according to viewangles
   r->vx = rs.viewangles.x;
@@ -220,6 +227,8 @@ void R_RenderScene(void) {
 }
 
 void R_NewMap(void) {
+  // redownload debug font if it got overwritten
+  R_InitDebug();
   rs.viewleaf = NULL;
   for (int i = 0; i < gs.worldmodel->numtextures; i++)
     gs.worldmodel->textures[i].texchain = NULL;
@@ -349,12 +358,85 @@ void R_RecursiveWorldNode(mnode_t *node) {
   R_RecursiveWorldNode(node->children[!side]);
 }
 
+static inline void DrawEntity(edict_t *ed) {
+  // check if the entity is in frustum
+  if (R_CullBox(&ed->v.absmin, &ed->v.absmax))
+    return;
+
+  // check if the entity is visible
+  // TODO: port over the efrags system or something, this is garbage
+  int i;
+  for (i = 0; i < ed->num_leafs; ++i) {
+    const mleaf_t *leaf = gs.worldmodel->leafs + ed->leafnums[i];
+    if (leaf->visframe == rs.visframe)
+      break; // found a visible leaf
+  }
+  if (i == ed->num_leafs)
+    return; // not in any visible leaf
+
+  rs.cur_entity = ed;
+  rs.modelorg.x = ed->v.origin.x - rs.vieworg.x;
+  rs.modelorg.y = ed->v.origin.y - rs.vieworg.y;
+  rs.modelorg.z = ed->v.origin.z - rs.vieworg.z;
+
+  // set up the GTE matrix
+  VECTOR *t = PSX_SCRATCH;
+  SVECTOR *r = (SVECTOR *)(t + 1);
+  r->vx = ed->v.angles.z;
+  r->vy = -ed->v.angles.x;
+  r->vz = ed->v.angles.y;
+  PushMatrix();
+  RotMatrix(r, &rs.entmatrix);
+  if (ed->v.modelnum < 0) {
+    t->vx = ed->v.origin.x >> FIXSHIFT;
+    t->vy = ed->v.origin.y >> FIXSHIFT;
+    t->vz = ed->v.origin.z >> FIXSHIFT;
+  } else {
+    t->vx = ((amodel_t *)ed->v.model)->offset.x;
+    t->vy = ((amodel_t *)ed->v.model)->offset.y;
+    t->vz = ((amodel_t *)ed->v.model)->offset.z;
+    ApplyMatrixLV(&rs.entmatrix, t, t);
+    t->vx += ed->v.origin.x >> FIXSHIFT;
+    t->vy += ed->v.origin.y >> FIXSHIFT;
+    t->vz += ed->v.origin.z >> FIXSHIFT;
+  }
+  TransMatrix(&rs.entmatrix, t);
+  CompMatrixLV(&rs.matrix, &rs.entmatrix, &rs.entmatrix);
+  gte_SetRotMatrix(&rs.entmatrix);
+  gte_SetTransMatrix(&rs.entmatrix);
+
+  // draw
+  if (ed->v.modelnum < 0)
+    R_DrawBrushModel(ed->v.model);
+  else
+    R_DrawAliasModel(ed->v.model, ed->v.frame);
+  
+  // restore the GTE matrix
+  PopMatrix();
+}
+
+void R_DrawEntities(void) {
+  edict_t *ed = gs.edicts;
+  for (int i = 0; i <= gs.max_edict; ++i, ++ed) {
+    if (ed->free || !ed->v.model)
+      continue;
+    DrawEntity(ed);
+  }
+}
+
 void R_DrawWorld(void) {
   static edict_t ed;
   ed.v.model = gs.worldmodel;
   rs.modelorg = rs.vieworg;
   rs.cur_entity = &ed;
   rs.cur_texture = NULL;
+
+  // first collect world surfaces into texchains
   R_RecursiveWorldNode(gs.worldmodel->nodes);
+
+  // then draw alias entities and add BSP submodels into texchains
+  R_DrawEntities();
+
+  // then draw the texchains
   R_DrawTextureChains();
 }

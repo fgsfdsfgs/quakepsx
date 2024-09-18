@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -7,12 +8,15 @@
 
 #include "../common/psxtypes.h"
 #include "../common/idbsp.h"
+#include "../common/idmdl.h"
 #include "../common/psxbsp.h"
+#include "../common/psxmdl.h"
 #include "../common/util.h"
 
 #include "util.h"
 #include "xbsp.h"
 #include "qbsp.h"
+#include "qmdl.h"
 
 // FIXME: removing T-junctions causes big gaps in geometry
 // #define REMOVE_TJUNCTIONS 1
@@ -39,7 +43,11 @@ u8          xbsp_visdata[MAX_XMAP_VISIBILITY];
 int         xbsp_numvisdata;
 xmodel_t    xbsp_models[MAX_XMAP_MODELS];
 int         xbsp_nummodels;
-xmapent_t  *xbsp_entities[MAX_ENTITIES];
+xaliashdr_t xbsp_entmodels[MAX_XMAP_ENTMODELS];
+u8          xbsp_entmodeldata[1 * 1024 * 1024];
+int         xbsp_numentmodels;
+u8         *xbsp_entmodeldataptr = xbsp_entmodeldata;
+xmapent_t   xbsp_entities[MAX_ENTITIES];
 int         xbsp_numentities;
 xmapsnd_t  *xbsp_sounds[MAX_SOUNDS];
 int         xbsp_numsounds;
@@ -165,19 +173,26 @@ void xbsp_set_palette(const u8 *pal) {
   }
 }
 
-void xbsp_vram_store(const qmiptex_t *qti, int x, int y) {
+void xbsp_vram_store_miptex(const qmiptex_t *qti, int x, int y) {
   int w, h, i;
   const u8 *data;
 
   w = qti->width;
   h = qti->height;
   i = xbsp_texture_shrink(&w, &h);
-  assert(i < NUM_MIPLEVELS - 1);
+  assert(i < NUM_MIPLEVELS);
   data = (const u8 *)qti + qti->offsets[i];
 
   if (y + h > xbsp_texmaxy)
     xbsp_texmaxy = y + h;
 
+  for (; h > 0; --h, ++y, data += w)
+    memcpy(&xbsp_texatlas[y][x], data, w);
+}
+
+void xbsp_vram_store_mdltex(const u8 *data, int x, int y, int w, int h) {
+  if (y + h > xbsp_texmaxy)
+    xbsp_texmaxy = y + h;
   for (; h > 0; --h, ++y, data += w)
     memcpy(&xbsp_texatlas[y][x], data, w);
 }
@@ -333,11 +348,106 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   xbsp_faces[xbsp_numfaces++] = *xf;
 }
 
+void xbsp_entmodel_add(qmdl_t *qm) {
+  assert(xbsp_numentmodels < MAX_XMAP_ENTMODELS);
+  assert(qm->header->numverts < MAX_XMDL_VERTS);
+  assert(qm->header->numtris < MAX_XMDL_TRIS);
+  assert(qm->header->numframes < MAX_XMDL_FRAMES);
+
+  qvec3_t mins = { +1e10f, +1e10f, +1e10f };
+  qvec3_t maxs = { -1e10f, -1e10f, -1e10f };
+  u8 *origptr = xbsp_entmodeldataptr;
+  u32 baseofs = xbsp_entmodeldataptr - xbsp_entmodeldata;
+  xaliashdr_t *xmhdr = &xbsp_entmodels[xbsp_numentmodels++];
+  xmhdr->type = 1; // mod_alias
+  xmhdr->id = qm->id;
+  xmhdr->numframes = qm->header->numframes;
+  xmhdr->numtris = qm->header->numtris;
+  xmhdr->numverts = qm->header->numverts;
+  xmhdr->scale = qvec3_to_x16vec3(qm->header->scale);
+  xmhdr->offset = qvec3_to_s16vec3(qm->header->translate);
+  xmhdr->trisofs = baseofs;
+  xmhdr->texcoordsofs = xmhdr->trisofs + sizeof(xaliastri_t) * xmhdr->numtris;
+  xmhdr->framesofs = xmhdr->texcoordsofs + sizeof(xaliasvert_t) * xmhdr->numverts;
+
+  // scale the texture down 2x because the skins are fucking massive
+  static u8 dst[256 * 256];
+  const u32 srcw = qm->header->skinwidth;
+  const u32 srch = qm->header->skinheight;
+  const u32 dstw = srcw >> 1;
+  const u32 dsth = srch >> 1;
+  const u8 *src = qm->skins[0].data;
+  assert(dstw <= 256);
+  assert(dsth <= 256);
+  for (u32 y = 0; y < dsth; ++y) {
+    for (u32 x = 0; x < dstw; ++x)
+      dst[y * dstw + x] = src[(y << 1) * srcw + (x << 1)];
+  }
+
+  xtexinfo_t xti;
+  int vramx = 0, vramy = 0;
+  for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
+    if (xbsp_vram_page_fit(&xti, i, dstw >> 1, dsth, &vramx, &vramy) == 0)
+      break;
+  }
+  xbsp_vram_store_mdltex(dst, vramx, vramy, dstw, dsth);
+  xmhdr->tpage = xti.tpage;
+
+  xaliastri_t *xmtri = (xaliastri_t *)(xbsp_entmodeldata + xmhdr->trisofs);
+  for (int i = 0; i < xmhdr->numtris; ++i, ++xmtri) {
+    xmtri->verts[0] = qm->tris[i].vertex[0];
+    xmtri->verts[1] = qm->tris[i].vertex[1];
+    xmtri->verts[2] = qm->tris[i].vertex[2];
+    xmtri->fnorm = 0x80 * !qm->tris[i].front; // TODO: normal
+  }
+
+  xaliastexcoord_t *xmtex = (xaliastexcoord_t *)(xbsp_entmodeldata + xmhdr->texcoordsofs);
+  for (int i = 0; i < xmhdr->numverts; ++i, ++xmtex) {
+    const qaliastexcoord_t *qtc = &qm->texcoords[i];
+    const f32 u = ((f32)qtc->s + 0.5f) / qm->header->skinwidth;
+    const f32 v = ((f32)qtc->t + 0.5f) / qm->header->skinheight;
+    f32 u2 = (f32)qtc->s + (f32)qm->header->skinwidth * 0.5f;
+    u2 = ((f32)u2 + 0.5f) / qm->header->skinwidth;
+    xmtex->u = xti.uv.u + (s16)(u * dstw);
+    xmtex->v = xti.uv.v + (s16)(v * dsth);
+    if (qtc->onseam)
+      xmtex->w = xti.uv.u + (s16)(u2 * dstw);
+    else
+      xmtex->w = xmtex->u;
+  }
+
+  xaliasvert_t *xmvert = (xaliasvert_t *)(xbsp_entmodeldata + xmhdr->framesofs);
+  for (int i = 0; i < xmhdr->numframes; ++i) {
+    const qaliasframe_t *qframe = &qm->frames[i];
+    for (int j = 0; j < xmhdr->numverts; ++j, ++xmvert) {
+      const qtrivertx_t *vert = &qframe->verts[j];
+      for (int k = 0; k < 3; ++k) {
+        xmvert->d[k] = vert->v[k];
+        const f32 v = qm->header->scale[k] * (f32)vert->v[k] + qm->header->translate[k];
+        if (v < mins[k]) mins[k] = v;
+        else if (v > maxs[k]) maxs[k] = v;
+      }
+    }
+  }
+
+  xmhdr->mins = qvec3_to_x32vec3(mins);
+  xmhdr->maxs = qvec3_to_x32vec3(maxs);
+
+  xbsp_entmodeldataptr = (u8 *)xmvert;
+
+  printf("* * id: %02x verts: %u, tris: %u, frames: %u size: %u skin: %ux%u extents: (%f, %f, %f)\n",
+    xmhdr->id,
+    xmhdr->numverts, xmhdr->numtris, xmhdr->numframes,
+    (u32)(xbsp_entmodeldataptr - origptr),
+    dstw, dsth,
+    maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
+}
+
 int xbsp_write(const char *fname) {
   FILE *f = fopen(fname, "wb");
   if (!f) return -1;
 
-  printf("writing XBSP to `%s`\n", fname);
+  printf("writing XBSP to `%s` %d\n", fname, xbsp_texmaxy);
 
   xbsp_header.ver = PSXBSPVERSION;
   fwrite(&xbsp_header, sizeof(xbsp_header), 1, f);
@@ -354,7 +464,12 @@ int xbsp_write(const char *fname) {
   fwrite(&xbsp_lumps[XLMP_SNDDATA], sizeof(xlump_t), 1, f);
 
   // write alias models
+  xmdllump_t mdllump;
+  mdllump.nummdls = xbsp_numentmodels;
   fwrite(&xbsp_lumps[XLMP_MDLDATA], sizeof(xlump_t), 1, f);
+  fwrite(&mdllump, sizeof(mdllump), 1, f);
+  fwrite(xbsp_entmodels, sizeof(*xbsp_entmodels), xbsp_numentmodels, f);
+  fwrite(xbsp_entmodeldata, xbsp_entmodeldataptr - xbsp_entmodeldata, 1, f);
 
   #define WRITE_LUMP(index, name, type, f) \
     fwrite(&xbsp_lumps[XLMP_ ## index], sizeof(xlump_t), 1, f); \
@@ -370,11 +485,9 @@ int xbsp_write(const char *fname) {
   WRITE_LUMP(NODES,     nodes,      xnode_t,     f);
   WRITE_LUMP(CLIPNODES, clipnodes,  xclipnode_t, f);
   WRITE_LUMP(MODELS,    models,     xmodel_t,    f);
+  WRITE_LUMP(ENTITIES,  entities,   xmapent_t,   f);
 
   #undef WRITE_LUMP
-
-  // write entities
-  fwrite(&xbsp_lumps[XLMP_ENTITIES], sizeof(xlump_t), 1, f);
 
   fclose(f);
 

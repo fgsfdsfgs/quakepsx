@@ -246,6 +246,7 @@ const trace_t *G_PushEntity(edict_t *ent, x32vec3_t *push)
   trace = G_Move(&ent->v.origin, &ent->v.mins, &ent->v.maxs, &end, 0, ent);
 
   ent->v.origin = trace->endpos;
+  G_LinkEdict(ent, true);
 
   return trace;
 }

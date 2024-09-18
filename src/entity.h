@@ -3,7 +3,7 @@
 #include "common.h"
 #include "model.h"
 
-#define MAX_ENT_LEAFS 16
+#define MAX_ENT_LEAFS 8
 
 // edict->solid values
 #define SOLID_NOT      0  // no interaction with other objects
@@ -51,9 +51,13 @@ typedef struct entvars_s {
   u8 movetype;
   u8 waterlevel;
   u16 flags;
-  model_t *model;
-  x32vec3_t mins;
-  x32vec3_t maxs;
+  s16 modelnum;
+  s16 frame;
+  x32 nextthink;
+  void *model; // either model_t or aliashdr_t
+  think_fn_t think;
+  x32vec3_t absmin, mins;
+  x32vec3_t absmax, maxs;
   x32vec3_t origin;
   x32vec3_t oldorigin;
   x32vec3_t velocity;
@@ -62,7 +66,7 @@ typedef struct entvars_s {
 
 struct edict_s {
   qboolean free;
-  s8 numleafs;
+  s8 num_leafs;
   s16 leafnums[MAX_ENT_LEAFS];
   link_t area;
   x32 freetime;
