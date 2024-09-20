@@ -9,15 +9,15 @@ extern void spawn_ambient_suck_wind(edict_t *self) { }
 extern void spawn_ambient_swamp1(edict_t *self) { }
 extern void spawn_ambient_swamp2(edict_t *self) { }
 extern void spawn_event_lightning(edict_t *self) { }
-extern void spawn_func_bossgate(edict_t *self) { }
-extern void spawn_func_button(edict_t *self) { }
-extern void spawn_func_door(edict_t *self) { }
-extern void spawn_func_door_secret(edict_t *self) { }
-extern void spawn_func_episodegate(edict_t *self) { }
-extern void spawn_func_illusionary(edict_t *self) { }
-extern void spawn_func_plat(edict_t *self) { }
-extern void spawn_func_train(edict_t *self) { }
-extern void spawn_func_wall(edict_t *self) { }
+extern void spawn_func_bossgate(edict_t *self);
+extern void spawn_func_button(edict_t *self);
+extern void spawn_func_door(edict_t *self);
+extern void spawn_func_door_secret(edict_t *self);
+extern void spawn_func_episodegate(edict_t *self);
+extern void spawn_func_illusionary(edict_t *self);
+extern void spawn_func_plat(edict_t *self);
+extern void spawn_func_train(edict_t *self);
+extern void spawn_func_wall(edict_t *self);
 extern void spawn_info_intermission(edict_t *self) { }
 extern void spawn_info_null(edict_t *self) { }
 extern void spawn_info_player_coop(edict_t *self) { }

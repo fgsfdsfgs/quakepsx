@@ -410,7 +410,7 @@ static inline void DrawEntity(edict_t *ed) {
     R_DrawBrushModel(ed->v.model);
   else
     R_DrawAliasModel(ed->v.model, ed->v.frame);
-  
+
   // restore the GTE matrix
   PopMatrix();
 }

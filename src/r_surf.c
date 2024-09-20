@@ -430,3 +430,114 @@ void R_DrawBrushModel(bmodel_t *model) {
     }
   }
 }
+
+static inline LINE_F3 *DrawTwoLines(LINE_F3 *line, const int otz, const u32 col, const SVECTOR *va, const SVECTOR *vb, const SVECTOR *vc)
+{
+  if (va->vx < 0 || va->vx > rs.clip.w || va->vy < 0 || va->vy > rs.clip.h)
+    return line;
+  if (vb->vx < 0 || vb->vx > rs.clip.w || vb->vy < 0 || vb->vy > rs.clip.h)
+    return line;
+  if (vc->vx < 0 || vc->vx > rs.clip.w || vc->vy < 0 || vc->vy > rs.clip.h)
+    return line;
+  if (otz <= 0 || otz >= GPU_OTDEPTH)
+    return line;
+
+  line->x0 = va->vx;
+  line->y0 = va->vy;
+  line->x1 = vb->vx;
+  line->y1 = vb->vy;
+  line->x2 = vc->vx;
+  line->y2 = vc->vy;
+  *(u32 *)&line->r0 = col;
+
+  setLineF3(line);
+  addPrim(gpu_ot + otz, line);
+  ++c_draw_polys;
+  ++line;
+  return line;
+}
+
+void R_DrawBBox(edict_t *ent)
+{
+  register int otz1, otz2;
+
+  SVECTOR *svp = PSX_SCRATCH;
+  SVECTOR *svmin = svp;
+  svp->vx = ent->v.absmin.x >> FIXSHIFT;
+  svp->vy = ent->v.absmin.y >> FIXSHIFT;
+  svp->vz = ent->v.absmin.z >> FIXSHIFT;
+  svp++;
+  SVECTOR *svmax = svp;
+  svp->vx = ent->v.absmax.x >> FIXSHIFT;
+  svp->vy = ent->v.absmax.y >> FIXSHIFT;
+  svp->vz = ent->v.absmax.z >> FIXSHIFT;
+  svp++;
+  SVECTOR *sv00 = svmin;
+  SVECTOR *sv10 = svp;
+  svp->vx = svmax->vx;
+  svp->vy = svmin->vy;
+  svp->vz = svmin->vz;
+  svp++;
+  SVECTOR *sv20 = svp;
+  svp->vx = svmax->vx;
+  svp->vy = svmax->vy;
+  svp->vz = svmin->vz;
+  svp++;
+  SVECTOR *sv30 = svp;
+  svp->vx = svmin->vx;
+  svp->vy = svmax->vy;
+  svp->vz = svmin->vz;
+  svp++;
+  SVECTOR *sv01 = svp;
+  svp->vx = svmin->vx;
+  svp->vy = svmin->vy;
+  svp->vz = svmax->vz;
+  svp++;
+  SVECTOR *sv11 = svp;
+  svp->vx = svmax->vx;
+  svp->vy = svmin->vy;
+  svp->vz = svmax->vz;
+  svp++;
+  SVECTOR *sv21 = svmax;
+  SVECTOR *sv31 = svp;
+  svp->vx = svmin->vx;
+  svp->vy = svmax->vy;
+  svp->vz = svmax->vz;
+  svp++;
+
+  SVECTOR *tv00 = svp++;
+  SVECTOR *tv10 = svp++;
+  SVECTOR *tv20 = svp++;
+  SVECTOR *tv30 = svp++;
+  SVECTOR *tv01 = svp++;
+  SVECTOR *tv11 = svp++;
+  SVECTOR *tv21 = svp++;
+  SVECTOR *tv31 = svp++;
+
+  gte_ldv3(sv00, sv10, sv20);
+  gte_rtpt();
+  gte_stsxy3(tv00, tv10, tv20);
+  gte_ldv0(sv30);
+  gte_rtps();
+  gte_stsxy(tv30);
+  gte_avsz4();
+  gte_stotz_m(otz1);
+
+  gte_ldv3(sv01, sv11, sv21);
+  gte_rtpt();
+  gte_stsxy3(tv01, tv11, tv21);
+  gte_ldv0(sv31);
+  gte_rtps();
+  gte_stsxy(tv31);
+  gte_avsz4();
+  gte_stotz_m(otz2);
+
+  LINE_F3 *line = (LINE_F3 *)gpu_ptr;
+
+  line = DrawTwoLines(line, otz1, 0x008000, tv00, tv10, tv20);
+  line = DrawTwoLines(line, otz1, 0x008000, tv20, tv30, tv00);
+  line = DrawTwoLines(line, otz2, 0x008000, tv01, tv11, tv21);
+  line = DrawTwoLines(line, otz2, 0x008000, tv21, tv31, tv01);
+
+  gpu_ptr = (u8 *)line;
+}

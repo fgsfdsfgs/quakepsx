@@ -19,6 +19,9 @@ void spawn_monster_army(edict_t *self) {
   self->v.maxs.x = TO_FIX32(+16);
   self->v.maxs.y = TO_FIX32(+16);
   self->v.maxs.z = TO_FIX32(+24);
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
   self->v.think = army_think;
   self->v.nextthink = gs.time + 410;
+  self->v.solid = SOLID_SLIDEBOX;
+  self->v.flags = FL_MONSTER;
 }

@@ -1,3 +1,4 @@
+#include <string.h>
 #include "common.h"
 #include "entity.h"
 #include "model.h"
@@ -8,6 +9,9 @@
 static hull_t box_hull;
 static xbspclipnode_t box_clipnodes[6];
 static mplane_t box_planes[6];
+
+areanode_t g_areanodes[AREA_NODES];
+int g_numareanodes;
 
 void G_InitBoxHull(void)
 {
@@ -23,7 +27,7 @@ void G_InitBoxHull(void)
   {
     box_clipnodes[i].planenum = i;
 
-    side = i&1;
+    side = i & 1;
 
     box_clipnodes[i].children[side] = CONTENTS_EMPTY;
     if (i != 5)
@@ -32,7 +36,7 @@ void G_InitBoxHull(void)
       box_clipnodes[i].children[side^1] = CONTENTS_SOLID;
 
     box_planes[i].type = i >> 1;
-    box_planes[i].normal.d[i >> 1] = 1;
+    box_planes[i].normal.d[i >> 1] = ONE;
   }
 }
 
@@ -179,13 +183,13 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
 
 hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs)
 {
- box_planes[0].dist = maxs->d[0];
- box_planes[1].dist = mins->d[0];
- box_planes[2].dist = maxs->d[1];
- box_planes[3].dist = mins->d[1];
- box_planes[4].dist = maxs->d[2];
- box_planes[5].dist = mins->d[2];
- return &box_hull;
+  box_planes[0].dist = maxs->d[0];
+  box_planes[1].dist = mins->d[0];
+  box_planes[2].dist = maxs->d[1];
+  box_planes[3].dist = mins->d[1];
+  box_planes[4].dist = maxs->d[2];
+  box_planes[5].dist = mins->d[2];
+  return &box_hull;
 }
 
 hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *offset)
@@ -257,6 +261,87 @@ void G_FindTouchedLeafs(edict_t *ent, mnode_t *node)
     G_FindTouchedLeafs(ent, node->children[1]);
 }
 
+areanode_t *G_CreateAreaNode (int depth, x32vec3_t *mins, x32vec3_t *maxs)
+{
+  areanode_t *anode;
+  x32vec3_t size;
+  x32vec3_t mins1, maxs1, mins2, maxs2;
+
+  anode = &g_areanodes[g_numareanodes];
+  g_numareanodes++;
+
+  ClearLink(&anode->trigger_edicts);
+  ClearLink(&anode->solid_edicts);
+
+  if (depth == AREA_DEPTH)
+  {
+    anode->axis = -1;
+    anode->children[0] = anode->children[1] = NULL;
+    return anode;
+  }
+
+  XVecSub(maxs, mins, &size);
+  if (size.x > size.y)
+    anode->axis = 0;
+  else
+    anode->axis = 1;
+
+  anode->dist = (maxs->d[anode->axis] + mins->d[anode->axis]) >> 1;
+  mins1 = *mins;
+  mins2 = *maxs;
+  maxs1 = *maxs;
+  maxs2 = *maxs;
+
+  maxs1.d[anode->axis] = mins2.d[anode->axis] = anode->dist;
+
+  anode->children[0] = G_CreateAreaNode(depth+1, &mins2, &maxs2);
+  anode->children[1] = G_CreateAreaNode(depth+1, &mins1, &maxs1);
+
+  return anode;
+}
+
+void G_ClearWorld(void)
+{
+  G_InitBoxHull();
+  memset(g_areanodes, 0, sizeof(g_areanodes));
+  g_numareanodes = 0;
+  G_CreateAreaNode(0, &gs.worldmodel->mins, &gs.worldmodel->maxs);
+}
+
+void G_TouchLinks(edict_t *ent, areanode_t *node)
+{
+  link_t *l, *next;
+  edict_t *touch;
+
+  // touch linked edicts
+  for (l = node->trigger_edicts.next; l != &node->trigger_edicts; l = next)
+  {
+    next = l->next;
+    touch = EDICT_FROM_AREA(l);
+    if (touch == ent)
+      continue;
+    if (!touch->v.touch || touch->v.solid != SOLID_TRIGGER)
+      continue;
+    if (ent->v.absmin.d[0] > touch->v.absmax.d[0]
+    || ent->v.absmin.d[1] > touch->v.absmax.d[1]
+    || ent->v.absmin.d[2] > touch->v.absmax.d[2]
+    || ent->v.absmax.d[0] < touch->v.absmin.d[0]
+    || ent->v.absmax.d[1] < touch->v.absmin.d[1]
+    || ent->v.absmax.d[2] < touch->v.absmin.d[2] )
+      continue;
+    touch->v.touch(touch, ent);
+  }
+
+  // recurse down both sides
+  if (node->axis == -1)
+    return;
+
+  if (ent->v.absmax.d[node->axis] > node->dist)
+    G_TouchLinks(ent, node->children[0]);
+  if (ent->v.absmin.d[node->axis] < node->dist)
+    G_TouchLinks(ent, node->children[1]);
+}
+
 void G_UnlinkEdict(edict_t *ent)
 {
   if (!ent->area.prev)
@@ -267,6 +352,8 @@ void G_UnlinkEdict(edict_t *ent)
 
 void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
 {
+  areanode_t *node;
+
   if (ent->area.prev)
     G_UnlinkEdict(ent); // unlink from old position
 
@@ -282,12 +369,12 @@ void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
 
   // because movement is clipped an epsilon away from an actual edge,
   // we must fully check even when bounding boxes don't quite touch
-  ent->v.absmin.x -= 1;
-  ent->v.absmin.y -= 1;
-  ent->v.absmin.z -= 1;
-  ent->v.absmax.x += 1;
-  ent->v.absmax.y += 1;
-  ent->v.absmax.z += 1;
+  ent->v.absmin.x -= ONE;
+  ent->v.absmin.y -= ONE;
+  ent->v.absmin.z -= ONE;
+  ent->v.absmax.x += ONE;
+  ent->v.absmax.y += ONE;
+  ent->v.absmax.z += ONE;
 
   // link to PVS leafs
   ent->num_leafs = 0;
@@ -297,5 +384,44 @@ void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
   if (ent->v.solid == SOLID_NOT)
     return;
 
-  // TODO: area node shit
+  // find the first node that the ent's box crosses
+  node = g_areanodes;
+  while (1)
+  {
+    if (node->axis == -1)
+      break;
+    if (ent->v.absmin.d[node->axis] > node->dist)
+      node = node->children[0];
+    else if (ent->v.absmax.d[node->axis] < node->dist)
+      node = node->children[1];
+    else
+      break; // crosses the node
+  }
+
+  // link it in
+  if (ent->v.solid == SOLID_TRIGGER)
+    InsertLinkBefore(&ent->area, &node->trigger_edicts);
+  else
+    InsertLinkBefore(&ent->area, &node->solid_edicts);
+
+  // if touch_triggers, touch all entities at this node and decend for more
+  if (touch_triggers)
+    G_TouchLinks(ent, g_areanodes);
+}
+
+void G_MoveBounds(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, x32vec3_t *boxmins, x32vec3_t *boxmaxs)
+{
+  for (int i = 0; i < 3; i++)
+  {
+    if (end->d[i] > start->d[i])
+    {
+      boxmins->d[i] = start->d[i] + mins->d[i] - ONE;
+      boxmaxs->d[i] = end->d[i] + maxs->d[i] + ONE;
+    }
+    else
+    {
+      boxmins->d[i] = end->d[i] + mins->d[i] - ONE;
+      boxmaxs->d[i] = start->d[i] + maxs->d[i] + ONE;
+    }
+  }
 }

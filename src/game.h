@@ -31,4 +31,6 @@ extern game_state_t gs;
 
 void G_StartMap(const char *path);
 void G_Update(const x16 dt);
-void G_SetModel(edict_t *ed, s16 modelnum);
+
+void G_SetModel(edict_t *ent, s16 modelnum);
+void G_SetSize(edict_t *ent, const x32vec3_t *mins, const x32vec3_t *maxs);

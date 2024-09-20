@@ -78,6 +78,7 @@ void R_DrawWorld(void);
 void R_NewMap(void);
 void R_DrawAliasModel(amodel_t *model, int frame);
 void R_DrawBrushModel(bmodel_t *model);
+void R_DrawBBox(edict_t *ent);
 void R_DrawTextureChains(void);
 void R_RenderView(void);
 void R_Flip(void);

@@ -23,7 +23,7 @@ void G_ParseMapEnts(bmodel_t *mdl)
   gs.edicts[1].v.classname = mdl->mapents[1].classname;
   gs.edicts[1].v.origin = mdl->mapents[1].origin;
   gs.edicts[1].v.angles = mdl->mapents[1].angles;
-  gs.edicts[1].v.solid = SOLID_BSP;
+  gs.edicts[1].v.solid = SOLID_SLIDEBOX;
   gs.edicts[1].v.movetype = MOVETYPE_WALK;
   gs.edicts[1].v.mins = (x32vec3_t){ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) };
   gs.edicts[1].v.maxs = (x32vec3_t){ TO_FIX32(16), TO_FIX32(16), TO_FIX32(32) };
@@ -62,6 +62,9 @@ void G_StartMap(const char *path)
   gs.bmodels = gs.worldmodel->bmodelptrs;
   gs.amodels = gs.worldmodel->amodels;
 
+  // clear area nodes
+  G_ClearWorld();
+
   // spawn entities
   gs.max_edict = 1; // worldspawn, player
   G_ParseMapEnts(gs.worldmodel);
@@ -77,7 +80,7 @@ void G_StartMap(const char *path)
   R_NewMap();
 
   edict_t *ent = gs.edicts + 2;
-  for (int i = 2; i < gs.max_edict; ++i, ++ent) {
+  for (int i = 2; i <= gs.max_edict; ++i, ++ent) {
     G_SetModel(ent, ent->v.modelnum);
     // TODO: move this to an appropriate place
     // execute the spawn function
@@ -107,7 +110,7 @@ void G_Update(const x16 dt)
   G_LinkEdict(ped, true);
 
   edict_t *ed = gs.edicts + 2;
-  for (int i = 2; i < gs.max_edict; ++i, ++ed) {
+  for (int i = 2; i <= gs.max_edict; ++i, ++ed) {
     if (ed->free || !ed->v.think)
       continue;
     if (ed->v.nextthink && ed->v.nextthink <= gs.time)
@@ -126,8 +129,7 @@ void G_SetModel(edict_t *ent, s16 modelnum)
       Sys_Error("G_SetModel(%d): not a valid bmodel", -modelnum);
     const bmodel_t *bmodel = gs.bmodels[modelnum];
     ent->v.model = (void *)bmodel;
-    ent->v.mins = bmodel->mins;
-    ent->v.maxs = bmodel->maxs;
+    G_SetSize(ent, &bmodel->mins, &bmodel->maxs);
   } else if (modelnum) {
     // for an alias model, modelnum is its positive unique id number
     for (int i = 0; i < gs.worldmodel->numamodels; ++i) {
@@ -140,4 +142,11 @@ void G_SetModel(edict_t *ent, s16 modelnum)
   } else {
     ent->v.model = NULL;
   }
+}
+
+void G_SetSize(edict_t *ent, const x32vec3_t *mins, const x32vec3_t *maxs)
+{
+  ent->v.mins = *mins;
+  ent->v.maxs = *maxs;
+  XVecSub(maxs, mins, &ent->v.size);
 }

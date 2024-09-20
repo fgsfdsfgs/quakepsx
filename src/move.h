@@ -4,6 +4,10 @@
 #include "entity.h"
 #include "world.h"
 
+#define MOVE_NORMAL 0
+#define MOVE_NOMONSTERS 1
+#define MOVE_MISSILE 2
+
 #define G_MAXSPEED TO_FIX32(320)
 #define G_ACCELERATE TO_FIX32(10)
 #define G_FRICTION TO_FIX32(4)
@@ -23,7 +27,7 @@ typedef struct {
   x32vec3_t *mins, *maxs;     // size of the moving object
   x32vec3_t mins2, maxs2;     // size when clipping against mosnters
   x32vec3_t *start, *end;
-  trace_t trace;
+  trace_t trace, tmptrace;
   int type;
   edict_t *passedict;
 } moveclip_t;

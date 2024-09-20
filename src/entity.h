@@ -54,10 +54,17 @@ typedef struct entvars_s {
   s16 modelnum;
   s16 frame;
   x32 nextthink;
+  x32 ltime;
   void *model; // either model_t or aliashdr_t
   think_fn_t think;
+  interact_fn_t touch;
+  interact_fn_t blocked;
+  interact_fn_t use;
+  edict_t *owner;
+  edict_t *groundentity;
   x32vec3_t absmin, mins;
   x32vec3_t absmax, maxs;
+  x32vec3_t size;
   x32vec3_t origin;
   x32vec3_t oldorigin;
   x32vec3_t velocity;

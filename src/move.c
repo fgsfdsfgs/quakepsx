@@ -10,6 +10,8 @@ movevars_t *const movevars = PSX_SCRATCH;
 
 #define MAX_CLIP_PLANES 4
 #define STOP_EPSILON 256
+#define STEPSIZE TO_FIX32(18)
+#define MAX_PUSHED 32
 
 static int ClipVelocity(x32vec3_t *in, x16vec3_t *normal, x32vec3_t *out, const x16 overbounce)
 {
@@ -66,6 +68,77 @@ static void G_ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, 
     trace->ent = ent;
 }
 
+void G_ClipToLinks(areanode_t *node, moveclip_t *clip)
+{
+  link_t *l, *next;
+  edict_t *touch;
+  trace_t *trace = &clip->tmptrace;
+
+  // touch linked edicts
+  for (l = node->solid_edicts.next; l != &node->solid_edicts; l = next)
+  {
+    next = l->next;
+    touch = EDICT_FROM_AREA(l);
+    if (touch->v.solid == SOLID_NOT)
+      continue;
+    if (touch == clip->passedict)
+      continue;
+
+    if (clip->type == MOVE_NOMONSTERS && touch->v.solid != SOLID_BSP)
+      continue;
+
+    if (clip->boxmins.d[0] > touch->v.absmax.d[0]
+    || clip->boxmins.d[1] > touch->v.absmax.d[1]
+    || clip->boxmins.d[2] > touch->v.absmax.d[2]
+    || clip->boxmaxs.d[0] < touch->v.absmin.d[0]
+    || clip->boxmaxs.d[1] < touch->v.absmin.d[1]
+    || clip->boxmaxs.d[2] < touch->v.absmin.d[2] )
+      continue;
+
+    if (clip->passedict && clip->passedict->v.size.x && !touch->v.size.x)
+      continue;	// points never interact
+
+    // might intersect, so do an exact clip
+    if (clip->trace.allsolid)
+      return;
+    if (clip->passedict)
+    {
+      if (touch->v.owner == clip->passedict)
+        continue;	// don't clip against own missiles
+      if (clip->passedict->v.owner == touch)
+        continue;	// don't clip against owner
+    }
+
+    if (touch->v.flags & FL_MONSTER)
+      G_ClipMoveToEntity(touch, clip->start, &clip->mins2, &clip->maxs2, clip->end, &clip->tmptrace);
+    else
+      G_ClipMoveToEntity(touch, clip->start, clip->mins, clip->maxs, clip->end, &clip->tmptrace);
+
+    if (trace->allsolid || trace->startsolid || trace->fraction < clip->trace.fraction)
+    {
+      trace->ent = touch;
+      if (clip->trace.startsolid)
+      {
+        clip->trace = *trace;
+        clip->trace.startsolid = true;
+      }
+      else
+        clip->trace = *trace;
+    }
+    else if (trace->startsolid)
+      clip->trace.startsolid = true;
+  }
+
+  // recurse down both sides
+  if (node->axis == -1)
+    return;
+
+  if (clip->boxmaxs.d[node->axis] > node->dist)
+    G_ClipToLinks(node->children[0], clip);
+  if (clip->boxmins.d[node->axis] < node->dist)
+    G_ClipToLinks(node->children[1], clip);
+}
+
 const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict)
 {
   moveclip_t *clip = &movevars->clip;
@@ -83,27 +156,25 @@ const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec
   clip->type = type;
   clip->passedict = passedict;
 
-  /*
   if (type == MOVE_MISSILE)
   {
-    for (i=0 ; i<3 ; i++)
+    for (i = 0; i < 3; i++)
     {
-      clip.mins2[i] = -15;
-      clip.maxs2[i] = 15;
+      clip->mins2.d[i] = -TO_FIX32(15);
+      clip->maxs2.d[i] = TO_FIX32(15);
     }
   }
   else
   {
-    VectorCopy (mins, clip.mins2);
-    VectorCopy (maxs, clip.maxs2);
+    clip->mins2 = *mins;
+    clip->maxs2 = *maxs;
   }
 
   // create the bounding box of the entire move
-  SV_MoveBounds ( start, clip.mins2, clip.maxs2, end, clip.boxmins, clip.boxmaxs );
+  G_MoveBounds(start, &clip->mins2, &clip->maxs2, end, &clip->boxmins, &clip->boxmaxs);
 
   // clip to entities
-  SV_ClipToLinks ( sv_areanodes, &clip );
-  */
+  G_ClipToLinks(g_areanodes, clip);
 
   return &clip->trace;
 }
@@ -251,7 +322,53 @@ const trace_t *G_PushEntity(edict_t *ent, x32vec3_t *push)
   return trace;
 }
 
-#define STEPSIZE TO_FIX32(18)
+int G_TryUnstick(edict_t *ent, x32vec3_t *oldvel)
+{
+	int i;
+	x32vec3_t oldorg = ent->v.origin;
+	x32vec3_t dir = { 0 };
+	int clip;
+	const trace_t *steptrace;
+
+  for (i = 0; i < 8; i++)
+  {
+    // try pushing a little in an axial direction
+    switch (i)
+    {
+      case 0:	dir.d[0] = +2 * ONE; dir.d[1] = +0 * ONE; break;
+      case 1:	dir.d[0] = +0 * ONE; dir.d[1] = +2 * ONE; break;
+      case 2:	dir.d[0] = -2 * ONE; dir.d[1] = +0 * ONE; break;
+      case 3:	dir.d[0] = +0 * ONE; dir.d[1] = -2 * ONE; break;
+      case 4:	dir.d[0] = +2 * ONE; dir.d[1] = +2 * ONE; break;
+      case 5:	dir.d[0] = -2 * ONE; dir.d[1] = +2 * ONE; break;
+      case 6:	dir.d[0] = +2 * ONE; dir.d[1] = -2 * ONE; break;
+      case 7:	dir.d[0] = -2 * ONE; dir.d[1] = -2 * ONE; break;
+    }
+
+    G_PushEntity(ent, &dir);
+
+    // retry the original move
+    ent->v.velocity.d[0] = oldvel->d[0];
+    ent->v.velocity.d[1] = oldvel->d[1];
+    ent->v.velocity.d[2] = 0;
+    clip = G_FlyMove(ent, 41, &steptrace);
+
+    if (oldorg.x == ent->v.origin.x || oldorg.y == ent->v.origin.y)
+    {
+      return clip;
+    }
+
+    // go back to the original pos and try again
+    ent->v.origin = oldorg;
+  }
+
+  ent->v.velocity.x = 0;
+  ent->v.velocity.y = 0;
+  ent->v.velocity.z = 0;
+
+  return 7; // still not moving
+}
+
 void G_WalkMove(edict_t *ent)
 {
   x32vec3_t upmove = { 0 }, downmove = { 0 };
@@ -307,7 +424,8 @@ void G_WalkMove(edict_t *ent)
   // in the clipping hulls
   if (clip)
   {
-    // TODO
+    if (oldorg.y == ent->v.origin.y || oldorg.x == ent->v.origin.x)
+      clip = G_TryUnstick(ent, &oldvel);
   }
 
   // extra friction based on view angle
@@ -322,7 +440,7 @@ void G_WalkMove(edict_t *ent)
     if (ent->v.solid == SOLID_BSP)
     {
       ent->v.flags |= FL_ONGROUND;
-      // ent->v.groundentity = EDICT_TO_PROG(downtrace->ent);
+      ent->v.groundentity = downtrace->ent;
     }
   }
   else
