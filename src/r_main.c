@@ -381,17 +381,24 @@ static inline void DrawEntity(edict_t *ed) {
 
   // set up the GTE matrix
   VECTOR *t = PSX_SCRATCH;
-  SVECTOR *r = (SVECTOR *)(t + 1);
+  VECTOR *s = (VECTOR *)(t + 1);
+  SVECTOR *r = (SVECTOR *)(s + 1);
   r->vx = ed->v.angles.z;
   r->vy = -ed->v.angles.x;
   r->vz = ed->v.angles.y;
+
   PushMatrix();
+
   RotMatrix(r, &rs.entmatrix);
+
+  // if this is an alias model, add its offset and scale to the matrix
+  // otherwise translate by origin
   if (ed->v.modelnum < 0) {
     t->vx = ed->v.origin.x >> FIXSHIFT;
     t->vy = ed->v.origin.y >> FIXSHIFT;
     t->vz = ed->v.origin.z >> FIXSHIFT;
   } else {
+    // rotate the offset first
     t->vx = ((amodel_t *)ed->v.model)->offset.x;
     t->vy = ((amodel_t *)ed->v.model)->offset.y;
     t->vz = ((amodel_t *)ed->v.model)->offset.z;
@@ -399,9 +406,16 @@ static inline void DrawEntity(edict_t *ed) {
     t->vx += ed->v.origin.x >> FIXSHIFT;
     t->vy += ed->v.origin.y >> FIXSHIFT;
     t->vz += ed->v.origin.z >> FIXSHIFT;
+    s->vx = ((amodel_t *)ed->v.model)->scale.x;
+    s->vy = ((amodel_t *)ed->v.model)->scale.y;
+    s->vz = ((amodel_t *)ed->v.model)->scale.z;
+    ScaleMatrix(&rs.entmatrix, s);
   }
+
   TransMatrix(&rs.entmatrix, t);
+
   CompMatrixLV(&rs.matrix, &rs.entmatrix, &rs.entmatrix);
+
   gte_SetRotMatrix(&rs.entmatrix);
   gte_SetTransMatrix(&rs.entmatrix);
 

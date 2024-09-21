@@ -416,15 +416,15 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
   const u8vec3_t *av = averts;
   savert_t *sv = alias_verts;
   for (i = 0; i <= numverts - 3; i += 3, av += 3, sv += 3) {
-    sv[0].pos.x = (av[0].x * model->scale.x) >> FIXSHIFT;
-    sv[0].pos.y = (av[0].y * model->scale.y) >> FIXSHIFT;
-    sv[0].pos.z = (av[0].z * model->scale.z) >> FIXSHIFT;
-    sv[1].pos.x = (av[1].x * model->scale.x) >> FIXSHIFT;
-    sv[1].pos.y = (av[1].y * model->scale.y) >> FIXSHIFT;
-    sv[1].pos.z = (av[1].z * model->scale.z) >> FIXSHIFT;
-    sv[2].pos.x = (av[2].x * model->scale.x) >> FIXSHIFT;
-    sv[2].pos.y = (av[2].y * model->scale.y) >> FIXSHIFT;
-    sv[2].pos.z = (av[2].z * model->scale.z) >> FIXSHIFT;
+    sv[0].pos.x = av[0].x;
+    sv[0].pos.y = av[0].y;
+    sv[0].pos.z = av[0].z;
+    sv[1].pos.x = av[1].x;
+    sv[1].pos.y = av[1].y;
+    sv[1].pos.z = av[1].z;
+    sv[2].pos.x = av[2].x;
+    sv[2].pos.y = av[2].y;
+    sv[2].pos.z = av[2].z;
     gte_ldv3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
     gte_rtpt();
     gte_stsxy3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
@@ -432,9 +432,9 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
   }
   // transform the remaining 1-2 verts
   for (; i < numverts; ++i, ++sv, ++av) {
-    sv[0].pos.x = (av[0].x * model->scale.x) >> FIXSHIFT;
-    sv[0].pos.y = (av[0].y * model->scale.y) >> FIXSHIFT;
-    sv[0].pos.z = (av[0].z * model->scale.z) >> FIXSHIFT;
+    sv[0].pos.x = av[0].x;
+    sv[0].pos.y = av[0].y;
+    sv[0].pos.z = av[0].z;
     gte_ldv0(&sv[0].pos.x);
     gte_rtps();
     gte_stsxy(&sv[0].pos.x);
