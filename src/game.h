@@ -19,6 +19,7 @@ typedef struct game_state_s {
   x16 frametime;
   s16 num_edicts;
   s16 max_edict;
+  s16 force_retouch;
   qboolean paused;
   bmodel_t *worldmodel;
   bmodel_t **bmodels;

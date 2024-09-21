@@ -171,7 +171,7 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
   }
   else
   {
-    XVecSub(&x32vec3_origin, &plane->normal, &trace->plane.normal);
+    XVecNegate(&plane->normal, &trace->plane.normal);
     trace->plane.dist = -plane->dist;
   }
 

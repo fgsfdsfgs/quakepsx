@@ -22,6 +22,8 @@
 // 2 * G_FORWARDSPEED / G_MAXSPEED
 #define G_DOUBLESPEEDFRAC TO_FIX32(3277) // ~0.8
 
+#define G_FLOORNORMALZ 2867 // TO_FIX32(0.7)
+
 typedef struct {
   x32vec3_t boxmins, boxmaxs; // enclose the test object along entire move
   x32vec3_t *mins, *maxs;     // size of the moving object
@@ -49,9 +51,13 @@ typedef struct {
 // this resides in the scratch and is used by G_Move and G_PlayerMove
 extern movevars_t *const movevars;
 
+edict_t *G_TestEntityPosition(edict_t *ent);
 const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict);
 
 int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace);
 void G_WalkMove(edict_t *ent);
+void G_PushMove(edict_t *pusher, x16 time);
 
 void PM_PlayerMove(const x16 dt);
+
+void G_Physics(void);

@@ -50,11 +50,13 @@ typedef struct entvars_s {
   u8 solid;
   u8 movetype;
   u8 waterlevel;
+  u8 watertype;
   u16 flags;
   s16 modelnum;
   s16 frame;
   x32 nextthink;
   x32 ltime;
+  x32 viewheight;
   void *model; // either model_t or aliashdr_t
   think_fn_t think;
   interact_fn_t touch;
@@ -68,6 +70,7 @@ typedef struct entvars_s {
   x32vec3_t origin;
   x32vec3_t oldorigin;
   x32vec3_t velocity;
+  x16vec3_t avelocity;
   x16vec3_t angles;
 } entvars_t;
 

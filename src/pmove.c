@@ -7,7 +7,7 @@
 
 #define STOP_EPSILON 41 // ~0.01
 
-static void PM_UserFriction(void)
+static x32 PM_UserFriction(const x32 stopspeed)
 {
   x32 speed, newspeed, control;
   x32vec3_t *vel = movevars->pm.velocity;
@@ -22,12 +22,12 @@ static void PM_UserFriction(void)
   {
     vel->x = 0;
     vel->y = 0;
-    return;
+    return 0;
   }
 
   speed = TO_FIX32(SquareRoot0(speed));
 
-  control = speed < G_STOPSPEED ? G_STOPSPEED : speed;
+  control = speed < stopspeed ? stopspeed : speed;
   control = xmul32(G_FRICTION, control);
   newspeed = speed - xmul32(gs.frametime, control);
 
@@ -41,6 +41,8 @@ static void PM_UserFriction(void)
   {
     XVecScaleSL(&dir, newspeed, vel);
   }
+
+  return newspeed;
 }
 
 static void PM_Accelerate(void)
@@ -116,7 +118,7 @@ static void PM_AirMove(void)
   }
   else if (movevars->pm.onground)
   {
-    PM_UserFriction();
+    PM_UserFriction(G_STOPSPEED);
     PM_Accelerate();
   }
   else
@@ -126,12 +128,98 @@ static void PM_AirMove(void)
   }
 }
 
-static inline void CalculateWishDir(const x32vec3_t *move, const x16 yaw, x16vec3_t *wishdir)
+static void PM_WaterMove(void)
+{
+  player_state_t *plr = &gs.player[0];
+  x32vec3_t *wishvel = &movevars->pm.wishvel;
+  x16vec3_t *wishdir = &movevars->pm.wishdir;
+  x16vec3_t dir;
+  x32 newspeed, addspeed, accelspeed;
+
+  if (!plr->move.x && !plr->move.y && !plr->move.z)
+  {
+    // drift towards bottom
+    wishvel->x = 0;
+    wishvel->y = 0;
+    wishvel->z = -TO_FIX32(60);
+    wishdir->x = 0;
+    wishdir->y = 0;
+    wishdir->z = -ONE;
+  }
+  else
+  {
+    // assume movespeed is either G_FORWARDSPEED or 2 * G_FORWARDSPEED
+    wishvel->x = xmul32(wishdir->x, plr->movespeed);
+    wishvel->y = xmul32(wishdir->y, plr->movespeed);
+    wishvel->z = +plr->move.z;
+  }
+
+  movevars->pm.wishspeed = plr->movespeed;
+
+  if (movevars->pm.wishspeed > G_MAXSPEED)
+  {
+    // this can only happen if we're sprinting, and that doubles the speed
+    // so the fraction would be 320 / (2 * 200) = 0.8
+    XVecScaleLS(wishvel, G_DOUBLESPEEDFRAC, wishvel);
+    movevars->pm.wishspeed = G_MAXSPEED;
+  }
+  movevars->pm.wishspeed = xmul32(2867, movevars->pm.wishspeed); // TO_FIX32(0.7)
+
+  // water friction
+  newspeed = PM_UserFriction(0);
+
+  // water acceleration
+  if (!movevars->pm.wishspeed)
+    return;
+
+  addspeed = movevars->pm.wishspeed - newspeed;
+  if (addspeed <= 0)
+    return;
+
+  accelspeed = xmul32(gs.frametime, G_ACCELERATE);
+  accelspeed = xmul32(accelspeed, movevars->pm.wishspeed);
+  if (accelspeed > addspeed)
+    accelspeed = addspeed;
+
+  for (int i = 0; i < 3; i++)
+    movevars->pm.velocity->d[i] += xmul32(wishdir->d[i], accelspeed);
+}
+
+static inline void PM_WaterJump (void)
+{
+  player_state_t *plr = &gs.player[0];
+  edict_t *ent = plr->ent;
+  if (!ent->v.waterlevel)
+  {
+    ent->v.flags &= ~FL_WATERJUMP;
+    // ent->v.teleport_time = 0;
+  }
+  ent->v.velocity.x = plr->move.x;
+  ent->v.velocity.y = plr->move.y;
+}
+
+static inline void CalculateWishDir(const x32vec3_t *move, const edict_t *ped, x16vec3_t *wishdir)
 {
   x16 wx;
   x16 wy;
 
-  wishdir->z = 0;
+  if (move->z && (ped->v.movetype != MOVETYPE_WALK || ped->v.waterlevel >= 2))
+  {
+    if (move->x || move->y)
+    {
+      // diagonal move, vector is gonna be (+-1/sqrt(2), +-1/sqrt(2), +-1)
+      wishdir->z = xsign32(move->z) * 2896;
+    }
+    else
+    {
+      // cardinal move, vector is gonna be (0, 0, +-1)
+      wishdir->z = xsign32(move->z) * ONE;
+    }
+  }
+  else
+  {
+    wishdir->z = 0;
+  }
 
   if (move->x && move->y)
   {
@@ -153,8 +241,8 @@ static inline void CalculateWishDir(const x32vec3_t *move, const x16 yaw, x16vec
   }
 
   // rotate wishdir
-  const x32 sy = isin(yaw);
-  const x32 cy = icos(yaw);
+  const x32 sy = isin(ped->v.angles.y);
+  const x32 cy = icos(ped->v.angles.y);
   wishdir->x = XMUL16(wx, cy) - XMUL16(wy, sy);
   wishdir->y = XMUL16(wx, sy) + XMUL16(wy, cy);
 }
@@ -180,21 +268,25 @@ void PM_PlayerMove(const x16 dt)
   // we can calculate the direction in which we want to go, then rotate it
   // this is needed to avoid having to normalize vectors and calculate their lengths
   x16vec3_t *wishdir = &movevars->pm.wishdir;
-  CalculateWishDir(&plr->move, ped->v.angles.y, wishdir);
+  CalculateWishDir(&plr->move, ped, wishdir);
 
   if (ped->v.movetype == MOVETYPE_WALK)
   {
-    // calculate velocity
-    PM_AirMove();
-
-    // jump if able, otherwise apply gravity
-    if (movevars->pm.onground && plr->move.z > 0)
-      ped->v.velocity.z += G_JUMPSPEED;
-
-    ped->v.velocity.z -= xmul32(dt, G_GRAVITY);
-
-    // apply movement
-    G_WalkMove(ped);
+    if (ped->v.flags & FL_WATERJUMP)
+    {
+      PM_WaterJump();
+    }
+    else if (ped->v.waterlevel >= 2)
+    {
+      PM_WaterMove();
+    }
+    else
+    {
+      PM_AirMove();
+      // jump if able
+      if (movevars->pm.onground && plr->move.z > 0)
+        ped->v.velocity.z += G_JUMPSPEED;
+    }
   }
   else if (ped->v.movetype == MOVETYPE_NOCLIP)
   {

@@ -106,16 +106,7 @@ void G_Update(const x16 dt)
   ped->v.angles.y = plr->viewangles.y;
   ped->v.angles.z = 0;
 
-  PM_PlayerMove(dt);
-  G_LinkEdict(ped, true);
-
-  edict_t *ed = gs.edicts + 2;
-  for (int i = 2; i <= gs.max_edict; ++i, ++ed) {
-    if (ed->free || !ed->v.think)
-      continue;
-    if (ed->v.nextthink && ed->v.nextthink <= gs.time)
-      ed->v.think(ed);
-  }
+  G_Physics();
 }
 
 void G_SetModel(edict_t *ent, s16 modelnum)

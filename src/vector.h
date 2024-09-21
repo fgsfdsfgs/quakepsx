@@ -81,10 +81,30 @@ extern const x16vec3_t x16vec3_origin;
 #define XVecLengthL(v) \
   (SquareRoot12(XVecLengthSqrL(v)))
 
+#define XVecZero(v) \
+  { (v)->x = 0; (v)->y = 0; (v)->z = 0; }
+
+#define XVecNegate(a, b) \
+  { (b)->x = -(a)->x; (b)->y = -(a)->y; (b)->z = -(a)->z; }
+
 FORCEINLINE void XVecSignLS(const x32vec3_t *in, x16vec3_t *out) {
   out->x = xsign32(in->x);
   out->y = xsign32(in->y);
   out->z = xsign32(in->z);
+}
+
+FORCEINLINE void XVecMulAddLSL(const x32vec3_t *a, const x16 b, const x32vec3_t *c, x32vec3_t *out)
+{
+  out->x = a->x + xmul32(b, c->x);
+  out->y = a->y + xmul32(b, c->y);
+  out->z = a->z + xmul32(b, c->z);
+}
+
+FORCEINLINE void XVecMulAddS(const x16vec3_t *a, const x16 b, const x16vec3_t *c, x16vec3_t *out)
+{
+  out->x = a->x + xmul32(b, c->x);
+  out->y = a->y + xmul32(b, c->y);
+  out->z = a->z + xmul32(b, c->z);
 }
 
 extern x32 XVecLengthSqrL(const x32vec3_t *v);

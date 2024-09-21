@@ -23,5 +23,6 @@ void spawn_monster_army(edict_t *self) {
   self->v.think = army_think;
   self->v.nextthink = gs.time + 410;
   self->v.solid = SOLID_SLIDEBOX;
+  self->v.movetype = MOVETYPE_STEP;
   self->v.flags = FL_MONSTER;
 }
