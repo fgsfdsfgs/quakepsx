@@ -5,7 +5,6 @@
 /* XMDL STRUCTURE
  * aliashdr_t      hdr;
  * aliastri_t      tris[hdr.numtris];
- * aliastexcoord_t texcoords[hdr.numverts];
  * aliasvert_t     frames[hdr.numframes][hdr.numverts];
  */
 
@@ -16,13 +15,14 @@
 #pragma pack(push, 1)
 
 typedef struct {
-  u8vec2_t texcoords[3];
+  u8vec2_t uvs[3];
   u8 verts[3];
   u8 fnorm;
 } atri_t;
 
 typedef struct {
-  s16 type;
+  u8 type;
+  u8 flags;
   s16 id;
   u8 numframes;
   u8 numverts;

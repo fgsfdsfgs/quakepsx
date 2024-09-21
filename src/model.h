@@ -135,10 +135,9 @@ typedef enum { mod_brush, mod_sprite, mod_alias } modtype_t;
 // somewhat confusingly our brush model struct also contains alias models
 
 typedef struct bmodel_s {
-  s16 type;
+  u8 type;
+  u8 flags;
   s16 id; // <0 == brush models
-
-  int flags;
 
   x32vec3_t mins, maxs;
   x32 radius;

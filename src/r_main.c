@@ -34,6 +34,8 @@ int r_debugstream = -1;
 static fb_t fb[2];
 static int fbidx;
 
+static x16 bobjrotate;
+
 void *GPU_SortPrim(const u32 size, const int otz) {
   u8 *newptr = gpu_ptr + size;
   ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
@@ -386,6 +388,11 @@ static inline void DrawEntity(edict_t *ed) {
   r->vx = ed->v.angles.z;
   r->vy = -ed->v.angles.x;
   r->vz = ed->v.angles.y;
+  if (ed->v.modelnum > 0 && (((amodel_t *)ed->v.model)->flags & EF_ROTATE)) {
+    r->vz = bobjrotate;
+  } else {
+    r->vz = ed->v.angles.y;
+  }
 
   PushMatrix();
 
@@ -430,6 +437,8 @@ static inline void DrawEntity(edict_t *ed) {
 }
 
 void R_DrawEntities(void) {
+  bobjrotate = (gs.time >> 2) & (FIXSCALE - 1);
+
   edict_t *ed = gs.edicts;
   for (int i = 0; i <= gs.max_edict; ++i, ++ed) {
     if (ed->free || !ed->v.model)

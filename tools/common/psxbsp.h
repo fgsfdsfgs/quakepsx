@@ -165,7 +165,7 @@ typedef struct {
 
 typedef struct {
   u8 classname;
-  u8 spawnflags;
+  u16 spawnflags;
   s16 model; // negative = brush models, positive = alias models
   x32vec3_t origin;
   x16vec3_t angles;

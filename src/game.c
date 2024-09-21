@@ -36,15 +36,18 @@ void G_ParseMapEnts(bmodel_t *mdl)
   edict_t *ent = &gs.edicts[2];
   xbspent_t *mapent = &mdl->mapents[2];
   int i;
-  for (i = 2; i < mdl->nummapents; ++i, ++mapent, ++ent) {
+  for (i = 2; i < mdl->nummapents; ++i, ++mapent) {
+    if ((mapent->spawnflags & SPAWNFLAG_SKILL_MASK) == SPAWNFLAG_SKILL_MASK)
+      continue; // deathmatch only
     ent->free = false;
     ent->v.classname = mapent->classname;
     ent->v.origin = mapent->origin;
     ent->v.angles = mapent->angles;
     ent->v.modelnum = mapent->model;
+    ++ent;
   }
 
-  gs.max_edict = i - 1;
+  gs.max_edict = ent - gs.edicts - 1;
 
   // this is no longer required
   Mem_Free(mdl->mapents);

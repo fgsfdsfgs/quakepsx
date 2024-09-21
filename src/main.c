@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
   Mem_SetMark(MEM_MARK_LO);
 
-  G_StartMap(FS_BASE "\\MAPS\\E1M1.PSB;1");
+  G_StartMap(FS_BASE "\\MAPS\\E1M2.PSB;1");
 
   x32 then = 0;
   x32 time = 0;

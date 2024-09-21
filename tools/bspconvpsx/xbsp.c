@@ -89,7 +89,7 @@ static inline void rect_fill(const int pg, int sx, int sy, int w, int h) {
 }
 
 // tries to fit w x h texture into vram image
-static int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, int *outy) {
+int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, int *outy) {
   int x = -1;
   int y = -1;
 
@@ -346,97 +346,6 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     xf->styles[1] = qf->styles[1] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[1];
   }
   xbsp_faces[xbsp_numfaces++] = *xf;
-}
-
-void xbsp_entmodel_add(qmdl_t *qm) {
-  assert(xbsp_numentmodels < MAX_XMAP_ENTMODELS);
-  assert(qm->header->numverts < MAX_XMDL_VERTS);
-  assert(qm->header->numtris < MAX_XMDL_TRIS);
-  assert(qm->header->numframes < MAX_XMDL_FRAMES);
-
-  qvec3_t mins = { +1e10f, +1e10f, +1e10f };
-  qvec3_t maxs = { -1e10f, -1e10f, -1e10f };
-  u8 *origptr = xbsp_entmodeldataptr;
-  u32 baseofs = xbsp_entmodeldataptr - xbsp_entmodeldata;
-  xaliashdr_t *xmhdr = &xbsp_entmodels[xbsp_numentmodels++];
-  xmhdr->type = 1; // mod_alias
-  xmhdr->id = qm->id;
-  xmhdr->numframes = qm->header->numframes;
-  xmhdr->numtris = qm->header->numtris;
-  xmhdr->numverts = qm->header->numverts;
-  xmhdr->scale = qvec3_to_x16vec3(qm->header->scale);
-  xmhdr->offset = qvec3_to_s16vec3(qm->header->translate);
-  xmhdr->trisofs = baseofs;
-  xmhdr->framesofs = xmhdr->trisofs + sizeof(xaliastri_t) * xmhdr->numtris;
-
-  // scale the texture down 2x because the skins are fucking massive
-  static u8 dst[256 * 256];
-  const u32 srcw = qm->header->skinwidth;
-  const u32 srch = qm->header->skinheight;
-  const u32 dstw = srcw >> 1;
-  const u32 dsth = srch >> 1;
-  const u8 *src = qm->skins[0].data;
-  assert(dstw <= 256);
-  assert(dsth <= 256);
-  for (u32 y = 0; y < dsth; ++y) {
-    for (u32 x = 0; x < dstw; ++x)
-      dst[y * dstw + x] = src[(y << 1) * srcw + (x << 1)];
-  }
-
-  xtexinfo_t xti;
-  int vramx = 0, vramy = 0;
-  for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
-    if (xbsp_vram_page_fit(&xti, i, dstw >> 1, dsth, &vramx, &vramy) == 0)
-      break;
-  }
-  xbsp_vram_store_mdltex(dst, vramx, vramy, dstw, dsth);
-  xmhdr->tpage = xti.tpage;
-
-  xaliastri_t *xmtri = (xaliastri_t *)(xbsp_entmodeldata + xmhdr->trisofs);
-  for (int i = 0; i < xmhdr->numtris; ++i, ++xmtri) {
-    xmtri->verts[0] = qm->tris[i].vertex[0];
-    xmtri->verts[1] = qm->tris[i].vertex[1];
-    xmtri->verts[2] = qm->tris[i].vertex[2];
-    xmtri->normal = 0; // TODO
-    for (int j = 0; j < 3; ++j) {
-      const qaliastexcoord_t *qtc = &qm->texcoords[xmtri->verts[j]];
-      const f32 u = ((f32)qtc->s + 0.5f) / qm->header->skinwidth;
-      const f32 v = ((f32)qtc->t + 0.5f) / qm->header->skinheight;
-      f32 u2 = (f32)qtc->s + (f32)qm->header->skinwidth * 0.5f;
-      u2 = ((f32)u2 + 0.5f) / qm->header->skinwidth;
-      xmtri->texcoords[j].v = xti.uv.v + (s16)(v * dsth);
-      if (qtc->onseam && !qm->tris[i].front)
-        xmtri->texcoords[j].u = xti.uv.u + (s16)(u2 * dstw);
-      else
-        xmtri->texcoords[j].u = xti.uv.u + (s16)(u * dstw);
-    }
-  }
-
-  xaliasvert_t *xmvert = (xaliasvert_t *)(xbsp_entmodeldata + xmhdr->framesofs);
-  for (int i = 0; i < xmhdr->numframes; ++i) {
-    const qaliasframe_t *qframe = &qm->frames[i];
-    for (int j = 0; j < xmhdr->numverts; ++j, ++xmvert) {
-      const qtrivertx_t *vert = &qframe->verts[j];
-      for (int k = 0; k < 3; ++k) {
-        xmvert->d[k] = vert->v[k];
-        const f32 v = qm->header->scale[k] * (f32)vert->v[k] + qm->header->translate[k];
-        if (v < mins[k]) mins[k] = v;
-        else if (v > maxs[k]) maxs[k] = v;
-      }
-    }
-  }
-
-  xmhdr->mins = qvec3_to_x32vec3(mins);
-  xmhdr->maxs = qvec3_to_x32vec3(maxs);
-
-  xbsp_entmodeldataptr = (u8 *)xmvert;
-
-  printf("* * id: %02x verts: %u, tris: %u, frames: %u size: %u skin: %ux%u extents: (%f, %f, %f)\n",
-    xmhdr->id,
-    xmhdr->numverts, xmhdr->numtris, xmhdr->numframes,
-    (u32)(xbsp_entmodeldataptr - origptr),
-    dstw, dsth,
-    maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 }
 
 int xbsp_write(const char *fname) {

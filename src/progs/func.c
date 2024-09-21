@@ -42,3 +42,19 @@ void spawn_func_wall(edict_t *self) {
   self->v.solid = SOLID_BSP;
   self->v.movetype = MOVETYPE_PUSH;
 }
+
+void spawn_misc_explobox(edict_t *self) {
+  self->v.mins = ((amodel_t *)self->v.model)->mins;
+  self->v.maxs = ((amodel_t *)self->v.model)->maxs;
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
+  self->v.solid = SOLID_BBOX;
+  self->v.movetype = MOVETYPE_NONE;
+}
+
+void spawn_misc_explobox2(edict_t *self) {
+  self->v.mins = ((amodel_t *)self->v.model)->mins;
+  self->v.maxs = ((amodel_t *)self->v.model)->maxs;
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
+  self->v.solid = SOLID_BBOX;
+  self->v.movetype = MOVETYPE_NONE;
+}

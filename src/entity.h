@@ -40,6 +40,13 @@
 #define FL_WATERJUMP     2048  // player jumping out of water
 #define FL_JUMPRELEASED  4096  // for jump debouncing
 
+// spawnflags
+#define SPAWNFLAG_NOT_EASY       256
+#define SPAWNFLAG_NOT_MEDIUM     512
+#define SPAWNFLAG_NOT_HARD       1024
+#define SPAWNFLAG_NOT_DEATHMATCH 2048
+#define SPAWNFLAG_SKILL_MASK     (SPAWNFLAG_NOT_EASY | SPAWNFLAG_NOT_MEDIUM | SPAWNFLAG_NOT_HARD)
+
 typedef struct edict_s edict_t;
 
 typedef void (*think_fn_t)(edict_t *self);

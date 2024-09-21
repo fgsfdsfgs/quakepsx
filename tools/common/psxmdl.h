@@ -20,13 +20,14 @@ typedef u8vec3_t xaliasvert_t;
 typedef u8vec2_t xaliastexcoord_t;
 
 typedef struct {
-  u8vec2_t texcoords[3];
+  u8vec2_t uvs[3];
   u8 verts[3];
   u8 normal;
 } xaliastri_t;
 
 typedef struct {
-  s16 type;
+  u8 type;
+  u8 flags;
   s16 id;
   u8 numframes;
   u8 numverts;

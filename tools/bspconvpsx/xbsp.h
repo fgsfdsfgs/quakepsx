@@ -43,6 +43,7 @@ extern xlump_t     xbsp_lumps[XLMP_COUNT];
 
 void xbsp_set_palette(const u8 *pal);
 xmapsnd_t *xbsp_spu_fit(const u8 *data, u32 size);
+int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, int *outy);
 int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy);
 void xbsp_vram_store_miptex(const qmiptex_t *qti, int x, int y);
 void xbsp_vram_store_mdltex(const u8 *data, int x, int y, int w, int h);
@@ -51,5 +52,4 @@ u16 xbsp_texture_flags(const qmiptex_t *qti);
 int xbsp_texture_shrink(int *w, int *h);
 int xbsp_vram_height(void);
 void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp);
-void xbsp_entmodel_add(qmdl_t *qm);
 int xbsp_write(const char *fname);

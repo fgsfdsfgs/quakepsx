@@ -25,13 +25,13 @@ extern void spawn_info_player_deathmatch(edict_t *self) { }
 extern void spawn_info_player_start(edict_t *self) { }
 extern void spawn_info_player_start2(edict_t *self) { }
 extern void spawn_info_teleport_destination(edict_t *self) { }
-extern void spawn_item_armor1(edict_t *self) { }
-extern void spawn_item_armor2(edict_t *self) { }
-extern void spawn_item_armorInv(edict_t *self) { }
-extern void spawn_item_artifact_envirosuit(edict_t *self) { }
-extern void spawn_item_artifact_invisibility(edict_t *self) { }
-extern void spawn_item_artifact_invulnerability(edict_t *self) { }
-extern void spawn_item_artifact_super_damage(edict_t *self) { }
+extern void spawn_item_armor1(edict_t *self);
+extern void spawn_item_armor2(edict_t *self);
+extern void spawn_item_armorInv(edict_t *self);
+extern void spawn_item_artifact_envirosuit(edict_t *self);
+extern void spawn_item_artifact_invisibility(edict_t *self);
+extern void spawn_item_artifact_invulnerability(edict_t *self);
+extern void spawn_item_artifact_super_damage(edict_t *self);
 extern void spawn_item_cells(edict_t *self) { }
 extern void spawn_item_health(edict_t *self) { }
 extern void spawn_item_key1(edict_t *self) { }
@@ -40,7 +40,7 @@ extern void spawn_item_rockets(edict_t *self) { }
 extern void spawn_item_shells(edict_t *self) { }
 extern void spawn_item_sigil(edict_t *self) { }
 extern void spawn_item_spikes(edict_t *self) { }
-extern void spawn_item_weapon(edict_t *self) { }
+extern void spawn_item_weapon(edict_t *self);
 extern void spawn_light(edict_t *self) { }
 extern void spawn_light_flame_large_yellow(edict_t *self) { }
 extern void spawn_light_flame_small_white(edict_t *self) { }
@@ -49,8 +49,8 @@ extern void spawn_light_fluoro(edict_t *self) { }
 extern void spawn_light_fluorospark(edict_t *self) { }
 extern void spawn_light_globe(edict_t *self) { }
 extern void spawn_light_torch_small_walltorch(edict_t *self) { }
-extern void spawn_misc_explobox(edict_t *self) { }
-extern void spawn_misc_explobox2(edict_t *self) { }
+extern void spawn_misc_explobox(edict_t *self);
+extern void spawn_misc_explobox2(edict_t *self);
 extern void spawn_misc_fireball(edict_t *self) { }
 extern void spawn_misc_teleporttrain(edict_t *self) { }
 extern void spawn_monster_army(edict_t *self);
@@ -82,12 +82,12 @@ extern void spawn_trigger_relay(edict_t *self) { }
 extern void spawn_trigger_secret(edict_t *self) { }
 extern void spawn_trigger_setskill(edict_t *self) { }
 extern void spawn_trigger_teleport(edict_t *self) { }
-extern void spawn_weapon_grenadelauncher(edict_t *self) { }
-extern void spawn_weapon_lightning(edict_t *self) { }
-extern void spawn_weapon_nailgun(edict_t *self) { }
-extern void spawn_weapon_rocketlauncher(edict_t *self) { }
-extern void spawn_weapon_supernailgun(edict_t *self) { }
-extern void spawn_weapon_supershotgun(edict_t *self) { }
+extern void spawn_weapon_grenadelauncher(edict_t *self);
+extern void spawn_weapon_lightning(edict_t *self);
+extern void spawn_weapon_nailgun(edict_t *self);
+extern void spawn_weapon_rocketlauncher(edict_t *self);
+extern void spawn_weapon_supernailgun(edict_t *self);
+extern void spawn_weapon_supershotgun(edict_t *self);
 
 think_fn_t ent_spawnfuncs[] = {
   [ENT_AIR_BUBBLES] = spawn_air_bubbles,

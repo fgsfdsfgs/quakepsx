@@ -13,6 +13,7 @@
 
 #include "util.h"
 #include "xbsp.h"
+#include "xmdl.h"
 #include "qbsp.h"
 #include "qmdl.h"
 #include "qent.h"
@@ -288,6 +289,9 @@ static void do_entities(void) {
         xent->model = qmdl_id_for_name(qent->info->mdls[0]);
       }
     }
+
+    if (qent_get_int(qent, "spawnflags", &tmpint))
+      xent->spawnflags = tmpint;
   }
 
   xbsp_lumps[XLMP_ENTITIES].size = sizeof(*xent) * xbsp_numentities;
@@ -295,13 +299,22 @@ static void do_entities(void) {
 }
 
 static void load_entmodel(const char *mdlname) {
-  if (qmdl_find(mdlname))
+  const int id = qmdl_id_for_name(mdlname);
+  if (xbsp_entmodel_find(id))
     return;
+
   printf("* loading model %s\n", mdlname);
+
   size_t mdlsize = 0;
   u8 *mdl = lmp_read(moddir, mdlname, &mdlsize);
-  qmdl_t *qmdl = qmdl_add(mdlname, mdl, mdlsize);
-  xbsp_entmodel_add(qmdl);
+  if (strstr(mdlname, ".bsp")) {
+    static qbsp_t tmpqbsp;
+    qbsp_init(&tmpqbsp, mdl, mdlsize);
+    xbsp_entmodel_add_from_qbsp(&tmpqbsp, id);
+  } else {
+    qmdl_t *qmdl = qmdl_add(mdlname, mdl, mdlsize);
+    xbsp_entmodel_add_from_qmdl(qmdl);
+  }
 }
 
 static void do_entmodels(void) {
