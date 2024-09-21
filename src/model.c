@@ -71,7 +71,6 @@ static void Mod_LoadAliasData(bmodel_t *mod, const int fh) {
   for (u32 i = 0; i < num_mdls; ++i) {
     mdls[i].frames = (void *)((uintptr_t)mdls[i].frames + (u8 *)mdldata);
     mdls[i].tris = (void *)((uintptr_t)mdls[i].tris + (u8 *)mdldata);
-    mdls[i].texcoords = (void *)((uintptr_t)mdls[i].texcoords + (u8 *)mdldata);
   }
 
   mod->numamodels = num_mdls;

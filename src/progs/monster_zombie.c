@@ -1,8 +1,8 @@
 #include "prcommon.h"
 #include "monster.h"
 
-void spawn_monster_army(edict_t *self) {
-  G_SetModel(self, MDLID_SOLDIER);
+void spawn_monster_zombie(edict_t *self) {
+  G_SetModel(self, MDLID_ZOMBIE);
   XVecSetInt(&self->v.mins, -16, -16, -24);
   XVecSetInt(&self->v.maxs, +16, +16, +24);
   G_SetSize(self, &self->v.mins, &self->v.maxs);

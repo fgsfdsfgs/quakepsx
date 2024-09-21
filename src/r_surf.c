@@ -443,13 +443,9 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
 
   const atri_t *tri = model->tris;
   for (int i = 0; i < numtris; ++i, ++tri) {
-    const qboolean back = tri->fnorm & 0x80;
     const savert_t *sv0 = &alias_verts[tri->verts[0]];
     const savert_t *sv1 = &alias_verts[tri->verts[1]];
     const savert_t *sv2 = &alias_verts[tri->verts[2]];
-    const u8vec3_t *uv0 = &model->texcoords[tri->verts[0]];
-    const u8vec3_t *uv1 = &model->texcoords[tri->verts[1]];
-    const u8vec3_t *uv2 = &model->texcoords[tri->verts[2]];
 
     // cull backfaces
     gte_ldsxy3(&sv0->pos.x, &sv1->pos.x, &sv2->pos.x);
@@ -470,18 +466,12 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
     *(u32 *)&poly->x0 = *(u32 *)&sv0->pos.x;
     *(u32 *)&poly->x1 = *(u32 *)&sv1->pos.x;
     *(u32 *)&poly->x2 = *(u32 *)&sv2->pos.x;
-    if (back) {
-      poly->u0 = uv0->p;
-      poly->u1 = uv1->p;
-      poly->u2 = uv2->p;
-    } else {
-      poly->u0 = uv0->u;
-      poly->u1 = uv1->u;
-      poly->u2 = uv2->u;
-    }
-    poly->v0 = uv0->v;
-    poly->v1 = uv1->v;
-    poly->v2 = uv2->v;
+    poly->u0 = tri->texcoords[0].u;
+    poly->v0 = tri->texcoords[0].v;
+    poly->u1 = tri->texcoords[1].u;
+    poly->v1 = tri->texcoords[1].v;
+    poly->u2 = tri->texcoords[2].u;
+    poly->v2 = tri->texcoords[2].v;
     *(u32 *)&poly->r0 = col;
     *(u32 *)&poly->r1 = col;
     *(u32 *)&poly->r2 = col;

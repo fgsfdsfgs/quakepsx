@@ -7,7 +7,6 @@
 /* XMDL STRUCTURE
  * xaliashdr_t      hdr;
  * xaliastri_t      tris[hdr.numtris];
- * xaliastexcoord_t texcoords[hdr.numverts];
  * xaliasvert_t     frames[hdr.numframes][hdr.numverts];
  */
 
@@ -18,13 +17,12 @@
 // real coord = verts[i] * scale + offset
 typedef u8vec3_t xaliasvert_t;
 
-// u, v = normal uv
-// w = u for onseam tris
-typedef u8vec3_t xaliastexcoord_t;
+typedef u8vec2_t xaliastexcoord_t;
 
 typedef struct {
+  u8vec2_t texcoords[3];
   u8 verts[3];
-  u8 fnorm; // top bit: backface, bottom 7 bits: normal index
+  u8 normal;
 } xaliastri_t;
 
 typedef struct {
@@ -39,7 +37,6 @@ typedef struct {
   x32vec3_t mins;
   x32vec3_t maxs;
   u32 trisofs;
-  u32 texcoordsofs; // count: 2 * numverts
   u32 framesofs; // real v = verts[v] * scale + offset
 } xaliashdr_t;
 

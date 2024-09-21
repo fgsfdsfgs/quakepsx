@@ -55,19 +55,19 @@ extern void spawn_misc_fireball(edict_t *self) { }
 extern void spawn_misc_teleporttrain(edict_t *self) { }
 extern void spawn_monster_army(edict_t *self);
 extern void spawn_monster_boss(edict_t *self) { }
-extern void spawn_monster_demon1(edict_t *self) { }
+extern void spawn_monster_demon1(edict_t *self);
 extern void spawn_monster_dog(edict_t *self);
 extern void spawn_monster_enforcer(edict_t *self) { }
-extern void spawn_monster_fish(edict_t *self) { }
-extern void spawn_monster_hell_knight(edict_t *self) { }
-extern void spawn_monster_knight(edict_t *self) { }
-extern void spawn_monster_ogre(edict_t *self) { }
+extern void spawn_monster_fish(edict_t *self);
+extern void spawn_monster_hell_knight(edict_t *self);
+extern void spawn_monster_knight(edict_t *self);
+extern void spawn_monster_ogre(edict_t *self);
 extern void spawn_monster_oldone(edict_t *self) { }
 extern void spawn_monster_shalrath(edict_t *self) { }
-extern void spawn_monster_shambler(edict_t *self) { }
+extern void spawn_monster_shambler(edict_t *self);
 extern void spawn_monster_tarbaby(edict_t *self) { }
-extern void spawn_monster_wizard(edict_t *self) { }
-extern void spawn_monster_zombie(edict_t *self) { }
+extern void spawn_monster_wizard(edict_t *self);
+extern void spawn_monster_zombie(edict_t *self);
 extern void spawn_path_corner(edict_t *self) { }
 extern void spawn_trap_spikeshooter(edict_t *self) { }
 extern void spawn_trigger_changelevel(edict_t *self) { }

@@ -367,8 +367,7 @@ void xbsp_entmodel_add(qmdl_t *qm) {
   xmhdr->scale = qvec3_to_x16vec3(qm->header->scale);
   xmhdr->offset = qvec3_to_s16vec3(qm->header->translate);
   xmhdr->trisofs = baseofs;
-  xmhdr->texcoordsofs = xmhdr->trisofs + sizeof(xaliastri_t) * xmhdr->numtris;
-  xmhdr->framesofs = xmhdr->texcoordsofs + sizeof(xaliasvert_t) * xmhdr->numverts;
+  xmhdr->framesofs = xmhdr->trisofs + sizeof(xaliastri_t) * xmhdr->numtris;
 
   // scale the texture down 2x because the skins are fucking massive
   static u8 dst[256 * 256];
@@ -398,22 +397,19 @@ void xbsp_entmodel_add(qmdl_t *qm) {
     xmtri->verts[0] = qm->tris[i].vertex[0];
     xmtri->verts[1] = qm->tris[i].vertex[1];
     xmtri->verts[2] = qm->tris[i].vertex[2];
-    xmtri->fnorm = 0x80 * !qm->tris[i].front; // TODO: normal
-  }
-
-  xaliastexcoord_t *xmtex = (xaliastexcoord_t *)(xbsp_entmodeldata + xmhdr->texcoordsofs);
-  for (int i = 0; i < xmhdr->numverts; ++i, ++xmtex) {
-    const qaliastexcoord_t *qtc = &qm->texcoords[i];
-    const f32 u = ((f32)qtc->s + 0.5f) / qm->header->skinwidth;
-    const f32 v = ((f32)qtc->t + 0.5f) / qm->header->skinheight;
-    f32 u2 = (f32)qtc->s + (f32)qm->header->skinwidth * 0.5f;
-    u2 = ((f32)u2 + 0.5f) / qm->header->skinwidth;
-    xmtex->u = xti.uv.u + (s16)(u * dstw);
-    xmtex->v = xti.uv.v + (s16)(v * dsth);
-    if (qtc->onseam)
-      xmtex->w = xti.uv.u + (s16)(u2 * dstw);
-    else
-      xmtex->w = xmtex->u;
+    xmtri->normal = 0; // TODO
+    for (int j = 0; j < 3; ++j) {
+      const qaliastexcoord_t *qtc = &qm->texcoords[xmtri->verts[j]];
+      const f32 u = ((f32)qtc->s + 0.5f) / qm->header->skinwidth;
+      const f32 v = ((f32)qtc->t + 0.5f) / qm->header->skinheight;
+      f32 u2 = (f32)qtc->s + (f32)qm->header->skinwidth * 0.5f;
+      u2 = ((f32)u2 + 0.5f) / qm->header->skinwidth;
+      xmtri->texcoords[j].v = xti.uv.v + (s16)(v * dsth);
+      if (qtc->onseam && !qm->tris[i].front)
+        xmtri->texcoords[j].u = xti.uv.u + (s16)(u2 * dstw);
+      else
+        xmtri->texcoords[j].u = xti.uv.u + (s16)(u * dstw);
+    }
   }
 
   xaliasvert_t *xmvert = (xaliasvert_t *)(xbsp_entmodeldata + xmhdr->framesofs);

@@ -1,8 +1,4 @@
-#include "../common.h"
-#include "../game.h"
-#include "../entity.h"
-#include "../system.h"
-#include "entclasses.h"
+#include "prcommon.h"
 
 void spawn_func_bossgate(edict_t *self) {
 

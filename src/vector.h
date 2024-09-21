@@ -87,6 +87,12 @@ extern const x16vec3_t x16vec3_origin;
 #define XVecNegate(a, b) \
   { (b)->x = -(a)->x; (b)->y = -(a)->y; (b)->z = -(a)->z; }
 
+#define XVecSet(a, ax, ay, az) \
+  { (a)->x = (ax); (a)->y = (ay); (a)->z = (az); }
+
+#define XVecSetInt(a, ax, ay, az) \
+  { (a)->x = TO_FIX32(ax); (a)->y = TO_FIX32(ay); (a)->z = TO_FIX32(az); }
+
 FORCEINLINE void XVecSignLS(const x32vec3_t *in, x16vec3_t *out) {
   out->x = xsign32(in->x);
   out->y = xsign32(in->y);

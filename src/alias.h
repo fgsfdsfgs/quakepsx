@@ -16,6 +16,7 @@
 #pragma pack(push, 1)
 
 typedef struct {
+  u8vec2_t texcoords[3];
   u8 verts[3];
   u8 fnorm;
 } atri_t;
@@ -32,7 +33,6 @@ typedef struct {
   x32vec3_t mins;
   x32vec3_t maxs;
   atri_t *tris;
-  u8vec3_t *texcoords;
   u8vec3_t *frames;
 } aliashdr_t;
 
