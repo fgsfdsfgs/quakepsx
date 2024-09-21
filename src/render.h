@@ -54,6 +54,7 @@ typedef struct render_state_s {
   x32 frametime;
   u32 frame;
   u32 visframe;
+  u32 debug;
 } render_state_t;
 
 extern render_state_t rs;

@@ -22,8 +22,7 @@ static void TestInput(const x16 dt) {
   plr->anglemove.y = yaw * G_YAWSPEED;
   plr->movespeed = G_FORWARDSPEED << onspeed;
 
-  if (IN_ButtonPressed(PAD_L2))
-  {
+  if (IN_ButtonPressed(PAD_L2)) {
     if (plr->ent->v.movetype == MOVETYPE_WALK)
       plr->ent->v.movetype = MOVETYPE_NOCLIP;
     else
@@ -31,9 +30,10 @@ static void TestInput(const x16 dt) {
   }
 
   if (IN_ButtonPressed(PAD_R2))
-  {
     onspeed = !onspeed;
-  }
+
+  if (IN_ButtonPressed(PAD_SELECT))
+    rs.debug = !rs.debug;
 }
 
 int main(int argc, char **argv) {
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
   Mem_SetMark(MEM_MARK_LO);
 
-  G_StartMap(FS_BASE "\\MAPS\\E1M2.PSB;1");
+  G_StartMap(FS_BASE "\\MAPS\\E1M1.PSB;1");
 
   x32 then = 0;
   x32 time = 0;

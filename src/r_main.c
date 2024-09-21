@@ -272,7 +272,8 @@ void R_Flip(void) {
   ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
 
   const x32 dt = Sys_FixedTime() - rs.frametime;
-  R_DrawDebug(dt);
+  if (rs.debug)
+    R_DrawDebug(dt);
 
   DrawSync(0);
   VSync(0);
