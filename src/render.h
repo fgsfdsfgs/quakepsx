@@ -14,6 +14,7 @@
 #define gte_stmac0_m(r0) __asm__ volatile( "mfc2   %0, $24;" : "=r"( r0 ) : )
 #define gte_stsxy0_m(r0) __asm__ volatile( "mfc2   %0, $12;" : "=r"( r0 ) : )
 #define gte_stsz1_m(r0)  __asm__ volatile( "mfc2   %0, $17;" : "=r"( r0 ) : )
+#define gte_stopz_m(r0)  __asm__ volatile( "mfc2   %0, $24;" : "=r"( r0 ) : )
 #define gte_ldsxy1_m(r0) __asm__ volatile( "mtc2   %0, $13;" : : "r"( r0 ) )
 #define gte_ldsz1_m(r0)  __asm__ volatile( "mtc2   %0, $17;" : : "r"( r0 ) )
 #define gte_ldsz2_m(r0)  __asm__ volatile( "mtc2   %0, $18;" : : "r"( r0 ) )
@@ -28,7 +29,7 @@
 }
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x28000
+#define GPU_BUFSIZE 0x30000
 #define GPU_OTDEPTH 2048
 
 #define GPU_SUBDIV_DIST_1 80

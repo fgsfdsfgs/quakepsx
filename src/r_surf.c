@@ -18,10 +18,18 @@
 
 typedef struct {
   s16vec3_t pos;
+  s16 pad;
+} __attribute__((packed)) savert_t;
+
+typedef struct {
+  s16vec3_t pos;
   u8vec2_t tex;
   u8vec4_t col;
+  s16vec2_t tpos;
   s32 sz;
 } __attribute__((packed)) svert_t;
+
+static savert_t alias_verts[256];
 
 static inline s16 TestClip(const RECT *clip, const s16 x, const s16 y) {
   // tests which corners of the screen a point lies outside of
@@ -84,6 +92,19 @@ static inline u32 LightVert(const u8 *col, const u8 *styles) {
   return lit | (lit << 8) | (lit << 16);
 }
 
+static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const savert_t *sv0, const savert_t *sv1, const savert_t *sv2)
+{
+  if (!TriClip(&rs.clip, poly)) {
+    setPolyGT3(poly);
+    poly->tpage = tpage;
+    poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+    addPrim(gpu_ot + otz, poly);
+    ++c_draw_polys;
+    ++poly;
+  }
+  return poly;
+}
+
 static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2)
 {
   if (!TriClip(&rs.clip, poly)) {
@@ -126,11 +147,11 @@ static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz
 
 static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert_t *sv1)
 {
-  h01->tex.u = sv0->tex.u + ((sv1->tex.u - sv0->tex.u) >> 1);
-  h01->tex.v = sv0->tex.v + ((sv1->tex.v - sv0->tex.v) >> 1);
-  h01->col.r = sv0->col.r + ((sv1->col.r - sv0->col.r) >> 1);
-  h01->col.g = sv0->col.g + ((sv1->col.g - sv0->col.g) >> 1);
-  h01->col.b = sv0->col.b + ((sv1->col.b - sv0->col.b) >> 1);
+  h01->tex.u = (s16)sv0->tex.u + (((s16)sv1->tex.u - (s16)sv0->tex.u) >> 1);
+  h01->tex.v = (s16)sv0->tex.v + (((s16)sv1->tex.v - (s16)sv0->tex.v) >> 1);
+  h01->col.r = (s16)sv0->col.r + (((s16)sv1->col.r - (s16)sv0->col.r) >> 1);
+  h01->col.g = h01->col.r; // assume non-colored lighting for now
+  h01->col.b = h01->col.r;
   h01->pos.x = sv0->pos.x + ((sv1->pos.x - sv0->pos.x) >> 1);
   h01->pos.y = sv0->pos.y + ((sv1->pos.y - sv0->pos.y) >> 1);
   h01->pos.z = sv0->pos.z + ((sv1->pos.z - sv0->pos.z) >> 1);
@@ -142,16 +163,16 @@ static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert
   gte_avsz3(); \
   gte_stotz_m(otz); \
   if (otz > 0) { \
-    *(u32 *)&poly->x0 = *(u32 *)&pv0->pos.x; \
-    *(u32 *)&poly->x1 = *(u32 *)&pv1->pos.x; \
-    *(u32 *)&poly->x2 = *(u32 *)&pv2->pos.x; \
+    *(u32 *)&poly->x0 = *(u32 *)&pv0->tpos.x; \
+    *(u32 *)&poly->x1 = *(u32 *)&pv1->tpos.x; \
+    *(u32 *)&poly->x2 = *(u32 *)&pv2->tpos.x; \
     poly = EmitBrushTriangle(poly, tpage, otz, cv0, cv1, cv2); \
   }
 
 #define SORT_FTRI(pv0, pv1, pv2, cv0, cv1, cv2, az) \
-  *(u32 *)&poly->x0 = *(u32 *)&pv0->pos.x; \
-  *(u32 *)&poly->x1 = *(u32 *)&pv1->pos.x; \
-  *(u32 *)&poly->x2 = *(u32 *)&pv2->pos.x; \
+  *(u32 *)&poly->x0 = *(u32 *)&pv0->tpos.x; \
+  *(u32 *)&poly->x1 = *(u32 *)&pv1->tpos.x; \
+  *(u32 *)&poly->x2 = *(u32 *)&pv2->tpos.x; \
   poly = EmitBrushTriangle(poly, tpage, az, cv0, cv1, cv2);
 
 #define SORT_QUAD(pv0, pv1, pv2, pv3, cv0, cv1, cv2, cv3) \
@@ -159,10 +180,10 @@ static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert
   gte_avsz4(); \
   gte_stotz_m(otz); \
   if (otz > 0) { \
-    *(u32 *)&((POLY_GT4 *)poly)->x0 = *(u32 *)&pv0->pos.x; \
-    *(u32 *)&((POLY_GT4 *)poly)->x1 = *(u32 *)&pv1->pos.x; \
-    *(u32 *)&((POLY_GT4 *)poly)->x2 = *(u32 *)&pv2->pos.x; \
-    *(u32 *)&((POLY_GT4 *)poly)->x3 = *(u32 *)&pv3->pos.x; \
+    *(u32 *)&((POLY_GT4 *)poly)->x0 = *(u32 *)&pv0->tpos.x; \
+    *(u32 *)&((POLY_GT4 *)poly)->x1 = *(u32 *)&pv1->tpos.x; \
+    *(u32 *)&((POLY_GT4 *)poly)->x2 = *(u32 *)&pv2->tpos.x; \
+    *(u32 *)&((POLY_GT4 *)poly)->x3 = *(u32 *)&pv3->tpos.x; \
     poly = EmitBrushQuad((void *)poly, tpage, otz, cv0, cv1, cv2, cv3); \
   }
 
@@ -171,21 +192,19 @@ static inline POLY_GT3 *SubdivBrushTriangle1(POLY_GT3 *poly, const u16 tpage, s3
   register int otz;
 
   // calculate halfpoints on every edge
-  svert_t *h01 = HalfwayVert(clipzone + 3, sv0, sv1);
-  svert_t *h12 = HalfwayVert(clipzone + 4, sv1, sv2);
-  svert_t *h20 = HalfwayVert(clipzone + 5, sv2, sv0);
+  svert_t *h01 = HalfwayVert(clipzone + 0, sv0, sv1);
+  svert_t *h12 = HalfwayVert(clipzone + 1, sv1, sv2);
+  svert_t *h20 = HalfwayVert(clipzone + 2, sv2, sv0);
 
-  // store the original transformed verts
-  svert_t *tv0 = clipzone + 0;
-  svert_t *tv1 = clipzone + 1;
-  svert_t *tv2 = clipzone + 2;
-  gte_stsxy3(&tv0->pos.x, &tv1->pos.x, &tv2->pos.x);
-  gte_stsz3(&tv0->sz, &tv1->sz, &tv2->sz);
+  // the original transformed verts
+  svert_t *tv0 = sv0;
+  svert_t *tv1 = sv1;
+  svert_t *tv2 = sv2;
 
   // transform the new verts and save the result
   gte_ldv3(&h01->pos.x, &h12->pos.x, &h20->pos.x);
   gte_rtpt();
-  gte_stsxy3(&h01->pos.x, &h12->pos.x, &h20->pos.x);
+  gte_stsxy3(&h01->tpos.x, &h12->tpos.x, &h20->tpos.x);
   gte_stsz3(&h01->sz, &h12->sz, &h20->sz);
 
   // sort the resulting 4 triangles as 1 quad + 2 tris
@@ -214,43 +233,41 @@ static inline POLY_GT3 *SubdivBrushTriangle2(POLY_GT3 *poly, const u16 tpage, s3
 {
   register int otz;
 
-  // store the original transformed verts
-  svert_t *tv00 = clipzone + 0;
-  svert_t *tv01 = clipzone + 1;
-  svert_t *tv02 = clipzone + 2;
-  gte_stsxy3(&tv00->pos.x, &tv01->pos.x, &tv02->pos.x);
-  gte_stsz3(&tv00->sz, &tv01->sz, &tv02->sz);
+  // the original transformed verts
+  svert_t *tv00 = sv00;
+  svert_t *tv01 = sv01;
+  svert_t *tv02 = sv02;
 
   // calculate halfpoints on every edge and halfpoints on every half-edge
-  svert_t *tv03 = HalfwayVert(clipzone +  3, sv00, sv01);
-  svert_t *tv04 = HalfwayVert(clipzone +  4, sv01, sv02);
-  svert_t *tv05 = HalfwayVert(clipzone +  5, sv00, sv02);
-  svert_t *tv06 = HalfwayVert(clipzone +  6, sv00, tv03);
-  svert_t *tv07 = HalfwayVert(clipzone +  7, sv01, tv03);
-  svert_t *tv08 = HalfwayVert(clipzone +  8, sv01, tv04);
-  svert_t *tv09 = HalfwayVert(clipzone +  9, tv04, sv02);
-  svert_t *tv10 = HalfwayVert(clipzone + 10, tv05, sv02);
-  svert_t *tv11 = HalfwayVert(clipzone + 11, tv05, sv00);
-  svert_t *tv12 = HalfwayVert(clipzone + 12, tv05, tv03);
-  svert_t *tv13 = HalfwayVert(clipzone + 13, tv12, tv08);
-  svert_t *tv14 = HalfwayVert(clipzone + 14, tv05, tv04);
+  svert_t *tv03 = HalfwayVert(clipzone +  0, sv00, sv01);
+  svert_t *tv04 = HalfwayVert(clipzone +  1, sv01, sv02);
+  svert_t *tv05 = HalfwayVert(clipzone +  2, sv00, sv02);
+  svert_t *tv06 = HalfwayVert(clipzone +  3, sv00, tv03);
+  svert_t *tv07 = HalfwayVert(clipzone +  4, sv01, tv03);
+  svert_t *tv08 = HalfwayVert(clipzone +  5, sv01, tv04);
+  svert_t *tv09 = HalfwayVert(clipzone +  6, tv04, sv02);
+  svert_t *tv10 = HalfwayVert(clipzone +  7, tv05, sv02);
+  svert_t *tv11 = HalfwayVert(clipzone +  8, tv05, sv00);
+  svert_t *tv12 = HalfwayVert(clipzone +  9, tv05, tv03);
+  svert_t *tv13 = HalfwayVert(clipzone + 10, tv12, tv08);
+  svert_t *tv14 = HalfwayVert(clipzone + 11, tv05, tv04);
 
   // transform them
   gte_ldv3(&tv03->pos.x, &tv04->pos.x, &tv05->pos.x);
   gte_rtpt();
-  gte_stsxy3(&tv03->pos.x, &tv04->pos.x, &tv05->pos.x);
+  gte_stsxy3(&tv03->tpos.x, &tv04->tpos.x, &tv05->tpos.x);
   gte_stsz3(&tv03->sz, &tv04->sz, &tv05->sz);
   gte_ldv3(&tv06->pos.x, &tv07->pos.x, &tv08->pos.x);
   gte_rtpt();
-  gte_stsxy3(&tv06->pos.x, &tv07->pos.x, &tv08->pos.x);
+  gte_stsxy3(&tv06->tpos.x, &tv07->tpos.x, &tv08->tpos.x);
   gte_stsz3(&tv06->sz, &tv07->sz, &tv08->sz);
   gte_ldv3(&tv09->pos.x, &tv10->pos.x, &tv11->pos.x);
   gte_rtpt();
-  gte_stsxy3(&tv09->pos.x, &tv10->pos.x, &tv11->pos.x);
+  gte_stsxy3(&tv09->tpos.x, &tv10->tpos.x, &tv11->tpos.x);
   gte_stsz3(&tv09->sz, &tv10->sz, &tv11->sz);
   gte_ldv3(&tv12->pos.x, &tv13->pos.x, &tv14->pos.x);
   gte_rtpt();
-  gte_stsxy3(&tv12->pos.x, &tv13->pos.x, &tv14->pos.x);
+  gte_stsxy3(&tv12->tpos.x, &tv13->tpos.x, &tv14->tpos.x);
   gte_stsz3(&tv12->sz, &tv13->sz, &tv14->sz);
 
   // corner triangles
@@ -294,18 +311,19 @@ static inline POLY_GT3 *RenderBrushTriangle(POLY_GT3 *poly, const u16 tpage, sve
 {
   register int otz;
 
-  // transform the big triangle
-  gte_ldv3(&sv0->pos.x, &sv1->pos.x, &sv2->pos.x);
-  gte_rtpt();
-  gte_stsxy3_gt3(poly);
-
   // calculate OT Z for the big triangle
+  gte_ldsz3(sv0->sz, sv1->sz, sv2->sz);
   gte_avsz3();
   gte_stotz_m(otz);
 
   // clip off if out of Z range
   if (otz <= 0 || otz >= GPU_OTDEPTH)
     return poly;
+
+  // fill in the transformed coords
+  *(u32 *)&poly->x0 = *(u32 *)&sv0->tpos.x;
+  *(u32 *)&poly->x1 = *(u32 *)&sv1->tpos.x;
+  *(u32 *)&poly->x2 = *(u32 *)&sv2->tpos.x;
 
   // see if we need to subdivide
   if (otz < GPU_SUBDIV_DIST_2) {
@@ -329,21 +347,38 @@ static inline void RenderBrushPoly(const msurface_t *fa) {
   svert_t *sv = PSX_SCRATCH;
   svert_t *clipzone;
   POLY_GT3 *poly = (POLY_GT3 *)gpu_ptr;
+  int i;
 
   // put all the verts into scratch and light them; this will also ensure that pos is aligned to 4
   // that means we're limited to ~50 verts per poly, since we use the scratch to store clipped verts as well
-  for (int i = 0; i < numverts; ++i, ++v, ++sv) {
+  for (i = 0; i < numverts; ++i, ++v, ++sv) {
     sv->pos = v->pos;
     sv->tex.word = v->tex.word;
     sv->col.word = LightVert(v->col, fa->styles);
   }
 
-  // reset pointers
+  // clipverts go after the normal verts
   clipzone = sv;
+
+  // transform all verts in threes
   sv = (svert_t *)PSX_SCRATCH;
+  for (i = 0; i <= numverts - 3; i += 3, sv += 3) {
+    gte_ldv3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+    gte_rtpt();
+    gte_stsxy3(&sv[0].tpos.x, &sv[1].tpos.x, &sv[2].tpos.x);
+    gte_stsz3(&sv[0].sz, &sv[1].sz, &sv[2].sz);
+  }
+  // transform the remaining 1-2 verts with rtps
+  for (; i < numverts; ++i, ++sv) {
+    gte_ldv0(&sv->pos.x);
+    gte_rtps();
+    gte_stsxy(&sv->tpos.x);
+    gte_stsz(&sv->sz);
+  }
 
   // it's a triangle fan
-  for (int i = 2; i < numverts; ++i) {
+  sv = (svert_t *)PSX_SCRATCH;
+  for (i = 2; i < numverts; ++i) {
     poly = RenderBrushTriangle(poly, tpage, &sv[0], &sv[i - 1], &sv[i], clipzone);
   }
 
@@ -369,43 +404,89 @@ void R_DrawTextureChains(void) {
 
 void R_DrawAliasModel(amodel_t *model, int frame) {
   register int otz;
+  const u32 col = 0x808080; // TODO: calculate light level
   const u16 tpage = model->tpage;
   const int numverts = model->numverts;
   const int numtris = model->numtris;
-  svert_t *sv = PSX_SCRATCH;
+  const u8vec3_t *averts = model->frames + (frame * numverts);
   POLY_GT3 *poly = (POLY_GT3 *)gpu_ptr;
+  int i;
 
-  u8vec3_t *averts = model->frames + (frame * numverts);
-  const atri_t *tri = model->tris;
-  const u8vec3_t *av;
-  for (int i = 0; i < numtris; ++i, ++tri) {
-    for (int j = 0; j < 3; ++j) {
-      const u8vec3_t *uv = &model->texcoords[tri->verts[j]];
-      av = &averts[tri->verts[j]];
-      sv[j].pos.x = (av->x * model->scale.x) >> FIXSHIFT;
-      sv[j].pos.y = (av->y * model->scale.y) >> FIXSHIFT;
-      sv[j].pos.z = (av->z * model->scale.z) >> FIXSHIFT;
-      sv[j].col.r = 0x80;
-      sv[j].col.g = 0x80;
-      sv[j].col.b = 0x80;
-      sv[j].tex.u = (tri->fnorm & 0x80) ? uv->p : uv->u;
-      sv[j].tex.v = uv->v;
-    }
-
-    // transform the triangle
+  // transform all verts first
+  const u8vec3_t *av = averts;
+  savert_t *sv = alias_verts;
+  for (i = 0; i <= numverts - 3; i += 3, av += 3, sv += 3) {
+    sv[0].pos.x = (av[0].x * model->scale.x) >> FIXSHIFT;
+    sv[0].pos.y = (av[0].y * model->scale.y) >> FIXSHIFT;
+    sv[0].pos.z = (av[0].z * model->scale.z) >> FIXSHIFT;
+    sv[1].pos.x = (av[1].x * model->scale.x) >> FIXSHIFT;
+    sv[1].pos.y = (av[1].y * model->scale.y) >> FIXSHIFT;
+    sv[1].pos.z = (av[1].z * model->scale.z) >> FIXSHIFT;
+    sv[2].pos.x = (av[2].x * model->scale.x) >> FIXSHIFT;
+    sv[2].pos.y = (av[2].y * model->scale.y) >> FIXSHIFT;
+    sv[2].pos.z = (av[2].z * model->scale.z) >> FIXSHIFT;
     gte_ldv3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
     gte_rtpt();
-    gte_stsxy3_gt3(poly);
+    gte_stsxy3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+    gte_stsz3(&sv[0].pos.z, &sv[1].pos.z, &sv[2].pos.z);
+  }
+  // transform the remaining 1-2 verts
+  for (; i < numverts; ++i, ++sv, ++av) {
+    sv[0].pos.x = (av[0].x * model->scale.x) >> FIXSHIFT;
+    sv[0].pos.y = (av[0].y * model->scale.y) >> FIXSHIFT;
+    sv[0].pos.z = (av[0].z * model->scale.z) >> FIXSHIFT;
+    gte_ldv0(&sv[0].pos.x);
+    gte_rtps();
+    gte_stsxy(&sv[0].pos.x);
+    gte_stsz(&sv[0].pos.z);
+  }
+
+  const atri_t *tri = model->tris;
+  for (int i = 0; i < numtris; ++i, ++tri) {
+    const qboolean back = tri->fnorm & 0x80;
+    const savert_t *sv0 = &alias_verts[tri->verts[0]];
+    const savert_t *sv1 = &alias_verts[tri->verts[1]];
+    const savert_t *sv2 = &alias_verts[tri->verts[2]];
+    const u8vec3_t *uv0 = &model->texcoords[tri->verts[0]];
+    const u8vec3_t *uv1 = &model->texcoords[tri->verts[1]];
+    const u8vec3_t *uv2 = &model->texcoords[tri->verts[2]];
+
+    // cull backfaces
+    gte_ldsxy3(&sv0->pos.x, &sv1->pos.x, &sv2->pos.x);
+    gte_nclip();
+    gte_stopz_m(otz);
+    if (otz < 0)
+      continue;
 
     // calculate OT Z for the big triangle
+    gte_ldsz3(sv0->pos.z, sv1->pos.z, sv2->pos.z);
     gte_avsz3();
     gte_stotz_m(otz);
-
     // clip off if out of Z range
     if (otz <= 0 || otz >= GPU_OTDEPTH)
       continue;
 
-    poly = EmitBrushTriangle(poly, tpage, otz, sv + 0, sv + 1, sv + 2);
+    // set positions, UVs and colors
+    *(u32 *)&poly->x0 = *(u32 *)&sv0->pos.x;
+    *(u32 *)&poly->x1 = *(u32 *)&sv1->pos.x;
+    *(u32 *)&poly->x2 = *(u32 *)&sv2->pos.x;
+    if (back) {
+      poly->u0 = uv0->p;
+      poly->u1 = uv1->p;
+      poly->u2 = uv2->p;
+    } else {
+      poly->u0 = uv0->u;
+      poly->u1 = uv1->u;
+      poly->u2 = uv2->u;
+    }
+    poly->v0 = uv0->v;
+    poly->v1 = uv1->v;
+    poly->v2 = uv2->v;
+    *(u32 *)&poly->r0 = col;
+    *(u32 *)&poly->r1 = col;
+    *(u32 *)&poly->r2 = col;
+
+    poly = EmitAliasTriangle(poly, tpage, otz, sv0, sv1, sv2);
   }
 
   gpu_ptr = (u8 *)poly;
