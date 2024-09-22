@@ -23,21 +23,13 @@ typedef int32_t x32; // 1.19.12 fixed point
 #define XMUL16(x, y) (((x32)(x) * (x32)(y)) >> FIXSHIFT)
 #define XDIV16(x, y) (((x32)(x) << FIXSHIFT) / (x32)(y))
 
+// NOTE: these compile into trash without at least -O2
+
+#pragma GCC push_options
+#pragma GCC optimize("-O3")
+
 FORCEINLINE x32 xmul32(const x32 x, const x32 y) {
-  x32 r;
-  __asm__ volatile(
-    "mult %1, %2;"
-    "mflo %0;"
-    "mfhi $t0;"
-    "srl  %0, 12;"
-    "and  $t0, 0x0FFF;"
-    "sll  $t0, 20;"
-    "or   %0, $t0;"
-    : "=r"(r)
-    : "r"(x), "r"(y)
-    : "$t0"
-  );
-  return r;
+  return ((s64)x * y) >> FIXSHIFT;
 }
 
 FORCEINLINE x32 xdiv32(const x32 x, const x32 y) {
@@ -47,3 +39,5 @@ FORCEINLINE x32 xdiv32(const x32 x, const x32 y) {
 FORCEINLINE x32 xsign32(const x32 x) {
   return (x > 0) - (x < 0);
 }
+
+#pragma GCC pop_options
