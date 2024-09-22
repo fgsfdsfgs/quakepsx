@@ -145,6 +145,10 @@ static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz
   return poly;
 }
 
+// TODO: fix this properly
+#pragma GCC push_options
+#pragma GCC optimize("no-strict-aliasing")
+
 static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert_t *sv1)
 {
   h01->tex.u = (s16)sv0->tex.u + (((s16)sv1->tex.u - (s16)sv0->tex.u) >> 1);
@@ -306,6 +310,8 @@ static inline POLY_GT3 *SubdivBrushTriangle2(POLY_GT3 *poly, const u16 tpage, s3
 #undef SORT_TRI
 #undef SORT_FTRI
 #undef SORT_QUAD
+
+#pragma GCC pop_options
 
 static inline POLY_GT3 *RenderBrushTriangle(POLY_GT3 *poly, const u16 tpage, svert_t *sv0, svert_t *sv1, svert_t *sv2, svert_t *clipzone)
 {
