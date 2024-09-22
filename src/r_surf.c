@@ -31,25 +31,25 @@ typedef struct {
 
 static savert_t alias_verts[256];
 
-static inline s16 TestClip(const RECT *clip, const s16 x, const s16 y) {
+static inline s16 TestClip(const s16 x, const s16 y) {
   // tests which corners of the screen a point lies outside of
   register s16 result = 0;
-  if (x < clip->x)
+  if (x < 0)
     result |= CLIP_LEFT;
-  if (x >= (clip->x+(clip->w-1)))
+  if (x >= (VID_WIDTH - 1))
     result |= CLIP_RIGHT;
-  if (y < clip->y)
+  if (y < 0)
     result |= CLIP_TOP;
-  if (y >= (clip->y+(clip->h-1)))
+  if (y >= (VID_HEIGHT - 1))
     result |= CLIP_BOTTOM;
   return result;
 }
 
-static inline qboolean TriClip(const RECT *clip, const POLY_GT3 *poly) {
+static inline qboolean TriClip(const POLY_GT3 *poly) {
   // returns non-zero if a triangle is outside the screen boundaries
-  register const s16 c0 = TestClip(clip, poly->x0, poly->y0);
-  register const s16 c1 = TestClip(clip, poly->x1, poly->y1);
-  register const s16 c2 = TestClip(clip, poly->x2, poly->y2);
+  register const s16 c0 = TestClip(poly->x0, poly->y0);
+  register const s16 c1 = TestClip(poly->x1, poly->y1);
+  register const s16 c2 = TestClip(poly->x2, poly->y2);
 
   if ((c0 & c1) == 0)
     return false;
@@ -61,12 +61,12 @@ static inline qboolean TriClip(const RECT *clip, const POLY_GT3 *poly) {
   return true;
 }
 
-static inline qboolean QuadClip(const RECT *clip, const POLY_GT4 *poly) {
+static inline qboolean QuadClip(const POLY_GT4 *poly) {
   // returns non-zero if a quad is outside the screen boundaries
-  register const s16 c0 = TestClip(clip, poly->x0, poly->y0);
-  register const s16 c1 = TestClip(clip, poly->x1, poly->y1);
-  register const s16 c2 = TestClip(clip, poly->x2, poly->y2);
-  register const s16 c3 = TestClip(clip, poly->x3, poly->y3);
+  register const s16 c0 = TestClip(poly->x0, poly->y0);
+  register const s16 c1 = TestClip(poly->x1, poly->y1);
+  register const s16 c2 = TestClip(poly->x2, poly->y2);
+  register const s16 c3 = TestClip(poly->x3, poly->y3);
 
   if ((c0 & c1) == 0)
     return false;
@@ -94,7 +94,7 @@ static inline u32 LightVert(const u8 *col, const u8 *styles) {
 
 static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const savert_t *sv0, const savert_t *sv1, const savert_t *sv2)
 {
-  if (!TriClip(&rs.clip, poly)) {
+  if (!TriClip(poly)) {
     setPolyGT3(poly);
     poly->tpage = tpage;
     poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
@@ -107,7 +107,7 @@ static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int
 
 static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2)
 {
-  if (!TriClip(&rs.clip, poly)) {
+  if (!TriClip(poly)) {
     *(u32 *)&poly->r0 = sv0->col.word;
     *(u32 *)&poly->r1 = sv1->col.word;
     *(u32 *)&poly->r2 = sv2->col.word;
@@ -126,7 +126,7 @@ static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int
 
 static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2 , const svert_t *sv3)
 {
-  if (!QuadClip(&rs.clip, poly)) {
+  if (!QuadClip(poly)) {
     *(u32 *)&poly->r0 = sv0->col.word;
     *(u32 *)&poly->r1 = sv1->col.word;
     *(u32 *)&poly->r2 = sv2->col.word;
