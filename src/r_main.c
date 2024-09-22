@@ -386,26 +386,27 @@ static inline void DrawEntity(edict_t *ed) {
   VECTOR *t = PSX_SCRATCH;
   VECTOR *s = (VECTOR *)(t + 1);
   SVECTOR *r = (SVECTOR *)(s + 1);
-  r->vx = ed->v.angles.z;
-  r->vy = -ed->v.angles.x;
-  r->vz = ed->v.angles.y;
-  if (ed->v.modelnum > 0 && (((amodel_t *)ed->v.model)->flags & EF_ROTATE)) {
-    r->vz = bobjrotate;
-  } else {
-    r->vz = ed->v.angles.y;
-  }
 
   PushMatrix();
 
-  RotMatrix(r, &rs.entmatrix);
-
-  // if this is an alias model, add its offset and scale to the matrix
-  // otherwise translate by origin
+  // if this is an alias model, rotate it and add its offset and scale to the matrix
+  // otherwise just translate by origin, since brush models don't rotate
   if (ed->v.modelnum < 0) {
     t->vx = ed->v.origin.x >> FIXSHIFT;
     t->vy = ed->v.origin.y >> FIXSHIFT;
     t->vz = ed->v.origin.z >> FIXSHIFT;
+    TransMatrix(&rs.entmatrix, t);
   } else {
+    // set rotation
+    r->vx = ed->v.angles.z;
+    r->vy = -ed->v.angles.x;
+    r->vz = ed->v.angles.y;
+    if (((amodel_t *)ed->v.model)->flags & EF_ROTATE) {
+      r->vz = bobjrotate;
+    } else {
+      r->vz = ed->v.angles.y;
+    }
+    RotMatrix(r, &rs.entmatrix);
     // rotate the offset first
     t->vx = ((amodel_t *)ed->v.model)->offset.x;
     t->vy = ((amodel_t *)ed->v.model)->offset.y;
@@ -418,13 +419,11 @@ static inline void DrawEntity(edict_t *ed) {
     s->vy = ((amodel_t *)ed->v.model)->scale.y;
     s->vz = ((amodel_t *)ed->v.model)->scale.z;
     ScaleMatrix(&rs.entmatrix, s);
+    TransMatrix(&rs.entmatrix, t);
+    CompMatrixLV(&rs.matrix, &rs.entmatrix, &rs.entmatrix);
+    gte_SetRotMatrix(&rs.entmatrix);
   }
 
-  TransMatrix(&rs.entmatrix, t);
-
-  CompMatrixLV(&rs.matrix, &rs.entmatrix, &rs.entmatrix);
-
-  gte_SetRotMatrix(&rs.entmatrix);
   gte_SetTransMatrix(&rs.entmatrix);
 
   // draw
