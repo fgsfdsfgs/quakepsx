@@ -6,7 +6,7 @@ static void monster_army_think(edict_t *self) {
 
   // HACK
   if (self->v.viewheight++ >= 64) {
-    Snd_StartSoundId(self - gs.edicts, CHAN_VOICE, SFXID_SOLDIER_IDLE, &self->v.origin, SND_MAXVOL, ATTN_IDLE);
+    Snd_StartSoundId(self - gs.edicts, CHAN_VOICE, SFXID_SOLDIER_IDLE, &self->v.origin, SND_MAXVOL / 2, ATTN_IDLE);
     self->v.viewheight = rand() & 0x1F;
   }
 }
