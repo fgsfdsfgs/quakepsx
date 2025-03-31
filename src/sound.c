@@ -5,6 +5,7 @@
 
 static const sfx_t *snd_sfx = NULL;
 static int snd_num_sfx = 0;
+static int snd_num_statics = 0;
 static x32vec3_t *listener_origin = NULL;
 static x16vec3_t *listener_right = NULL;
 
@@ -13,13 +14,14 @@ static struct sndchan {
   s16 looping;
   s16 entchannel;
   s16 entnum;
-  s16 vol;
+  s16 vol; // 0 - 255
   x16 attn;
   s32 endframe;
   x32vec3_t origin;
 } snd_chan[SND_NUM_CH];
 
 void Snd_Init(void) {
+  Sys_Printf("Snd_Init()\n");
   SPU_Init();
 }
 
@@ -73,8 +75,8 @@ static struct sndchan *Snd_PickChannel(const s16 entnum, const s16 entch) {
 
 static qboolean Snd_Spatialize(struct sndchan* ch) {
   const s16 voice = ch - snd_chan;
-  s16 lvol = 0;
-  s16 rvol = 0;
+  s32 lvol = 0;
+  s32 rvol = 0;
 
   // anything coming from the view entity will allways be full volume
   if (ch->entnum == 1) {
@@ -88,17 +90,18 @@ static qboolean Snd_Spatialize(struct sndchan* ch) {
     XVecNormLS(&source_vec, &dir_vec, &dist); // this returns squared distance
     // if out of clip distance, don't bother
     if (dist < SND_CLIPDIST * SND_CLIPDIST) {
-      dist = SquareRoot0(dist) * ch->attn;
-      dist = ONE - dist;
+      dist = ONE - SquareRoot0(dist) * ch->attn;
       const x16 dot = XVecDotSS(listener_right, &dir_vec);
       const x32 rscale = xmul32(dist, ONE + dot);
       const x32 lscale = xmul32(dist, ONE - dot);
       rvol = (rscale <= 0) ? 0 : xmul32(rscale, ch->vol);
+      rvol &= SND_MAXVOL;
       lvol = (lscale <= 0) ? 0 : xmul32(lscale, ch->vol);
+      lvol &= SND_MAXVOL;
     }
   }
 
-  SPU_SetVoiceVolume(voice, lvol, rvol);
+  SPU_SetVoiceVolume(voice, lvol << 6, rvol << 6);
 
   return (rvol || lvol);
 }
@@ -110,6 +113,8 @@ const sfx_t *Snd_FindSound(const s16 id) {
         return &snd_sfx[i];
     }
   }
+
+  Sys_Printf("Snd_FindSound: sound %02x not found\n", id);
 
   return NULL;
 }
@@ -134,10 +139,36 @@ void Snd_StartSound(const s16 entnum, const s16 entch, const sfx_t *sfx, const x
   if (!Snd_Spatialize(target_chan))
     return; // sound is inaudible
 
+  Sys_Printf("Snd_StartSound(%d): attn = %d (%d)\n", target_chan- snd_chan, attn, target_chan->attn);
+
   target_chan->sfx = sfx;
   target_chan->endframe = Sys_Frames() + sfx->frames;
 
   const s16 voice = target_chan - snd_chan;
+  SPU_PlaySample(voice, sfx->spuaddr, SND_FREQ);
+}
+
+void Snd_StaticSound(const sfx_t *sfx, const x32vec3_t *origin, s16 vol, x32 attn) {
+  if (!sfx)
+    return;
+
+  if (snd_num_statics == SND_NUM_CH_AMBIENT) {
+    Sys_Printf("Snd_StaticSound: too many statics (max %d)\n", SND_NUM_CH_AMBIENT);
+    return;
+  }
+
+  struct sndchan* ch = &snd_chan[SND_CH_AMBIENT0 + snd_num_statics++];
+  ch->sfx = sfx;
+  ch->origin = *origin;
+  ch->vol = vol;
+  ch->attn = XMUL16(attn, SND_INV_CLIPDIST);
+  ch->endframe = Sys_Frames() + sfx->frames;
+
+  Sys_Printf("Snd_StaticSound(%d): attn = %d (%d)\n", ch - snd_chan, attn, ch->attn);
+
+  Snd_Spatialize(ch);
+
+  const s16 voice = ch - snd_chan;
   SPU_PlaySample(voice, sfx->spuaddr, SND_FREQ);
 }
 
@@ -147,8 +178,8 @@ void Snd_Update(x32vec3_t *lorigin, x16vec3_t *lright) {
   listener_origin = lorigin;
   listener_right = lright;
 
-  struct sndchan *ch = &snd_chan[SND_CH_DYNAMIC0];
-  for (int i = SND_CH_DYNAMIC0; i < SND_NUM_CH; ++i, ++ch) {
+  struct sndchan *ch = &snd_chan[SND_CH_AMBIENT0];
+  for (int i = SND_CH_AMBIENT0; i < SND_NUM_CH; ++i, ++ch) {
     if (!ch->sfx)
       continue;
     if (!Snd_Spatialize(ch))

@@ -86,6 +86,7 @@ qsfx_t *qsfx_add(const char *name, u8 *start, const size_t size) {
   sfx->samples = srcsamples;
   sfx->numframes = stime * 60.0;
   sfx->numsamples = numsrcsamples;
+  sfx->looped = (strstr(name, "ambience/") != NULL); // TODO
 
   return sfx;
 }
@@ -106,7 +107,7 @@ int qsfx_convert(qsfx_t *sfx, u8 *outptr, const int maxlen) {
   // 4MB ought to be enough for everybody
   static u8 tmp[4 * 1024 * 1024];
 
-  const int loop_start = -1; // TODO
+  const int loop_start = sfx->looped ? 0 : -1;
   const int adpcm_len = psx_audio_spu_encode_simple(sfx->samples, sfx->numsamples, tmp, loop_start);
   if (adpcm_len <= 0) {
     fprintf(stderr, "could not encode sound '%s'\n", qsfxmap[sfx->id]);

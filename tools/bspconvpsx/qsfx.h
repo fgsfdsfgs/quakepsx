@@ -9,6 +9,7 @@
 typedef struct  {
   int id;
   int samplerate;
+  int looped;
   int numframes;
   int numsamples;
   s16 *samples;

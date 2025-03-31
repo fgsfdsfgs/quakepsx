@@ -23,6 +23,9 @@ typedef int32_t x32; // 1.19.12 fixed point
 #define XMUL16(x, y) (((x32)(x) * (x32)(y)) >> FIXSHIFT)
 #define XDIV16(x, y) (((x32)(x) << FIXSHIFT) / (x32)(y))
 
+// only use for constants
+#define XRECIP(x) (x32)(((double)ONE) / ((double)(x)))
+
 // NOTE: these compile into trash without at least -O2
 
 #pragma GCC push_options

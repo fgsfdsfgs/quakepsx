@@ -2,7 +2,7 @@
 #include "monster.h"
 
 static void monster_dog_think(edict_t *self) {
-  cycler_think(self);
+  cycler_think(self, 70, 77);
 
   // HACK
   if (self->v.viewheight++ >= 64) {

@@ -194,6 +194,23 @@ ent monster_zombie
   sfx sound/zombie/z_pain.wav
   sfx sound/zombie/z_fall.wav
 
+ent monster_knight
+  mdl progs/knight.mdl
+  sfx sound/knight/idle.wav
+  sfx sound/knight/kdeath.wav
+  sfx sound/knight/khurt.wav
+  sfx sound/knight/ksight.wav
+  sfx sound/knight/sword1.wav
+
+ent monster_hell_knight
+  mdl progs/hknight.mdl
+  sfx sound/hknight/attack1.wav
+  sfx sound/hknight/death1.wav
+  sfx sound/hknight/idle.wav
+  sfx sound/hknight/pain1.wav
+  sfx sound/hknight/sight1.wav
+  sfx sound/hknight/slash1.wav
+
 ent monster_shambler
   mdl progs/shambler.mdl
   sfx sound/shambler/sidle.wav
@@ -233,3 +250,23 @@ ent func_button
 ent func_train
   sfx sound/plats/train1.wav
   sfx sound/plats/train2.wav
+
+# point entities
+
+ent ambient_comp_hum
+  sfx sound/ambience/comp1.wav
+
+ent ambient_drone
+  sfx sound/ambience/drone6.wav
+
+ent ambient_suck_wind
+  sfx sound/ambience/suck1.wav
+
+ent ambient_swamp1
+  sfx sound/ambience/swamp1.wav
+
+ent ambient_swamp2
+  # swamp1.wav and swamp2.wav are basically the same
+  sfx sound/ambience/swamp1.wav
+
+# TODO: drip1.wav is insanely long
