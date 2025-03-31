@@ -369,7 +369,7 @@ static inline void DrawEntity(edict_t *ed) {
   // TODO: port over the efrags system or something, this is garbage
   int i;
   for (i = 0; i < ed->num_leafs; ++i) {
-    const mleaf_t *leaf = gs.worldmodel->leafs + ed->leafnums[i];
+    const mleaf_t *leaf = gs.worldmodel->leafs + ed->leafnums[i] + 1;
     if (leaf->visframe == rs.visframe)
       break; // found a visible leaf
   }
