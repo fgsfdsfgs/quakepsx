@@ -139,8 +139,6 @@ void Snd_StartSound(const s16 entnum, const s16 entch, const sfx_t *sfx, const x
   if (!Snd_Spatialize(target_chan))
     return; // sound is inaudible
 
-  Sys_Printf("Snd_StartSound(%d): attn = %d (%d)\n", target_chan- snd_chan, attn, target_chan->attn);
-
   target_chan->sfx = sfx;
   target_chan->endframe = Sys_Frames() + sfx->frames;
 
@@ -163,8 +161,6 @@ void Snd_StaticSound(const sfx_t *sfx, const x32vec3_t *origin, s16 vol, x32 att
   ch->vol = vol;
   ch->attn = XMUL16(attn, SND_INV_CLIPDIST);
   ch->endframe = Sys_Frames() + sfx->frames;
-
-  Sys_Printf("Snd_StaticSound(%d): attn = %d (%d)\n", ch - snd_chan, attn, ch->attn);
 
   Snd_Spatialize(ch);
 
