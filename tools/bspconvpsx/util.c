@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 #include <math.h>
 
 #include "../common/pak.h"
@@ -181,4 +182,35 @@ skipwhite:
 
   com_token[len] = 0;
   return data;
+}
+
+int resmap_parse(const char *fname, char *list, const int max_num, const int entry_len, const int name_len) {
+  int id = 0xFF;
+  char line[MAX_TOKEN] = { 0 };
+
+  FILE *f = fopen(fname, "rb");
+  if (!f) {
+    fprintf(stderr, "resmap_parse(): can't find resmap file %s\n", fname);
+    return -1;
+  }
+
+  int max_index = -1;
+  while (fgets(line, sizeof(line), f)) {
+    char *p = strtok(line, " \t\r\n");
+    if (!p || !isalnum(p[0]))
+      continue;
+    id = strtol(p, NULL, 16);
+    if (id >= max_num)
+      continue;
+    p = strtok(NULL, " \t\r\n");
+    if (p && p[0]) {
+      if (id > max_index)
+        max_index = id;
+      strncpy(list + id * entry_len, p, name_len - 1);
+    }
+  }
+
+  fclose(f);
+
+  return max_index + 1;
 }

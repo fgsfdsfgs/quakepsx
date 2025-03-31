@@ -82,6 +82,10 @@ x32 Sys_FixedTime(void) {
   return (VSync(-1) << FIXSHIFT) / TICKS_PER_SECOND;
 }
 
+s32 Sys_Frames(void) {
+  return VSync(-1);
+}
+
 // TEMPORARY CD FILE READING API WITH BUFFERS AND SHIT
 // copied straight from d2d-psx and converted to only use one static handle
 

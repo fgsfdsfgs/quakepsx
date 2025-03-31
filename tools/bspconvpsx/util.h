@@ -23,6 +23,8 @@ int img_quantize(const u8 *src, u8 *dst, const int w, const int h, u8 *outpal);
 
 const char *com_parse(const char *data, char *com_token);
 
+int resmap_parse(const char *fname, char *list, const int max_num, const int entry_len, const int name_len);
+
 static inline x32 f32_to_x32(const f32 x) {
   return (x32)(x * (f32)FIXSCALE);
 }

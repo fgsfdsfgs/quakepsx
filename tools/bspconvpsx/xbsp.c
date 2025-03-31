@@ -17,6 +17,7 @@
 #include "xbsp.h"
 #include "qbsp.h"
 #include "qmdl.h"
+#include "qsfx.h"
 
 // FIXME: removing T-junctions causes big gaps in geometry
 // #define REMOVE_TJUNCTIONS 1
@@ -49,25 +50,44 @@ int         xbsp_numentmodels;
 u8         *xbsp_entmodeldataptr = xbsp_entmodeldata;
 xmapent_t   xbsp_entities[MAX_ENTITIES];
 int         xbsp_numentities;
-xmapsnd_t  *xbsp_sounds[MAX_SOUNDS];
+xmapsnd_t   xbsp_sounds[MAX_SOUNDS];
 int         xbsp_numsounds;
+u32         xbsp_spuptr = 0;
 u16         xbsp_clutdata[NUM_CLUT_COLORS];
 u16         xbsp_texatlas[VRAM_TOTAL_HEIGHT][VRAM_TOTAL_WIDTH];
 xlump_t     xbsp_lumps[XLMP_COUNT];
 
 static u8  xbsp_texbitmap[VRAM_NUM_PAGES][VRAM_PAGE_WIDTH][VRAM_PAGE_HEIGHT];
 static u16 xbsp_texmaxy = 0;
-static u32 xbsp_sndalloc = SPURAM_BASE;
 
-xmapsnd_t *xbsp_spu_fit(const u8 *data, u32 size) {
-  const u32 asize = ALIGN(size, 8);
-  if (xbsp_sndalloc + asize < SPURAM_SIZE)
-    panic("xbsp_spu_fit(%p, %u): could not fit", data, size);
-  xmapsnd_t *snd = calloc(1, sizeof(xmapsnd_t) + size);
-  assert(snd);
-  snd->spuaddr = xbsp_sndalloc;
-  snd->size = size;
-  memcpy(snd->data, data, size);
+static u8  xbsp_spuram[SPURAM_SIZE];
+
+xmapsnd_t *xbsp_spu_fit(qsfx_t *src) {
+  for (s32 i = 0; i < xbsp_numsounds; ++i) {
+    if (xbsp_sounds[i].soundid == src->id)
+      return &xbsp_sounds[i]; // already loaded
+  }
+
+  if (xbsp_numsounds >= MAX_SOUNDS)
+    panic("xbsp_spu_fit(%d): too many sounds", src->id);
+
+  if (xbsp_spuptr + 16 >= SPURAM_SIZE)
+    panic("xbsp_spu_fit(%d): could not fit", src->id);
+
+  const s32 outbytes = qsfx_convert(src, xbsp_spuram + xbsp_spuptr, SPURAM_SIZE - xbsp_spuptr);
+  if (outbytes <= 0)
+    panic("xbsp_spu_fit(%d): could not fit", src->id);
+
+  xmapsnd_t *snd = &xbsp_sounds[xbsp_numsounds++];
+  snd->spuaddr = xbsp_spuptr + SPURAM_BASE;
+  snd->frames = src->numframes;
+  snd->soundid = src->id;
+
+  printf("* * id: %02x pcmlen: %u, adpcmlen: %u, addr: %05x, time: %d\n",
+    src->id, src->numsamples * 2, outbytes, snd->spuaddr, snd->frames);
+
+  xbsp_spuptr += outbytes;
+
   return snd;
 }
 
@@ -366,7 +386,12 @@ int xbsp_write(const char *fname) {
   fwrite(xbsp_texatlas, sizeof(u16), VRAM_TOTAL_WIDTH * xbsp_texmaxy, f);
 
   // write sounds
+  xsndlump_t sndlump;
+  sndlump.numsfx = xbsp_numsounds;
   fwrite(&xbsp_lumps[XLMP_SNDDATA], sizeof(xlump_t), 1, f);
+  fwrite(&sndlump, sizeof(sndlump), 1, f);
+  fwrite(xbsp_sounds, sizeof(*xbsp_sounds), xbsp_numsounds, f);
+  fwrite(xbsp_spuram, xbsp_spuptr, 1, f);
 
   // write alias models
   xmdllump_t mdllump;

@@ -39,6 +39,7 @@
 #define FL_PARTIALGROUND 1024  // not all corners are valid
 #define FL_WATERJUMP     2048  // player jumping out of water
 #define FL_JUMPRELEASED  4096  // for jump debouncing
+#define FL_JUMPED        8192
 
 // spawnflags
 #define SPAWNFLAG_NOT_EASY       256
@@ -57,7 +58,7 @@ typedef struct entvars_s {
   u8 solid;
   u8 movetype;
   u8 waterlevel;
-  u8 watertype;
+  s8 watertype;
   u16 flags;
   s16 modelnum;
   s16 frame;

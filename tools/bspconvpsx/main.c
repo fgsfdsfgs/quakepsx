@@ -16,8 +16,10 @@
 #include "xmdl.h"
 #include "qbsp.h"
 #include "qmdl.h"
+#include "qsfx.h"
 #include "qent.h"
 
+static const char *cfgdir;
 static const char *moddir;
 static const char *inname;
 static const char *outname;
@@ -279,14 +281,14 @@ static void do_entities(void) {
       if (tmpstr[0] == '*') {
         xent->model = -atoi(tmpstr + 1);
       } else {
-        xent->model = qmdl_id_for_name(tmpstr);
+        xent->model = qmdlmap_id_for_name(tmpstr);
       }
     }
 
     // default to whatever we have in the model slot, for renderer testing purposes
     if (!xent->model) {
-      if (strncmp(qent->classname, "info_", 5) != 0 && qent->info->mdls[0]) {
-        xent->model = qmdl_id_for_name(qent->info->mdls[0]);
+      if (strncmp(qent->classname, "info_", 5) != 0 && qent->info->mdlnums[0]) {
+        xent->model = qent->info->mdlnums[0];
       }
     }
 
@@ -298,8 +300,7 @@ static void do_entities(void) {
   printf("converted to %d entities, entity lump size = %d\n", xbsp_numentities, xbsp_lumps[XLMP_ENTITIES].size);
 }
 
-static void load_entmodel(const char *mdlname) {
-  const int id = qmdl_id_for_name(mdlname);
+static void load_entmodel(const int id, const char *mdlname) {
   if (xbsp_entmodel_find(id))
     return;
 
@@ -320,19 +321,56 @@ static void load_entmodel(const char *mdlname) {
 static void do_entmodels(void) {
   printf("adding entity models\n");
 
-  for (int i = 1; i < num_qents; ++i) {
+  for (int i = 0; i < num_qents; ++i) {
     // add any models tied to the classname
-    for (int j = 0; j < MAX_ENT_MDLS && qents[i].info->mdls[j]; ++j)
-      load_entmodel(qents[i].info->mdls[j]);
+    for (int j = 0; j < MAX_ENT_MDLS && qents[i].info->mdlnums[j]; ++j)
+      load_entmodel(qents[i].info->mdlnums[j], qmdlmap_name_for_id(qents[i].info->mdlnums[j]));
     // also add any extra models
     const char *model = qent_get_string(&qents[i], "model");
-    if (model && model[0] != '*')
-      load_entmodel(model);
+    if (model && model[0] != '*' && model[0]) {
+      const int id = qmdlmap_id_for_name(model);
+      if (id > 0)
+        load_entmodel(id, model);
+      else
+        fprintf(stderr, "* unknown model '%s' in entity %d's model field\n", model, i);
+    }
   }
 
   xbsp_lumps[XLMP_TEXDATA].size = 2 * VRAM_TOTAL_WIDTH * xbsp_vram_height();
   xbsp_lumps[XLMP_MDLDATA].size = sizeof(xmdllump_t) + sizeof(xaliashdr_t) * xbsp_numentmodels + (xbsp_entmodeldataptr - xbsp_entmodeldata);
   printf("loaded %d entity models, mdl lump size = %u\n", num_qmdls, xbsp_lumps[XLMP_MDLDATA].size);
+}
+
+static void load_sound(const int id, const char *sfxname) {
+  if (qsfx_find(id))
+    return;
+
+  printf("* loading sound %s\n", sfxname);
+
+  size_t wavsize = 0;
+  u8 *wavdata = lmp_read(moddir, sfxname, &wavsize);
+  if (!wavdata)
+    return;
+
+  qsfx_t *sfx = qsfx_add(sfxname, wavdata, wavsize);
+  free(wavdata);
+  if (!sfx)
+    return;
+
+  xbsp_spu_fit(sfx);
+}
+
+static void do_sounds(void) {
+  printf("adding entity sounds\n");
+
+  for (int i = 0; i < num_qents; ++i) {
+    // add any sounds tied to the classname
+    for (int j = 0; j < MAX_ENT_SFX && qents[i].info->sfxnums[j]; ++j)
+      load_sound(qents[i].info->sfxnums[j], qsfxmap_name_for_id(qents[i].info->sfxnums[j]));
+  }
+
+  xbsp_lumps[XLMP_SNDDATA].size = sizeof(xsndlump_t) + sizeof(xmapsnd_t) * xbsp_numsounds + xbsp_spuptr;
+  printf("loaded %d sounds, sfx lump size = %u\n", xbsp_numsounds, xbsp_lumps[XLMP_SNDDATA].size);
 }
 
 static inline const char *get_arg(int c, const char **v, const char *arg) {
@@ -348,19 +386,26 @@ static inline const char *get_arg(int c, const char **v, const char *arg) {
 }
 
 int main(int argc, const char **argv) {
-  if (argc < 4) {
-    printf("usage: %s <moddir> <mapname> <outxbsp> [<options>]\n", argv[0]);
+  if (argc < 5) {
+    printf("usage: %s <cfgdir> <moddir> <mapname> <outxbsp> [<options>]\n", argv[0]);
     return -1;
   }
 
   atexit(cleanup);
 
-  moddir = argv[1];
-  inname = argv[2];
-  outname = argv[3];
+  cfgdir = argv[1];
+  moddir = argv[2];
+  inname = argv[3];
+  outname = argv[4];
   vramexp = get_arg(argc, argv, "--export-vram");
 
-  // read palette first
+  // read entity and resource definitions
+  assert(qmdlmap_init(strfmt("%s/mdlmap.txt", cfgdir)) >= 0);
+  assert(qsfxmap_init(strfmt("%s/sfxmap.txt", cfgdir)) >= 0);
+  assert(qentmap_init(strfmt("%s/entmap.txt", cfgdir)) >= 0);
+  assert(qentmap_link(strfmt("%s/reslist.txt", cfgdir)) >= 0);
+
+  // read palette
   size_t palsize = 0;
   qbsp.palette = lmp_read(moddir, "gfx/palette.lmp", &palsize);
   if (palsize < (NUM_CLUT_COLORS * 3))
@@ -384,6 +429,7 @@ int main(int argc, const char **argv) {
   do_models();
   do_entities();
   do_entmodels();
+  do_sounds();
 
   if (vramexp && *vramexp)
     xbsp_vram_export(vramexp, qbsp.palette);

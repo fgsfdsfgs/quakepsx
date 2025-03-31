@@ -5,6 +5,7 @@
 #include "world.h"
 #include "entity.h"
 #include "game.h"
+#include "sound.h"
 #include "move.h"
 
 movevars_t *const movevars = PSX_SCRATCH;
@@ -812,9 +813,15 @@ static void PhysicsToss(edict_t *ent)
 
 static void PhysicsPlayer(edict_t *ent)
 {
+  const qboolean oldwater = (ent->v.watertype == CONTENTS_WATER) || (ent->v.watertype == CONTENTS_SLIME)
+    || (ent->v.watertype == CONTENTS_LAVA);
+
   // call standard client pre-think
   // TODO
   PM_PlayerMove(gs.frametime);
+
+  const qboolean jumped = (ent->v.flags & FL_JUMPED) != 0;
+  ent->v.flags &= ~FL_JUMPED;
 
   // do a move
   // TODO: CheckVelocity?
@@ -858,7 +865,28 @@ static void PhysicsPlayer(edict_t *ent)
 
   // call standard player post-think
   G_LinkEdict(ent, true);
+
   // TODO: PlayerPostThink
+
+  const u8 newwater = (ent->v.watertype == CONTENTS_WATER) || (ent->v.watertype == CONTENTS_SLIME)
+    || (ent->v.watertype == CONTENTS_LAVA);
+
+  if (!oldwater && newwater) {
+    Snd_StartSoundId(ent - gs.edicts, CHAN_BODY, SFXID_PLAYER_INH2O, &ent->v.origin, SND_MAXVOL, ATTN_NORM);
+  } else if (!newwater && gs.player->fallspeed < -TO_FIX32(300) && (ent->v.flags & FL_ONGROUND)) {
+    if (gs.player->fallspeed < -TO_FIX32(650)) {
+      // TODO: fall damage
+      Snd_StartSoundId(ent - gs.edicts, CHAN_BODY, SFXID_PLAYER_LAND2, &ent->v.origin, SND_MAXVOL, ATTN_NORM);
+    } else {
+      Snd_StartSoundId(ent - gs.edicts, CHAN_BODY, SFXID_PLAYER_LAND, &ent->v.origin, SND_MAXVOL, ATTN_NORM);
+    }
+    gs.player->fallspeed = 0;
+  }
+
+  if (jumped)
+    Snd_StartSoundId(ent - gs.edicts, CHAN_VOICE, SFXID_PLAYER_PLYRJMP8, &ent->v.origin, SND_MAXVOL, ATTN_NORM);
+  else if (!(ent->v.flags & FL_ONGROUND))
+    gs.player->fallspeed = ent->v.velocity.z;
 }
 
 void G_Physics(void)

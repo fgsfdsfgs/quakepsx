@@ -1,0 +1,235 @@
+# this is a big list of resources used by each entity class
+# ent - specifies the entity class for all the other directives that follow, until the next ent directive
+# mdl - designates alias models that should be loaded if this class is in the map
+# sfx - designates sound effects that should be loaded if this class is in the map
+
+# always precached, since worldspawn is in every map
+ent worldspawn
+  mdl progs/backpack.mdl
+  mdl progs/grenade.mdl
+  mdl progs/v_axe.mdl
+  mdl progs/v_nail.mdl
+  mdl progs/v_nail2.mdl
+  mdl progs/v_rock.mdl
+  mdl progs/v_rock2.mdl
+  mdl progs/v_shot.mdl
+  mdl progs/v_shot2.mdl
+  mdl progs/v_spike.mdl
+  mdl progs/spike.mdl
+  mdl progs/gib1.mdl
+  mdl progs/gib2.mdl
+  mdl progs/gib3.mdl
+  sfx sound/misc/r_tele3.wav
+  sfx sound/misc/secret.wav
+  sfx sound/player/axhit2.wav
+  sfx sound/player/death1.wav
+  sfx sound/player/gib.wav
+  sfx sound/player/h2odeath.wav
+  sfx sound/player/pain1.wav
+  sfx sound/player/pain3.wav
+  sfx sound/player/pain6.wav
+  sfx sound/player/drown2.wav
+  sfx sound/player/lburn1.wav
+  sfx sound/player/plyrjmp8.wav
+  sfx sound/player/gasp1.wav
+  sfx sound/player/land.wav
+  sfx sound/player/land2.wav
+  sfx sound/player/inh2o.wav
+  sfx sound/weapons/ax1.wav
+  sfx sound/weapons/bounce.wav
+  sfx sound/weapons/grenade.wav
+  sfx sound/weapons/guncock.wav
+  sfx sound/weapons/lhit.wav
+  sfx sound/weapons/lock4.wav
+  sfx sound/weapons/lstart.wav
+  sfx sound/weapons/r_exp3.wav
+  sfx sound/weapons/rocket1i.wav
+  sfx sound/weapons/sgun1.wav
+  sfx sound/weapons/shotgn2.wav
+  sfx sound/weapons/spike2.wav
+  sfx sound/weapons/tink1.wav
+
+# weapons
+
+ent weapon_grenadelauncher
+  mdl progs/g_rock.mdl
+  sfx sound/weapons/pkup.wav
+
+ent weapon_lightning
+  mdl progs/g_light.mdl
+  sfx sound/weapons/pkup.wav
+
+ent weapon_nailgun
+  mdl progs/g_nail.mdl
+  sfx sound/weapons/pkup.wav
+
+ent weapon_rocketlauncher
+  mdl progs/g_rock2.mdl
+  sfx sound/weapons/pkup.wav
+
+ent weapon_supernailgun
+  mdl progs/g_nail2.mdl
+  sfx sound/weapons/pkup.wav
+
+ent weapon_supershotgun
+  mdl progs/g_shot.mdl
+  sfx sound/weapons/pkup.wav
+
+# ammo
+
+ent item_shells
+  mdl maps/b_shell0.bsp
+  mdl maps/b_shell1.bsp
+
+ent item_spikes
+  mdl maps/b_nail0.bsp
+  mdl maps/b_nail1.bsp
+
+ent item_rockets
+  mdl maps/b_rock0.bsp
+  mdl maps/b_rock1.bsp
+
+ent item_cells
+  mdl maps/b_batt0.bsp
+  mdl maps/b_batt1.bsp
+
+# other items
+
+ent item_health
+  mdl maps/b_bh10.bsp
+  mdl maps/b_bh25.bsp
+  mdl maps/b_bh100.bsp
+  sfx sound/items/health1.wav
+  sfx sound/items/r_item1.wav
+  sfx sound/items/r_item2.wav
+
+ent item_armor1
+  mdl progs/armor.mdl
+  sfx sound/items/armor1.wav
+
+ent item_armor2
+  mdl progs/armor.mdl
+  sfx sound/items/armor1.wav
+
+ent item_armorInv
+  mdl progs/armor.mdl
+  sfx sound/items/armor1.wav
+
+ent item_key1
+  mdl progs/m_s_key.mdl
+  sfx sound/misc/medkey.wav
+
+ent item_key2
+  mdl progs/m_g_key.mdl
+  sfx sound/misc/medkey.wav
+
+ent item_sigil
+  mdl progs/end1.mdl
+  sfx sound/misc/runekey.wav
+
+ent item_artifact_envirosuit
+  mdl progs/suit.mdl
+  sfx sound/items/suit.wav
+
+ent item_artifact_invisibility
+  mdl progs/invisibl.mdl
+  sfx sound/items/inv1.wav
+
+ent item_artifact_super_damage
+  mdl progs/quaddama.mdl
+  sfx sound/items/damage.wav
+
+ent item_artifact_invulnerability
+  mdl progs/invulner.mdl
+  sfx sound/items/protect.wav
+
+# enemies
+
+ent monster_army
+  mdl progs/soldier.mdl
+  sfx sound/soldier/idle.wav
+  sfx sound/soldier/sight1.wav
+  sfx sound/soldier/pain2.wav
+  sfx sound/soldier/death1.wav
+
+ent monster_dog
+  mdl progs/dog.mdl
+  sfx sound/dog/idle.wav
+  sfx sound/dog/dsight.wav
+  sfx sound/dog/dpain1.wav
+  sfx sound/dog/dattack1.wav
+  sfx sound/dog/ddeath.wav
+
+ent monster_ogre
+  mdl progs/ogre.mdl
+  sfx sound/ogre/ogidle.wav
+  sfx sound/ogre/ogwake.wav
+  sfx sound/ogre/ogsawatk.wav
+  sfx sound/ogre/ogpain1.wav
+  sfx sound/ogre/ogdth.wav
+
+ent monster_demon1
+  mdl progs/demon.mdl
+  sfx sound/demon/idle1.wav
+  sfx sound/demon/sight2.wav
+  sfx sound/demon/djump.wav
+  sfx sound/demon/dhit2.wav
+  sfx sound/demon/dpain1.wav
+  sfx sound/demon/ddeath.wav
+
+ent monster_wizard
+  mdl progs/wizard.mdl
+  sfx sound/wizard/widle1.wav
+  sfx sound/wizard/wsight.wav
+  sfx sound/wizard/wpain.wav
+  sfx sound/wizard/wattack.wav
+  sfx sound/wizard/wdeath.wav
+
+ent monster_zombie
+  mdl progs/zombie.mdl
+  sfx sound/zombie/z_idle.wav
+  sfx sound/zombie/idle_w2.wav
+  sfx sound/zombie/z_shot1.wav
+  sfx sound/zombie/z_miss.wav
+  sfx sound/zombie/z_pain.wav
+  sfx sound/zombie/z_fall.wav
+
+ent monster_shambler
+  mdl progs/shambler.mdl
+  sfx sound/shambler/sidle.wav
+  sfx sound/shambler/ssight.wav
+  sfx sound/shambler/sattck1.wav
+  sfx sound/shambler/sboom.wav
+  sfx sound/shambler/melee1.wav
+  sfx sound/shambler/shurt2.wav
+  sfx sound/shambler/sdeath.wav
+
+ent monster_boss
+  mdl progs/boss.mdl
+  sfx sound/boss1/sight1.wav
+  sfx sound/boss1/pain.wav
+  sfx sound/boss1/death.wav
+
+# brush entities
+
+ent func_plat
+  sfx sound/plats/medplat1.wav
+  sfx sound/plats/medplat2.wav
+
+ent func_door
+  sfx sound/doors/hydro1.wav
+  sfx sound/doors/hydro2.wav
+  sfx sound/doors/doormv1.wav
+  sfx sound/doors/drclos4.wav
+  sfx sound/doors/medtry.wav
+  sfx sound/doors/basetry.wav
+
+ent func_button
+  sfx sound/buttons/airbut1.wav
+  sfx sound/buttons/switch04.wav
+  sfx sound/doors/doormv1.wav
+  sfx sound/doors/drclos4.wav
+
+ent func_train
+  sfx sound/plats/train1.wav
+  sfx sound/plats/train2.wav

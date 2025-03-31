@@ -1,5 +1,5 @@
 TARGET = bspconvpsx
-SRC = $(wildcard *.c) ../common/pak.c
+SRC = $(wildcard *.c) ../common/pak.c libpsxav/adpcm.c libpsxav/cdrom.c
 CC ?= gcc
 
 ../bin/$(TARGET).exe: $(SRC)

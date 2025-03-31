@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "types.h"
 #include "fixed.h"
@@ -52,10 +53,6 @@ typedef struct link_s {
 #define VRAM_PAL_YSTART VID_HEIGHT
 #define VRAM_PAL_WIDTH  VID_NUM_COLORS
 #define VRAM_PAL_HEIGHT 1
-
-// sound stuff
-#define SPURAM_BASE 0x1100
-#define SPURAM_SIZE (0x80000 - SPURAM_BASE)
 
 // filesystem stuff
 #define FS_BASE "\\ID1PSX"

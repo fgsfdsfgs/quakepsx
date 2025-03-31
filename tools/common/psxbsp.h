@@ -172,15 +172,19 @@ typedef struct {
 } xmapent_t;
 
 typedef struct {
-  u8 soundid;
+  s16 soundid;
+  u16 frames;
   u32 spuaddr;
-  u32 size;
-  u8 data[];
 } xmapsnd_t;
 
 typedef struct {
   u32 nummdls;
   xaliashdr_t mdls[];
 } xmdllump_t;
+
+typedef struct {
+  u32 numsfx;
+  xmapsnd_t sfx[];
+} xsndlump_t;
 
 #pragma pack(pop)

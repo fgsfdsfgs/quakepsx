@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
 #define MAX_VA_LEN 4096
 #define MAX_VA_BUF 4
 

@@ -284,8 +284,10 @@ void PM_PlayerMove(const x16 dt)
     {
       PM_AirMove();
       // jump if able
-      if (movevars->pm.onground && plr->move.z > 0)
+      if (movevars->pm.onground && plr->move.z > 0) {
         ped->v.velocity.z += G_JUMPSPEED;
+        ped->v.flags |= FL_JUMPED;
+      }
     }
   }
   else if (ped->v.movetype == MOVETYPE_NOCLIP)

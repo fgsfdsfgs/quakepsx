@@ -1,4 +1,4 @@
-TARGET = mkentmap
+TARGET = mkresmap
 SRC = $(wildcard *.c) ../common/pak.c
 CC ?= gcc
 

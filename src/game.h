@@ -12,6 +12,7 @@ typedef struct player_state_s {
   x32vec3_t viewofs;
   edict_t *ent;
   x32 movespeed;
+  x32 fallspeed;
 } player_state_t;
 
 typedef struct game_state_s {

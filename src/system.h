@@ -24,7 +24,10 @@ void Sys_Error(const char *error, ...) __attribute__((noreturn));
 // installs CPU exception handler (see exception.c)
 void Sys_InstallExceptionHandler(void);
 
-// returns seconds since start in 1.19.12 fixed point
+// returns seconds since app start in 1.19.12 fixed point
 x32 Sys_FixedTime(void);
+
+// returns vblanks since app start
+s32 Sys_Frames(void);
 
 void Sys_Wait(int n);

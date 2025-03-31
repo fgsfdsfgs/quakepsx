@@ -6,6 +6,7 @@
 #include "bspfile.h"
 #include "render.h"
 #include "model.h"
+#include "sound.h"
 
 static x32 RadiusFromBounds(const x32vec3_t *mins, const x32vec3_t *maxs) {
   x32vec3_t corner;
@@ -53,7 +54,20 @@ static void Mod_LoadTextureData(bmodel_t *mod, const int fh) {
 
 static void Mod_LoadSoundData(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_SNDDATA, 0, fh);
-  // TODO
+
+  u32 num_sfx = 0;
+  Sys_FileRead(fh, &num_sfx, sizeof(u32));
+
+  sfx_t *sfx = Mem_Alloc(lump.size - sizeof(u32));
+  Sys_FileRead(fh, sfx, lump.size - sizeof(u32));
+
+  u8 *spudata = (u8 *)(sfx + num_sfx);
+  const u32 spudata_size = lump.size - sizeof(u32) - num_sfx * sizeof(*sfx);
+
+  Snd_SetBank(sfx, num_sfx, spudata, spudata_size);
+
+  // we don't need the SPU data anymore
+  ASSERT(Mem_Realloc(sfx, num_sfx * sizeof(*sfx)));
 }
 
 static void Mod_LoadAliasData(bmodel_t *mod, const int fh) {

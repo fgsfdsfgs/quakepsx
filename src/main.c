@@ -4,6 +4,10 @@
 #include "input.h"
 #include "game.h"
 #include "move.h"
+#include "sound.h"
+#include "progs/sfxids.h"
+
+static x32vec3_t sndorg;
 
 static void TestInput(const x16 dt) {
   static int onspeed = 0;
@@ -39,12 +43,15 @@ static void TestInput(const x16 dt) {
 int main(int argc, char **argv) {
   Sys_Init();
   Mem_Init();
+  Snd_Init();
   R_Init();
   IN_Init();
 
   Mem_SetMark(MEM_MARK_LO);
 
   G_StartMap(FS_BASE "\\MAPS\\E1M1.PSB;1");
+
+  sndorg = gs.edicts[1].v.origin;
 
   x32 then = 0;
   x32 time = 0;
@@ -55,6 +62,7 @@ int main(int argc, char **argv) {
     IN_Update();
     TestInput(gs.frametime);
     G_Update(gs.frametime);
+    Snd_Update(&rs.origin, &rs.vright);
     R_UpdateLightStyles(gs.time);
     R_RenderView();
     R_Flip();

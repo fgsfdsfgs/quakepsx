@@ -46,8 +46,7 @@ void *GPU_SortPrim(const u32 size, const int otz) {
 
 void R_InitDebug(void) {
   FntLoad(960, 256);
-  if (r_debugstream < 0)
-    r_debugstream = FntOpen(0, 8, 320, 216, 0, 255);
+  r_debugstream = FntOpen(0, 8, 320, 216, 0, 255);
 }
 
 void R_Init(void) {

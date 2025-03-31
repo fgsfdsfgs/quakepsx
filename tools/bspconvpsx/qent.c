@@ -2,113 +2,92 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 #include "util.h"
 #include "qent.h"
+#include "qmdl.h"
+#include "qsfx.h"
 
-// TODO: move these into an external file or some shit
-const qentmap_t qentmap[] = {
-  { 0x00, "worldspawn" },
-  { 0x01, "player" },
-  { 0x02, "air_bubbles" },
-  { 0x03, "ambient_comp_hum" },
-  { 0x04, "ambient_drip" },
-  { 0x05, "ambient_drone" },
-  { 0x06, "ambient_suck_wind" },
-  { 0x07, "ambient_swamp1" },
-  { 0x08, "ambient_swamp2" },
-  { 0x09, "event_lightning" },
-  { 0x0a, "func_bossgate" },
-  { 0x0b, "func_button" },
-  { 0x0c, "func_door" },
-  { 0x0d, "func_door_secret" },
-  { 0x0e, "func_episodegate" },
-  { 0x0f, "func_illusionary" },
-  { 0x10, "func_plat" },
-  { 0x11, "func_train" },
-  { 0x12, "func_wall" },
-  { 0x13, "info_intermission" },
-  { 0x14, "info_null" },
-  { 0x15, "info_player_coop" },
-  { 0x16, "info_player_deathmatch" },
-  { 0x17, "info_player_start", { "progs/v_axe.mdl", "progs/v_shot.mdl" } },
-  { 0x18, "info_player_start2" },
-  { 0x19, "info_teleport_destination" },
-  { 0x1a, "item_armor1", { "progs/armor.mdl" } },
-  { 0x1b, "item_armor2", { "progs/armor.mdl" } },
-  { 0x1c, "item_armorInv", { "progs/armor.mdl" } },
-  { 0x1d, "item_artifact_envirosuit", { "progs/suit.mdl" } },
-  { 0x1e, "item_artifact_invisibility", { "progs/invisibl.mdl" } },
-  { 0x1f, "item_artifact_invulnerability", { "progs/invulner.mdl" } },
-  { 0x20, "item_artifact_super_damage", { "progs/quaddama.mdl" } },
-  { 0x21, "item_cells", { "maps/b_batt0.bsp", "maps/b_batt1.bsp" } },
-  { 0x22, "item_health", { "maps/b_bh10.bsp", "maps/b_bh25.bsp", "maps/b_bh100.bsp" } },
-  { 0x23, "item_key1" },
-  { 0x24, "item_key2" },
-  { 0x25, "item_rockets", { "maps/b_rock0.bsp", "maps/b_rock1.bsp" } },
-  { 0x26, "item_shells", { "maps/b_shell0.bsp", "maps/b_shell1.bsp" } },
-  { 0x27, "item_sigil" },
-  { 0x28, "item_spikes", { "maps/b_shell0.bsp", "maps/b_shell1.bsp" } },
-  { 0x29, "item_weapon" },
-  { 0x2a, "light" },
-  { 0x2b, "light_flame_large_yellow" },
-  { 0x2c, "light_flame_small_white" },
-  { 0x2d, "light_flame_small_yellow" },
-  { 0x2e, "light_fluoro" },
-  { 0x2f, "light_fluorospark" },
-  { 0x30, "light_globe" },
-  { 0x31, "light_torch_small_walltorch" },
-  { 0x32, "misc_explobox", { "maps/b_explob.bsp"} },
-  { 0x33, "misc_explobox2", { "maps/b_exbox2.bsp"} },
-  { 0x34, "misc_fireball" },
-  { 0x35, "misc_teleporttrain" },
-  { 0x36, "monster_army", { "progs/soldier.mdl", "progs/backpack.mdl" } },
-  { 0x37, "monster_boss" },
-  { 0x38, "monster_demon1", { "progs/demon.mdl" } },
-  { 0x39, "monster_dog", { "progs/dog.mdl" } },
-  { 0x3a, "monster_enforcer" },
-  { 0x3b, "monster_fish", { "progs/fish.mdl" } },
-  { 0x3c, "monster_hell_knight", { "progs/knight.mdl" } },
-  { 0x3d, "monster_knight", { "progs/knight.mdl" } }, 
-  { 0x3e, "monster_ogre", { "progs/ogre.mdl", "progs/backpack.mdl", "progs/grenade.mdl" } },
-  { 0x3f, "monster_oldone" },
-  { 0x40, "monster_shalrath" },
-  { 0x41, "monster_shambler", { "progs/shambler.mdl" } },
-  { 0x42, "monster_tarbaby" },
-  { 0x43, "monster_wizard", { "progs/wizard.mdl" } },
-  { 0x44, "monster_zombie", { "progs/zombie.mdl" } },
-  { 0x45, "path_corner" },
-  { 0x46, "trap_spikeshooter" },
-  { 0x47, "trigger_changelevel" },
-  { 0x48, "trigger_counter" },
-  { 0x49, "trigger_hurt" },
-  { 0x4a, "trigger_monsterjump" },
-  { 0x4b, "trigger_multiple" },
-  { 0x4c, "trigger_once" },
-  { 0x4d, "trigger_onlyregistered" },
-  { 0x4e, "trigger_push" },
-  { 0x4f, "trigger_relay" },
-  { 0x50, "trigger_secret" },
-  { 0x51, "trigger_setskill" },
-  { 0x52, "trigger_teleport" },
-  { 0x53, "weapon_grenadelauncher", { "progs/g_rock.mdl", "progs/v_rock.mdl" } },
-  { 0x54, "weapon_lightning", { "progs/g_light.mdl", "progs/v_light.mdl" } },
-  { 0x55, "weapon_nailgun", { "progs/g_nail.mdl", "progs/v_nail.mdl" } },
-  { 0x56, "weapon_rocketlauncher", { "progs/g_rock2.mdl", "progs/v_rock2.mdl" } },
-  { 0x57, "weapon_supernailgun", { "progs/g_nail2.mdl", "progs/v_nail2.mdl" } },
-  { 0x58, "weapon_supershotgun", { "progs/g_shot.mdl", "progs/v_shot2.mdl" } },
-};
+qentmap_t qentmap[MAX_ENT_CLASSES];
+int num_qentmap = 0;
 
-const int num_qentmap = sizeof(qentmap) / sizeof(*qentmap);
-
-int num_qents = 0;
 qent_t qents[MAX_ENTITIES];
+int num_qents = 0;
 
-const qentmap_t *qentmap_find(const char *classname) {
+qentmap_t *qentmap_find(const char *classname) {
   for (int i = 0; i < num_qentmap; ++i) {
     if (!strcmp(qentmap[i].classname, classname))
       return &qentmap[i];
   }
   return NULL;
+}
+
+int qentmap_init(const char *mapfile) {
+  num_qentmap = resmap_parse(mapfile, (char *)qentmap, MAX_ENT_CLASSES, sizeof(qentmap[0]), MAX_ENT_CLASSNAME);
+  for (int i = 0; i < num_qentmap; ++i) {
+    qentmap[i].classnum = i;
+  }
+  printf("qentmap_init(): indexed %d entclasses from %s\n", num_qentmap, mapfile);
+  return num_qentmap;
+}
+
+int qentmap_link(const char *resfile) {
+  FILE *f = fopen(resfile, "rb");
+  if (!f) {
+    fprintf(stderr, "qentmap_link(): can't open reslist file %s\n", resfile);
+    return -1;
+  }
+
+  char line[MAX_TOKEN] = { 0 };
+  char classname[MAX_ENT_CLASSNAME] = { 0 };
+  qentmap_t *entclass = NULL;
+  int id;
+  int ret = 0;
+  while (fgets(line, sizeof(line), f)) {
+    char *key = strtok(line, " \t\r\n");
+    if (!key || key[0] == '#')
+      continue;
+
+    char *val = strtok(NULL, " \t\r\n");
+    if (!key || !val || !key[0] || !val[0])
+      continue;
+
+    if (!strcmp(key, "ent")) {
+      strncpy(classname, val, sizeof(classname) - 1);
+      entclass = qentmap_find(classname);
+      if (!entclass) {
+        fprintf(stderr, "classname '%s' is not in entmap\n", classname);
+        ret = -2;
+        break;
+      }
+    } else {
+      if (!entclass) {
+        fprintf(stderr, "encountered '%s %s' before any 'ent' directives\n", key, val);
+        ret = -3;
+        break;
+      }
+      if (!strcmp(key, "mdl")) {
+        assert(entclass->num_mdlnums < MAX_ENT_MDLS);
+        id = qmdlmap_id_for_name(val);
+        if (id <= 0) {
+          fprintf(stderr, "model '%s' not in mdlmap\n", val);
+          continue;
+        }
+        entclass->mdlnums[entclass->num_mdlnums++] = id;
+      } else if (!strcmp(key, "sfx")) {
+        assert(entclass->num_sfxnums < MAX_ENT_SFX);
+        id = qsfxmap_id_for_name(val);
+        if (id <= 0) {
+          fprintf(stderr, "sfx '%s' not in sfxmap\n", val);
+          continue;
+        }
+        entclass->sfxnums[entclass->num_sfxnums++] = id;
+      }
+    }
+  }
+
+  fclose(f);
+  return ret;
 }
 
 const char *qent_parse(qent_t *ent, const char *data) {

@@ -4,7 +4,10 @@
 #include "../common/idbsp.h"
 #include "../common/psxbsp.h"
 
-#define MAX_ENT_MDLS 4
+#define MAX_ENT_MDLS 32
+#define MAX_ENT_SFX 32
+#define MAX_ENT_CLASSES 0x80
+#define MAX_ENT_CLASSNAME 64
 #define MAX_ENT_FIELDS 64
 
 enum qfieldtype_e {
@@ -14,9 +17,15 @@ enum qfieldtype_e {
 };
 
 typedef struct {
+  char classname[MAX_ENT_CLASSNAME];
+
   int classnum;
-  const char *classname;
-  const char *mdls[MAX_ENT_MDLS];
+
+  int num_mdlnums;
+  int mdlnums[MAX_ENT_MDLS];
+
+  int num_sfxnums;
+  int sfxnums[MAX_ENT_SFX];
 } qentmap_t;
 
 typedef struct {
@@ -34,13 +43,12 @@ typedef struct {
   const qentmap_t *info;
 } qent_t;
 
-extern const int num_qentmap;
-extern const qentmap_t qentmap[];
-
 extern int num_qents;
 extern qent_t qents[MAX_ENTITIES];
 
-const qentmap_t *qentmap_find(const char *classname);
+int qentmap_init(const char *mapfile);
+qentmap_t *qentmap_find(const char *classname);
+int qentmap_link(const char *resfile);
 
 void qent_load(const char *data, int datalen);
 

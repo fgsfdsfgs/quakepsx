@@ -3,10 +3,10 @@
 #include "../common.h"
 #include "../game.h"
 #include "../entity.h"
+#include "../sound.h"
 #include "../system.h"
-#include "entity.h"
 #include "entclasses.h"
-#include "entmodels.h"
+#include "mdlids.h"
 
 #define PR_FRAMETIME 410 // ~0.1 sec
 
