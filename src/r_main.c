@@ -9,13 +9,21 @@
 #include "system.h"
 #include "game.h"
 #include "render.h"
+#include "screen.h"
 
 #define GPU_CLUT_X 0
 #define GPU_CLUT_Y VID_HEIGHT
 
+// for drawing 2D back to front without screwing with OTs too much
+typedef struct  {
+  u32 first;
+  u8 *last;
+} plist_t;
+
 typedef struct {
   DISPENV disp;
   DRAWENV draw;
+  plist_t gpuplist;
   u8 gpubuf[GPU_BUFSIZE];
   u32 gpuot[GPU_OTDEPTH];
 } fb_t;
@@ -23,30 +31,30 @@ typedef struct {
 u32 *gpu_ot;
 u8 *gpu_buf;
 u8 *gpu_ptr;
+plist_t *gpu_plist;
 
 render_state_t rs;
 
 int c_mark_leaves = 0;
 int c_draw_polys = 0;
 
-int r_debugstream = -1;
-
 static fb_t fb[2];
 static int fbidx;
 
 static x16 bobjrotate;
 
-void *GPU_SortPrim(const u32 size, const int otz) {
-  u8 *newptr = gpu_ptr + size;
-  ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
-  addPrim(gpu_ot + otz, gpu_ptr);
-  gpu_ptr = newptr;
-  return gpu_ptr;
+static inline void Plist_Append(const u32 size) {
+  if (!gpu_plist->last)
+    catPrim(&gpu_plist->first, gpu_ptr);
+  else
+    catPrim(gpu_plist->last, gpu_ptr);
+  gpu_plist->last = gpu_ptr;
+  gpu_ptr += size;
 }
 
-void R_InitDebug(void) {
-  FntLoad(960, 256);
-  r_debugstream = FntOpen(0, 8, 320, 216, 0, 255);
+static inline void Plist_Clear(void) {
+  gpu_plist->first = 0xFFFFFF;
+  gpu_plist->last = NULL;
 }
 
 void R_Init(void) {
@@ -84,8 +92,10 @@ void R_Init(void) {
   fbidx = 0;
   gpu_ptr = gpu_buf = fb[0].gpubuf;
   gpu_ot = fb[0].gpuot;
+  gpu_plist = &fb[0].gpuplist;
   PutDispEnv(&fb[0].disp);
   PutDrawEnv(&fb[0].draw);
+  Plist_Clear();
 
   // set up GTE
   InitGeom();
@@ -99,13 +109,15 @@ void R_Init(void) {
   gte_ldzsf3_m(zsf3);
   gte_ldzsf4_m(zsf4);
 
-  // load debug font
-  R_InitDebug();
+  R_InitLightStyles();
+
+  // load gfx.dat
+  Spr_Init();
+
+  Scr_Init();
 
   // enable display
   SetDispMask(1);
-
-  R_InitLightStyles();
 }
 
 void R_UploadClut(const u16 *clut) {
@@ -228,8 +240,6 @@ void R_RenderScene(void) {
 }
 
 void R_NewMap(void) {
-  // redownload debug font if it got overwritten
-  R_InitDebug();
   rs.viewleaf = NULL;
   for (int i = 0; i < gs.worldmodel->numtextures; i++)
     gs.worldmodel->textures[i].texchain = NULL;
@@ -245,34 +255,14 @@ void R_RenderView(void) {
   rs.frametime = Sys_FixedTime();
 
   R_RenderScene();
-}
 
-void R_DrawDebug(const x32 dt) {
-  player_state_t *p = gs.player;
-
-  FntPrint(r_debugstream, "X=%04d Y=%04d Z=%04d\n",
-    rs.vieworg.x>>12, 
-    rs.vieworg.y>>12, 
-    rs.vieworg.z>>12);
-  FntPrint(r_debugstream, "VX=%04d VY=%04d VZ=%04d G=%d\n",
-    p->ent->v.velocity.x>>12, 
-    p->ent->v.velocity.y>>12, 
-    p->ent->v.velocity.z>>12,
-    (int)(p->ent->v.flags & FL_ONGROUND));
-  FntPrint(r_debugstream, "RX=%05d RY=%05d\n",
-    rs.viewangles.x, 
-    rs.viewangles.y);
-  FntPrint(r_debugstream, "L=%05d M=%05d D=%05d\n", rs.viewleaf - gs.worldmodel->leafs, c_mark_leaves, c_draw_polys);
-  FntPrint(r_debugstream, "DT=%3d.%04d F=%3d VF=%3d\n", dt >> 12, dt & 4095, rs.frame, rs.visframe);
-  FntFlush(r_debugstream);
+  Scr_DrawScreen(rs.debug);
 }
 
 void R_Flip(void) {
   ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
 
   const x32 dt = Sys_FixedTime() - rs.frametime;
-  if (rs.debug)
-    R_DrawDebug(dt);
 
   DrawSync(0);
   VSync(0);
@@ -285,7 +275,17 @@ void R_Flip(void) {
   PutDrawEnv(&fb[fbidx].draw);
   PutDispEnv(&fb[fbidx].disp);
 
+  // if we drew any 2D stuff this frame, concat it to the beginning of the OT,
+  // so it draws on top of everything
+  if (gpu_plist->last) {
+    termPrim(gpu_plist->last);
+    catPrim(fb[fbidx ^ 1].gpuot, &gpu_plist->first);
+  }
+
   DrawOTag(fb[fbidx ^ 1].gpuot + GPU_OTDEPTH - 1);
+
+  gpu_plist = &fb[fbidx].gpuplist;
+  Plist_Clear();
 
   c_draw_polys = 0;
 }
@@ -461,4 +461,8 @@ void R_DrawWorld(void) {
 
   // then draw the texchains
   R_DrawTextureChains();
+}
+
+void R_AddScreenPrim(const u32 primsize) {
+  Plist_Append(primsize);
 }

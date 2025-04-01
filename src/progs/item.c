@@ -6,6 +6,7 @@ static void item_touch(edict_t *self, edict_t *other) {
     return;
 
   s16 sfxid;
+  const char *msg;
   switch (self->v.classname) {
     case ENT_WEAPON_GRENADELAUNCHER:
     case ENT_WEAPON_LIGHTNING:
@@ -14,29 +15,35 @@ static void item_touch(edict_t *self, edict_t *other) {
     case ENT_WEAPON_SUPERNAILGUN:
     case ENT_WEAPON_SUPERSHOTGUN:
       sfxid = SFXID_WEAPONS_PKUP;
+      msg = "got a gun";
       break;
 
     case ENT_ITEM_ARMOR1:
     case ENT_ITEM_ARMOR2:
     case ENT_ITEM_ARMORINV:
       sfxid = SFXID_ITEMS_ARMOR1;
+      msg = "got the armor";
       break;
 
     case ENT_ITEM_KEY1:
     case ENT_ITEM_KEY2:
       sfxid = SFXID_MISC_MEDKEY;
+      msg = "got the key";
       break;
 
     case ENT_ITEM_HEALTH:
       sfxid = SFXID_ITEMS_HEALTH1;
+      msg = "receive health";
       break;
 
     default:
       sfxid = SFXID_WEAPONS_LOCK4;
+      msg = "get ammo or some shit";
       break;
   }
 
   Snd_StartSoundId(other - gs.edicts, CHAN_ITEM, sfxid, &other->v.origin, SND_MAXVOL, ATTN_NORM);
+  Scr_SetTopMsg(VA("You %s", msg));
 
   G_SetModel(self, 0);
   self->v.solid = SOLID_NOT;

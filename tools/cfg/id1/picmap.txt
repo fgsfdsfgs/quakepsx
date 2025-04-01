@@ -1,0 +1,68 @@
+# pics without path are taken from gfx.wad
+# pic NAME VRAM_X VRAM_Y [COLORKEY=0xFF]
+
+# conchars has a different transparent color for some reason
+pic conchars 960 0 0
+
+# big HUD numbers
+pic num_0     960  128
+pic num_1     972  128
+pic num_2     984  128
+pic num_3     996  128
+pic num_4     1008 128
+pic num_5     960  152
+pic num_6     972  152
+pic num_7     984  152
+pic num_8     996  152
+pic num_9     1008 152
+pic num_slash 960  176
+pic num_colon 968  176
+
+# regular faces
+pic face1 960  200
+pic face2 972  200
+pic face3 984  200
+pic face4 996  200
+pic face5 1008 200
+
+# pain faces
+pic face_p1 960  224
+pic face_p2 972  224
+pic face_p3 984  224
+pic face_p4 996  224
+pic face_p5 1008 224
+
+# powerup faces; last is invis + invul
+pic face_quad   976  176
+pic face_invis  988  176
+pic face_invul2 1000 176
+pic face_inv2   1012 176
+
+# quake logo bar
+pic gfx/qplaque.lmp 960 256
+
+# items
+pic sb_armor1 976  256
+pic sb_armor2 988  256
+pic sb_armor3 1000 256
+pic sb_shells 1012 256
+pic sb_nails  976  280
+pic sb_rocket 988  280
+pic sb_cells  1000 280
+pic sb_key1   976  304
+pic sb_key2   984  304
+pic sb_sigil1 992  304
+pic sb_sigil2 996  304
+pic sb_sigil3 1000 304
+pic sb_sigil4 1004 304
+
+# spinny quake icon
+pic gfx/menudot1.lmp 976  320
+pic gfx/menudot2.lmp 984  320
+pic gfx/menudot3.lmp 992  320
+pic gfx/menudot4.lmp 1000 320
+pic gfx/menudot5.lmp 1008 320
+pic gfx/menudot6.lmp 1016 320
+
+# PAUSED
+pic gfx/pause.lmp 960 400

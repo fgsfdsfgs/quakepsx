@@ -222,10 +222,13 @@ ent monster_shambler
   sfx sound/shambler/sdeath.wav
 
 ent monster_boss
-  mdl progs/boss.mdl
+  # mdl progs/boss.mdl # this fat fuck has too many vertices
   sfx sound/boss1/sight1.wav
   sfx sound/boss1/pain.wav
   sfx sound/boss1/death.wav
+
+ent monster_fish
+  mdl progs/fish.mdl
 
 # brush entities
 

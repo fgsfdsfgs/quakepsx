@@ -29,7 +29,7 @@
 
 #define VRAM_XSTART         320
 #define VRAM_NUM_PAGES      2
-#define VRAM_PAGE_WIDTH     (1024 - VRAM_XSTART)
+#define VRAM_PAGE_WIDTH     (1024 - 64 - VRAM_XSTART)
 #define VRAM_PAGE_HEIGHT    256
 #define VRAM_TEXPAGE_WIDTH  64
 #define VRAM_TEXPAGE_HEIGHT 256
@@ -186,5 +186,11 @@ typedef struct {
   u32 numsfx;
   xmapsnd_t sfx[];
 } xsndlump_t;
+
+typedef struct {
+  u16 tpage;
+  u8vec2_t uv;
+  u8vec2_t size;
+} xpic_t;
 
 #pragma pack(pop)

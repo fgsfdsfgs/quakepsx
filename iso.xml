@@ -13,6 +13,7 @@
       <file name="system.cnf"   type="data" source="${PROJECT_SOURCE_DIR}/system.cnf"/>
       <file name="quakepsx.exe" type="data" source="quakepsx.exe"/>
       <dir  name="id1psx" source="${PROJECT_SOURCE_DIR}/id1psx">
+        <file name="gfx.dat" type="data" source="${PROJECT_SOURCE_DIR}/id1psx/gfx.dat"/>
         <dir name="maps" source="${PROJECT_SOURCE_DIR}/id1psx/maps">
           <file name="start.psb" type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/start.psb"/>
           <file name="e1m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m1.psb"/>
@@ -24,6 +25,9 @@
           <file name="e1m7.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m7.psb"/>
           <file name="e1m8.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m8.psb"/>
           <file name="e2m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m1.psb"/>
+          <file name="e2m2.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m2.psb"/>
+          <file name="e2m3.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m3.psb"/>
+          <file name="e2m7.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m7.psb"/>
         </dir>
       </dir>
       <dummy sectors="1024"/>

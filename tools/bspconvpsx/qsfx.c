@@ -4,11 +4,11 @@
 #include <assert.h>
 
 #define DR_WAV_IMPLEMENTATION 1
-#include "dr_wav.h"
-#include "libpsxav/libpsxav.h"
+#include "../common/dr_wav.h"
+#include "../common/libpsxav/libpsxav.h"
+#include "../common/psxtypes.h"
 #include "qsfx.h"
 #include "util.h"
-#include "../common/psxtypes.h"
 
 static char qsfxmap[MAX_QSFX][MAX_QSFX_NAME];
 static int num_qsfxmap = 0;

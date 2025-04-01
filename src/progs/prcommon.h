@@ -4,6 +4,7 @@
 #include "../game.h"
 #include "../entity.h"
 #include "../sound.h"
+#include "../screen.h"
 #include "../system.h"
 #include "entclasses.h"
 #include "mdlids.h"

@@ -7,6 +7,7 @@
 #include "common.h"
 #include "entity.h"
 #include "model.h"
+#include "sprite.h"
 #include "system.h"
 
 // some GTE macro variations that use registers instead of pointers
@@ -68,13 +69,18 @@ extern u32 *gpu_ot;
 extern u8 *gpu_buf;
 extern u8 *gpu_ptr;
 
-void *GPU_SortPrim(const u32 size, const int otz);
+static inline void *R_AllocPrim(const u32 size) {
+  void *ret = gpu_ptr;
+  gpu_ptr += size;
+  return ret;
+}
 
 void R_Init(void);
 void R_UploadClut(const u16 *clut);
 void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h);
 qboolean R_CullBox(const x32vec3_t *mins, const x32vec3_t *maxs);
 void R_SetFrustum(void);
+void R_AddScreenPrim(const u32 primsize);
 void R_RenderScene(void);
 void R_DrawWorld(void);
 void R_NewMap(void);

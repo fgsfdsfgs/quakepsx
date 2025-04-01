@@ -4,7 +4,7 @@
 #include <assert.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "../common/stb_image_write.h"
 
 #include "../common/psxtypes.h"
 #include "../common/idbsp.h"
@@ -183,14 +183,7 @@ int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy) {
 }
 
 void xbsp_set_palette(const u8 *pal) {
-  for (int i = 0; i < NUM_CLUT_COLORS; ++i) {
-    const u8 r = *pal++;
-    const u8 g = *pal++;
-    const u8 b = *pal++;
-    xbsp_clutdata[i] = PSXRGB(r, g, b);
-    if (!xbsp_clutdata[i])
-      xbsp_clutdata[i] = 0x8000; // replace with non-transparent black
-  }
+  convert_palette(xbsp_clutdata, pal, NUM_CLUT_COLORS);
 }
 
 void xbsp_vram_store_miptex(const qmiptex_t *qti, int x, int y) {

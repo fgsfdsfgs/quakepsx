@@ -5,17 +5,11 @@
 
 #include "../common/psxtypes.h"
 #include "../common/idbsp.h"
+#include "../common/util.h"
 
 #define MAX_TOKEN 2048
 
 #define XBSP_SCALE 1
-
-#define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
-#define PSXRGB(r, g, b) ((((b) >> 3) << 10) | (((g) >> 3) << 5) | ((r) >> 3))
-#define PSXTPAGE(tp, abr, x, y) ((((x)&0x3FF)>>6) | (((y)>>8)<<4) | (((abr)&0x3)<<5) | (((tp)&0x3)<<7))
-
-void panic(const char *fmt, ...);
-void *lmp_read(const char *dir, const char *fname, size_t *outsize);
 
 void img_palettize(const u8 *src, u8 *dst, const int w, const int h, const u8 *pal, const int palsiz);
 void img_unpalettize(const u8 *src, u8 *dst, const int w, const int h, const u8 *pal);

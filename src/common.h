@@ -35,6 +35,7 @@ typedef struct link_s {
 #define VID_CENTER_X   (VID_WIDTH >> 1)
 #define VID_CENTER_Y   (VID_HEIGHT >> 1)
 #define VID_NUM_COLORS 256
+#define VID_MAXFPS     60 // TODO: PAL?
 
 // texture flags
 #define TEX_SPECIAL   1
@@ -45,9 +46,12 @@ typedef struct link_s {
 #define TEX_NULL      0x8000
 
 // VRAM layout
+#define VRAM_PIC_XSTART 960
+#define VRAM_PIC_WIDTH  64
+#define VRAM_PIC_HEIGHT 512
 #define VRAM_TEX_XSTART 320
 #define VRAM_TEX_YSTART 0
-#define VRAM_TEX_WIDTH  (1024 - VRAM_TEX_XSTART)
+#define VRAM_TEX_WIDTH  (1024 - VRAM_PIC_WIDTH - VRAM_TEX_XSTART)
 #define VRAM_TEX_HEIGHT 512
 #define VRAM_PAL_XSTART 0
 #define VRAM_PAL_YSTART VID_HEIGHT
