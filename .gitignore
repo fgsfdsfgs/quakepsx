@@ -1,5 +1,7 @@
 build
 id1psx/*/*
+tools/tmp
+tools/tmp/*/*
 !id1psx/.empty
 !id1psx/maps/.empty
 *.o
@@ -8,6 +10,9 @@ id1psx/*/*
 *.iso
 *.psb
 *.bsp
+*.dat
+*.bin
+*.cue
 .vscode
 compile_flags.txt
 compile_commands.json
