@@ -6,6 +6,7 @@
 #include "entity.h"
 #include "game.h"
 #include "sound.h"
+#include "progs.h"
 #include "move.h"
 
 movevars_t *const movevars = PSX_SCRATCH;

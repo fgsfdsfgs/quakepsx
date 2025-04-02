@@ -4,6 +4,7 @@
 #include "render.h"
 #include "entity.h"
 #include "game.h"
+#include "progs.h"
 #include "move.h"
 
 game_state_t gs;

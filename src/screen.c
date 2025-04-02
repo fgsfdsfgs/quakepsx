@@ -4,8 +4,9 @@
 
 #include "common.h"
 #include "render.h"
-#include "screen.h"
 #include "game.h"
+#include "progs.h"
+#include "screen.h"
 
 static const pic_t *pic_conchars;
 static const pic_t *pic_bignumbers;

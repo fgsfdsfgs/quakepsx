@@ -3,7 +3,6 @@
 #include "common.h"
 #include "model.h"
 #include "entity.h"
-#include "progs.h"
 
 #define MAX_AMMO_TYPES 4
 

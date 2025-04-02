@@ -3,14 +3,13 @@
 // progs stuff that is directly used by the engine
 
 #include "common.h"
+#include "game.h"
 #include "progs/entclasses.h"
 #include "progs/picids.h"
 
-struct player_state_s;
-
 // status bar
 void Sbar_Init(void);
-void Sbar_Draw(const struct player_state_s *p);
+void Sbar_Draw(const player_state_t *p);
 
 // player
 void Player_PreThink(edict_t *ent);
