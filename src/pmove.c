@@ -286,7 +286,7 @@ void PM_PlayerMove(const x16 dt)
       // jump if able
       if (movevars->pm.onground && plr->move.z > 0) {
         ped->v.velocity.z += G_JUMPSPEED;
-        ped->v.flags |= FL_JUMPED;
+        plr->flags |= PFL_JUMPED;
       }
     }
   }

@@ -26,20 +26,21 @@
 #define MOVETYPE_BOUNCE      10
 
 // edict->flags
-#define FL_FLY           1
-#define FL_SWIM          2
-#define FL_CONVEYOR      4
-#define FL_CLIENT        8
-#define FL_INWATER       16
-#define FL_MONSTER       32
-#define FL_GODMODE       64
-#define FL_NOTARGET      128
-#define FL_ITEM          256
-#define FL_ONGROUND      512
-#define FL_PARTIALGROUND 1024  // not all corners are valid
-#define FL_WATERJUMP     2048  // player jumping out of water
-#define FL_JUMPRELEASED  4096  // for jump debouncing
-#define FL_JUMPED        8192
+#define FL_FLY           (1 <<  0)
+#define FL_SWIM          (1 <<  1)
+#define FL_CONVEYOR      (1 <<  2)
+#define FL_CLIENT        (1 <<  3)
+#define FL_INWATER       (1 <<  4)
+#define FL_MONSTER       (1 <<  5)
+#define FL_GODMODE       (1 <<  6)
+#define FL_NOTARGET      (1 <<  7)
+#define FL_ITEM          (1 <<  8)
+#define FL_ONGROUND      (1 <<  9)
+#define FL_PARTIALGROUND (1 << 10) // not all corners are valid
+#define FL_WATERJUMP     (1 << 11) // player jumping out of water
+#define FL_JUMPRELEASED  (1 << 12) // for jump debouncing
+#define FL_DEAD          (1 << 13)
+#define FL_TAKEDAMAGE    (1 << 14)
 
 // spawnflags
 #define SPAWNFLAG_NOT_EASY       256
@@ -47,6 +48,8 @@
 #define SPAWNFLAG_NOT_HARD       1024
 #define SPAWNFLAG_NOT_DEATHMATCH 2048
 #define SPAWNFLAG_SKILL_MASK     (SPAWNFLAG_NOT_EASY | SPAWNFLAG_NOT_MEDIUM | SPAWNFLAG_NOT_HARD)
+
+#define EDICT_NUM(e) ((e) - gs.edicts)
 
 typedef struct edict_s edict_t;
 
@@ -62,10 +65,13 @@ typedef struct entvars_s {
   u16 flags;
   s16 modelnum;
   s16 frame;
+  s16 health;
+  s16 max_health;
   x32 nextthink;
   x32 ltime;
   x32 viewheight;
   void *model; // either model_t or aliashdr_t
+  void *extra; // class-specific extra data
   think_fn_t think;
   interact_fn_t touch;
   interact_fn_t blocked;

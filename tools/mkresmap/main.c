@@ -151,14 +151,14 @@ static int do_entclasses(const char *txtname, const char *hname, const char *cna
   fprintf(fh, "#pragma once\n\n#include \"entity.h\"\n\nenum entclass_e {\n");
   fprintf(fc, "#include \"entity.h\"\n#include \"entclasses.h\"\n\n");
 
-  for (int i = 2; i < numents; ++i)
+  for (int i = 1; i < numents; ++i)
     fprintf(fc, "extern void spawn_%s(edict_t *self);\n", entlist[i]);
   fprintf(fc, "\nthink_fn_t ent_spawnfuncs[] = {\n");
 
   for (int i = 0; i < numents; ++i) {
     fprintf(fm, "%02x %s\n", i, entlist[i]);
     fprintf(fh, "  ENT_%s = 0x%02x,\n", entstrupr(entlist[i]), i);
-    if (i >= 2) fprintf(fc, "  [ENT_%s] = spawn_%s,\n", entstrupr(entlist[i]), entlist[i]);
+    if (i >= 1) fprintf(fc, "  [ENT_%s] = spawn_%s,\n", entstrupr(entlist[i]), entlist[i]);
   }
 
   fprintf(fh, "};\n\nextern think_fn_t ent_spawnfuncs[];\n");

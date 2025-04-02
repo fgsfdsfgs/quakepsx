@@ -1,5 +1,4 @@
 #include "prcommon.h"
-#include "monster.h"
 
 static void monster_fish_think(edict_t *self) {
   cycler_think(self, 40, 57);

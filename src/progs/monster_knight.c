@@ -1,5 +1,4 @@
 #include "prcommon.h"
-#include "monster.h"
 
 static void monster_knight_think(edict_t *self) {
   cycler_think(self, 0, 8);

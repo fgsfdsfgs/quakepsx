@@ -5,7 +5,6 @@
 #include "entity.h"
 #include "game.h"
 #include "move.h"
-#include "progs/entclasses.h"
 
 game_state_t gs;
 
@@ -23,14 +22,6 @@ void G_ParseMapEnts(bmodel_t *mdl)
   gs.edicts[1].v.classname = mdl->mapents[1].classname;
   gs.edicts[1].v.origin = mdl->mapents[1].origin;
   gs.edicts[1].v.angles = mdl->mapents[1].angles;
-  gs.edicts[1].v.solid = SOLID_SLIDEBOX;
-  gs.edicts[1].v.movetype = MOVETYPE_WALK;
-  gs.edicts[1].v.mins = (x32vec3_t){ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) };
-  gs.edicts[1].v.maxs = (x32vec3_t){ TO_FIX32(16), TO_FIX32(16), TO_FIX32(32) };
-  gs.player[0].ent = &gs.edicts[1];
-  gs.player[0].viewofs.z = TO_FIX32(22);
-  gs.player[0].viewangles.y = gs.edicts[1].v.angles.y;
-  G_LinkEdict(&gs.edicts[1], false);
 
   // the rest
   edict_t *ent = &gs.edicts[2];
@@ -82,8 +73,8 @@ void G_StartMap(const char *path)
 
   R_NewMap();
 
-  edict_t *ent = gs.edicts + 2;
-  for (int i = 2; i <= gs.max_edict; ++i, ++ent) {
+  edict_t *ent = gs.edicts + 1;
+  for (int i = 1; i <= gs.max_edict; ++i, ++ent) {
     G_SetModel(ent, ent->v.modelnum);
     // TODO: move this to an appropriate place
     // execute the spawn function

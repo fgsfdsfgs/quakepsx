@@ -18,19 +18,19 @@ pic num_9     1008 152
 pic num_slash 960  176
 pic num_colon 968  176
 
-# regular faces
-pic face1 960  200
-pic face2 972  200
+# regular faces (the order is actually inverted for some reason)
+pic face5 960  200
+pic face4 972  200
 pic face3 984  200
-pic face4 996  200
-pic face5 1008 200
+pic face2 996  200
+pic face1 1008 200
 
-# pain faces
-pic face_p1 960  224
-pic face_p2 972  224
+# pain faces (the order is actually inverted for some reason)
+pic face_p5 960  224
+pic face_p4 972  224
 pic face_p3 984  224
-pic face_p4 996  224
-pic face_p5 1008 224
+pic face_p2 996  224
+pic face_p1 1008 224
 
 # powerup faces; last is invis + invul
 pic face_quad   976  176

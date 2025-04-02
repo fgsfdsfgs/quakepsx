@@ -44,6 +44,7 @@ static void item_touch(edict_t *self, edict_t *other) {
 
   Snd_StartSoundId(other - gs.edicts, CHAN_ITEM, sfxid, &other->v.origin, SND_MAXVOL, ATTN_NORM);
   Scr_SetTopMsg(VA("You %s", msg));
+  Scr_SetFlashBlend(C_YELLOW);
 
   G_SetModel(self, 0);
   self->v.solid = SOLID_NOT;

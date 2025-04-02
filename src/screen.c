@@ -7,8 +7,6 @@
 #include "screen.h"
 #include "game.h"
 
-#include "progs/hud.h"
-
 static const pic_t *pic_conchars;
 static const pic_t *pic_bignumbers;
 static u16 scr_tpage = 0;
@@ -20,6 +18,9 @@ static x32 scr_centermsg_time = 0;
 static char scr_msg[MAX_SCR_LINE];
 static s32 scr_msg_len = 0;
 static x32 scr_msg_time = 0;
+
+static u8 scr_flash_color[3];
+static x32 scr_flash_time = 0;
 
 static inline void SetTPage(const u16 v) {
   if (scr_tpage != v) {
@@ -69,7 +70,7 @@ void Scr_Init(void) {
   // the rest should be sequential
   pic_bignumbers = Spr_GetPic(PICID_NUM_0);
 
-  HUD_Init();
+  Sbar_Init();
 }
 
 static void Scr_DrawDebug(const int debug_mode) {
@@ -97,7 +98,7 @@ void Scr_DrawScreen(const int debug_mode) {
   if (debug_mode)
     Scr_DrawDebug(debug_mode);
 
-  HUD_Draw();
+  Sbar_Draw(&gs.player[0]);
 
   if (!debug_mode && scr_msg_time > rs.frametime) {
     const s16 ofsx = 4;
@@ -109,6 +110,15 @@ void Scr_DrawScreen(const int debug_mode) {
     const s16 ofsx = VID_CENTER_X - (FNT_SMALL_W / 2) * scr_centermsg_len;
     const s16 ofsy = VID_CENTER_Y - (FNT_SMALL_H / 2);
     Scr_DrawText(ofsx, ofsy, C_WHITE, scr_centermsg);
+  }
+
+  if (scr_flash_time > rs.frametime) {
+    x32 t = scr_flash_time - rs.frametime;
+    if (t > ONE) t = ONE;
+    const u8 r = (t * scr_flash_color[0]) >> FIXSHIFT;
+    const u8 g = (t * scr_flash_color[1]) >> FIXSHIFT;
+    const u8 b = (t * scr_flash_color[2]) >> FIXSHIFT;
+    Scr_DrawBlend(r, g, b);
   }
 }
 
@@ -168,6 +178,17 @@ void Scr_DrawRect(const s16 x, const s16 y, const s16 w, const s16 h, const u32 
   R_AddScreenPrim(sizeof(*prim));
 }
 
+void Scr_DrawBlend(const u8 r, const u8 g, const u8 b) {
+  SetTPage(getTPage(1, 1, VRAM_TEX_XSTART, VRAM_TEX_YSTART));
+  TILE *prim = (TILE *)gpu_ptr;
+  setTile(prim);
+  setSemiTrans(prim, 1);
+  setRGB0(prim, r, g, b);
+  setXY0(prim, 0, 0);
+  setWH(prim, VID_WIDTH, VID_HEIGHT);
+  R_AddScreenPrim(sizeof(*prim));
+}
+
 void Scr_SetTopMsg(const char *str) {
   strncpy(scr_msg, str, MAX_SCR_LINE);
   scr_msg[MAX_SCR_LINE - 1] = 0;
@@ -180,4 +201,11 @@ void Scr_SetCenterMsg(const char *str) {
   scr_centermsg[MAX_SCR_LINE - 1] = 0;
   scr_centermsg_time = rs.frametime + SCR_LINE_TIME;
   scr_centermsg_len = strlen(scr_centermsg);
+}
+
+void Scr_SetFlashBlend(const u32 color) {
+  scr_flash_color[0] = color & 0x0000FFu;
+  scr_flash_color[1] = (color & 0x00FF00u) >> 8;
+  scr_flash_color[2] = (color & 0xFF0000u) >> 16;
+  scr_flash_time = rs.frametime + SCR_FLASH_TIME;
 }

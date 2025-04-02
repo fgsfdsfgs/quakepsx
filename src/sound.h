@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "spu.h"
-#include "progs/sfxids.h"
 
 // we downsample everything to this
 #define SND_FREQ 11025

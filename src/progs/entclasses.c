@@ -1,6 +1,7 @@
 #include "entity.h"
 #include "entclasses.h"
 
+extern void spawn_player(edict_t *self);
 extern void spawn_air_bubbles(edict_t *self) { }
 extern void spawn_ambient_comp_hum(edict_t *self);
 extern void spawn_ambient_drip(edict_t *self);
@@ -90,6 +91,7 @@ extern void spawn_weapon_supernailgun(edict_t *self);
 extern void spawn_weapon_supershotgun(edict_t *self);
 
 think_fn_t ent_spawnfuncs[] = {
+  [ENT_PLAYER] = spawn_player,
   [ENT_AIR_BUBBLES] = spawn_air_bubbles,
   [ENT_AMBIENT_COMP_HUM] = spawn_ambient_comp_hum,
   [ENT_AMBIENT_DRIP] = spawn_ambient_drip,

@@ -3,16 +3,37 @@
 #include "common.h"
 #include "model.h"
 #include "entity.h"
+#include "progs.h"
+
+#define MAX_AMMO_TYPES 4
+
+enum player_flags_e {
+  PFL_JUMPED = (1 << 0),
+  PFL_INWATER = (1 << 1),
+};
+
+typedef struct stats_s {
+  s16 health;
+  s16 armor;
+  s16 weaponnum;
+  s16 ammonum;
+  u32 items;
+  s16 ammo[MAX_AMMO_TYPES];
+} stats_t;
 
 typedef struct player_state_s {
+  stats_t stats;
   x16vec3_t viewangles;
   x16vec3_t punchangle;
   x16vec3_t anglemove;
   x32vec3_t move;
   x32vec3_t viewofs;
   edict_t *ent;
+  amodel_t *vmodel;
   x32 movespeed;
   x32 fallspeed;
+  u16 flags;
+  s16 vmodelframe;
 } player_state_t;
 
 typedef struct game_state_s {

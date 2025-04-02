@@ -5,7 +5,6 @@
 #include "game.h"
 #include "move.h"
 #include "sound.h"
-#include "progs/sfxids.h"
 
 static x32vec3_t sndorg;
 
