@@ -26,11 +26,12 @@ void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str);
 void Scr_DrawDigits(const s16 x, const s16 y, const u32 rgb, const char *str);
 void Scr_DrawPic(const s16 x, const s16 y, const u32 rgb, const pic_t *pic);
 void Scr_DrawRect(const s16 x, const s16 y, const s16 w, const s16 h, const u32 rgb, const u8 blend);
-void Scr_DrawBlend(const u8 r, const u8 g, const u8 b);
+void Scr_DrawBlendAdd(const u8 r, const u8 g, const u8 b);
+void Scr_DrawBlendHalf(const u8 r, const u8 g, const u8 b);
 
 void Scr_SetTopMsg(const char *str);
 void Scr_SetCenterMsg(const char *str);
-void Scr_SetFlashBlend(const u32 color);
+void Scr_SetBlend(const u32 color, const x32 time);
 
 void Scr_BeginLoading(void);
 void Scr_TickLoading(void);

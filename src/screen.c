@@ -63,18 +63,38 @@ static inline void DrawPic(const s16 x, const s16 y, const u8 du, const u8 dv, c
   R_AddScreenPrim(sizeof(*prim));
 }
 
-void Scr_Init(void) {
-  // can't live without conchars
-  pic_conchars = Spr_GetPic(PICID_CONCHARS);
-  ASSERT(pic_conchars);
+static inline void DrawBlend(const player_state_t *plr) {
+  u16 r = 0;
+  u16 g = 0;
+  u16 b = 0;
 
-  // the rest should be sequential
-  pic_bignumbers = Spr_GetPic(PICID_NUM_0);
+  if (rs.viewleaf) {
+    // if underwater, apply constant tint
+    switch (rs.viewleaf->contents) {
+      case CONTENTS_LAVA: r = 64; g = 20; b = 0; break;
+      case CONTENTS_SLIME: r = 0; g = 13; b = 3; break;
+      case CONTENTS_WATER: r = 32; g = 20; b = 12; break;
+      default: break;
+    }
+  }
 
-  Sbar_Init();
+  if (scr_flash_time > rs.frametime) {
+    // if a screen flash is currently happening, mix that in
+    x32 t = scr_flash_time - rs.frametime;
+    if (t > ONE) t = ONE;
+    const u16 fr = (t * scr_flash_color[0]) >> FIXSHIFT;
+    r += fr; if (r > 0x80) r = 0x80;
+    const u16 fg = (t * scr_flash_color[1]) >> FIXSHIFT;
+    g += fg; if (g > 0x80) g = 0x80;
+    const u16 fb = (t * scr_flash_color[2]) >> FIXSHIFT;
+    b += fb; if (b > 0x80) b = 0x80;
+  }
+
+  if (r | g | b)
+    Scr_DrawBlendAdd(r, g, b);
 }
 
-static void Scr_DrawDebug(const int debug_mode) {
+static void DrawDebug(const int debug_mode) {
   player_state_t *p = gs.player;
 
   Scr_DrawText(2, 2, C_WHITE, VA("X=%04d Y=%04d Z=%04d",
@@ -93,13 +113,26 @@ static void Scr_DrawDebug(const int debug_mode) {
   ));
 }
 
+void Scr_Init(void) {
+  // can't live without conchars
+  pic_conchars = Spr_GetPic(PICID_CONCHARS);
+  ASSERT(pic_conchars);
+
+  // the rest should be sequential
+  pic_bignumbers = Spr_GetPic(PICID_NUM_0);
+
+  Sbar_Init();
+}
+
 void Scr_DrawScreen(const int debug_mode) {
   scr_tpage = 0;
 
-  if (debug_mode)
-    Scr_DrawDebug(debug_mode);
+  player_state_t *plr = &gs.player[0];
 
-  Sbar_Draw(&gs.player[0]);
+  DrawBlend(plr);
+
+  if (debug_mode)
+    DrawDebug(debug_mode);
 
   if (!debug_mode && scr_msg_time > rs.frametime) {
     const s16 ofsx = 4;
@@ -113,14 +146,7 @@ void Scr_DrawScreen(const int debug_mode) {
     Scr_DrawText(ofsx, ofsy, C_WHITE, scr_centermsg);
   }
 
-  if (scr_flash_time > rs.frametime) {
-    x32 t = scr_flash_time - rs.frametime;
-    if (t > ONE) t = ONE;
-    const u8 r = (t * scr_flash_color[0]) >> FIXSHIFT;
-    const u8 g = (t * scr_flash_color[1]) >> FIXSHIFT;
-    const u8 b = (t * scr_flash_color[2]) >> FIXSHIFT;
-    Scr_DrawBlend(r, g, b);
-  }
+  Sbar_Draw(plr);
 }
 
 void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str) {
@@ -179,8 +205,7 @@ void Scr_DrawRect(const s16 x, const s16 y, const s16 w, const s16 h, const u32 
   R_AddScreenPrim(sizeof(*prim));
 }
 
-void Scr_DrawBlend(const u8 r, const u8 g, const u8 b) {
-  SetTPage(getTPage(1, 1, VRAM_TEX_XSTART, VRAM_TEX_YSTART));
+static inline void DrawBlendCommon(const u8 r, const u8 g, const u8 b) {
   TILE *prim = (TILE *)gpu_ptr;
   setTile(prim);
   setSemiTrans(prim, 1);
@@ -188,6 +213,16 @@ void Scr_DrawBlend(const u8 r, const u8 g, const u8 b) {
   setXY0(prim, 0, 0);
   setWH(prim, VID_WIDTH, VID_HEIGHT);
   R_AddScreenPrim(sizeof(*prim));
+}
+
+void Scr_DrawBlendAdd(const u8 r, const u8 g, const u8 b) {
+  SetTPage(getTPage(1, 1, VRAM_TEX_XSTART, VRAM_TEX_YSTART));
+  DrawBlendCommon(r, g, b);
+}
+
+void Scr_DrawBlendHalf(const u8 r, const u8 g, const u8 b) {
+  SetTPage(getTPage(1, 0, VRAM_TEX_XSTART, VRAM_TEX_YSTART));
+  DrawBlendCommon(r, g, b);
 }
 
 void Scr_SetTopMsg(const char *str) {
@@ -204,9 +239,9 @@ void Scr_SetCenterMsg(const char *str) {
   scr_centermsg_len = strlen(scr_centermsg);
 }
 
-void Scr_SetFlashBlend(const u32 color) {
+void Scr_SetBlend(const u32 color, const x32 time) {
   scr_flash_color[0] = color & 0x0000FFu;
   scr_flash_color[1] = (color & 0x00FF00u) >> 8;
   scr_flash_color[2] = (color & 0xFF0000u) >> 16;
-  scr_flash_time = rs.frametime + SCR_FLASH_TIME;
+  scr_flash_time = rs.frametime + time;
 }
