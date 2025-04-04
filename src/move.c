@@ -46,7 +46,7 @@ static inline void Impact(edict_t *e1, edict_t *e2)
   if (e1->v.touch && e1->v.solid != SOLID_NOT)
     e1->v.touch(e1, e2);
   if (e2->v.touch && e2->v.solid != SOLID_NOT)
-    e1->v.touch(e2, e1);
+    e2->v.touch(e2, e1);
 }
 
 static inline void AddGravity(edict_t *ent)
