@@ -5,6 +5,8 @@
 #include "entity.h"
 #include "game.h"
 #include "progs.h"
+#include "sound.h"
+#include "menu.h"
 #include "move.h"
 
 game_state_t gs;
@@ -47,7 +49,11 @@ void G_ParseMapEnts(bmodel_t *mdl) {
 }
 
 void G_StartMap(const char *path) {
+  Mem_FreeToMark(MEM_MARK_LO);
+
   memset(&gs, 0, sizeof(gs));
+
+  Snd_NewMap();
 
   gs.num_edicts = 512;
   gs.edicts = Mem_ZeroAlloc(gs.num_edicts * sizeof(edict_t));
@@ -87,6 +93,11 @@ void G_Update(const x16 dt) {
   x32vec3_t noclipvel;
   player_state_t *plr = &gs.player[0];
   edict_t *ped = plr->ent;
+
+  if (menu_open) {
+    Menu_Update();
+    return;
+  }
 
   plr->viewangles.y += XMUL16(plr->anglemove.y, dt);
   plr->viewangles.x += XMUL16(plr->anglemove.x, dt);

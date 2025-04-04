@@ -3,6 +3,7 @@
 #include "render.h"
 #include "input.h"
 #include "game.h"
+#include "menu.h"
 #include "progs.h"
 #include "move.h"
 #include "sound.h"
@@ -41,7 +42,7 @@ static void TestInput(const x16 dt) {
     rs.debug = !rs.debug;
 
   if (IN_ButtonPressed(PAD_START))
-    Player_NextWeapon(plr->ent);
+    Menu_Toggle();
 
   if (IN_ButtonHeld(PAD_R2))
     plr->buttons |= BTN_FIRE;
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
 
   Mem_SetMark(MEM_MARK_LO);
 
-  G_StartMap(FS_BASE "\\MAPS\\E1M2.PSB;1");
+  G_StartMap(FS_BASE "\\MAPS\\START.PSB;1");
 
   sndorg = gs.edicts[1].v.origin;
 

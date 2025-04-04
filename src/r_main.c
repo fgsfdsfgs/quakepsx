@@ -10,6 +10,7 @@
 #include "game.h"
 #include "render.h"
 #include "screen.h"
+#include "menu.h"
 
 #define GPU_CLUT_X 0
 #define GPU_CLUT_Y VID_HEIGHT
@@ -290,10 +291,10 @@ void R_NewMap(void) {
 }
 
 void R_RenderView(void) {
-  const player_state_t *plr = &gs.player[0];
-
   if (!gs.worldmodel)
-    Sys_Error("R_RenderView: NULL worldmodel");
+    return;
+
+  const player_state_t *plr = &gs.player[0];
 
   XVecAdd(&plr->ent->v.origin, &plr->viewofs, &rs.vieworg);
   rs.viewangles = plr->viewangles;
@@ -304,7 +305,10 @@ void R_RenderView(void) {
 
   R_DrawViewModel(plr);
 
-  Scr_DrawScreen(rs.debug);
+  if (menu_open)
+    Menu_Draw();
+  else
+    Scr_DrawScreen(rs.debug);
 }
 
 void R_Flip(void) {

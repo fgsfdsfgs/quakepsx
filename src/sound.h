@@ -43,6 +43,8 @@ void Snd_Init(void);
 void Snd_SetBank(const sfx_t *sfx, const int num_sfx, const u8 *spudata, const u32 spudata_size);
 void Snd_ResetBank(void);
 
+void Snd_NewMap(void);
+
 const sfx_t *Snd_FindSound(const s16 id);
 void Snd_StartSound(const s16 entnum, const s16 entch, const sfx_t *sfx, const x32vec3_t *origin, s16 vol, x32 attn);
 void Snd_StaticSound(const sfx_t *sfx, const x32vec3_t *origin, s16 vol, x32 attn);

@@ -800,18 +800,18 @@ void G_Physics(void) {
   // let the progs know that a new frame has started
   // TODO
 
-  ent->v.oldorigin = ent->v.origin;
-
   //
   // treat each object in turn
   //
   ent = gs.edicts;
-  for (i = 0; i <= gs.max_edict; ++i, ++ent) {
+  for (i = 1; i <= gs.max_edict; ++i, ++ent) {
     if (ent->free)
       continue;
 
     if (gs.force_retouch)
       G_LinkEdict(ent, true); // force retouch even for stationary
+
+    ent->v.oldorigin = ent->v.origin;
 
     if (i == 1)
       PhysicsPlayer(ent);

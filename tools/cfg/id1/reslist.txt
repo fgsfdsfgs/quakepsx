@@ -221,14 +221,31 @@ ent monster_shambler
   sfx sound/shambler/shurt2.wav
   sfx sound/shambler/sdeath.wav
 
+ent monster_shalrath
+  progs/shalrath.mdl
+
+ent monster_tarbaby
+  progs/tarbaby.mdl
+
+ent monster_enforcer
+  progs/enforcer.mdl
+  sfx sound/enforcer/sight1.wav
+  sfx sound/enforcer/idle1.wav
+  sfx sound/enforcer/death1.wav
+  sfx sound/enforcer/enfire.wav
+  sfx sound/enforcer/enfstop.wav
+
+ent monster_fish
+  mdl progs/fish.mdl
+
+ent monster_oldone
+  mdl progs/oldone.mdl
+
 ent monster_boss
   # mdl progs/boss.mdl # this fat fuck has too many vertices
   sfx sound/boss1/sight1.wav
   sfx sound/boss1/pain.wav
   sfx sound/boss1/death.wav
-
-ent monster_fish
-  mdl progs/fish.mdl
 
 # brush entities
 

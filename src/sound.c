@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "common.h"
 #include "system.h"
 #include "spu.h"
@@ -23,6 +25,14 @@ static struct sndchan {
 void Snd_Init(void) {
   Sys_Printf("Snd_Init()\n");
   SPU_Init();
+}
+
+void Snd_NewMap(void) {
+  memset(snd_chan, 0, sizeof(snd_chan));
+  listener_origin = NULL;
+  listener_right = NULL;
+  snd_num_statics = 0;
+  SPU_ClearAllVoices();
 }
 
 void Snd_SetBank(const sfx_t *sfx, const int num_sfx, const u8 *spudata, const u32 spudata_size) {

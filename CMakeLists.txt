@@ -6,7 +6,7 @@ file(GLOB _sources src/*.c src/progs/*.c src/*.s)
 
 include_directories(src)
 
-add_compile_options(-flto)
+add_compile_options(-flto -Wuninitialized)
 add_link_options(-flto)
 
 get_target_property(OLD_OPTS psn00bsdk INTERFACE_COMPILE_OPTIONS)

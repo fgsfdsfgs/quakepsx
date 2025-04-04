@@ -28,3 +28,9 @@ void IN_Update(void) {
 
   in_buttons_trig = ~in_buttons_prev & in_buttons;
 }
+
+void IN_Clear(void) {
+  in_buttons = 0;
+  in_buttons_prev = 0;
+  in_buttons_trig = 0;
+}

@@ -24,10 +24,6 @@
           <file name="e1m6.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m6.psb"/>
           <file name="e1m7.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m7.psb"/>
           <file name="e1m8.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m8.psb"/>
-          <file name="e2m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m1.psb"/>
-          <file name="e2m2.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m2.psb"/>
-          <file name="e2m3.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m3.psb"/>
-          <file name="e2m7.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e2m7.psb"/>
         </dir>
       </dir>
       <dummy sectors="1024"/>

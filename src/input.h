@@ -17,3 +17,4 @@ static inline int IN_ButtonPressed(const u16 btn) {
 
 void IN_Init(void);
 void IN_Update(void);
+void IN_Clear(void);
