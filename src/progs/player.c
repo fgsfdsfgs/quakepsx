@@ -3,15 +3,19 @@
 static void player_think(edict_t *self) {
   player_state_t *plr = self->v.extra_ptr;
 
-  if (plr->vmodel && (plr->buttons & BTN_FIRE)) {
-    plr->vmodelframe++;
-    if (plr->vmodelframe >= plr->vmodel->numframes)
-      plr->vmodelframe = 0;
-    else if (plr->vmodelframe == 1)
+  // test gun
+  if (!plr->vmodelframe && (plr->buttons & BTN_FIRE)) {
+    if (plr->stats.ammonum < 0 || plr->stats.ammo[plr->stats.ammonum] > 0) {
+      if (plr->stats.ammonum >= 0)
+        plr->stats.ammo[plr->stats.ammonum]--;
+      plr->vmodelframe++;
       Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, weap_table[plr->stats.weaponnum].noise,
         &self->v.origin, SND_MAXVOL, ATTN_NORM);
-  } else {
-    plr->vmodelframe = 0;
+    }
+  } else if (plr->vmodelframe) {
+    plr->vmodelframe++;
+    if (plr->vmodelframe >= (plr->stats.weaponnum == WEAP_SHOTGUN ? 6 : 5))
+      plr->vmodelframe = 0;
   }
 
   self->v.nextthink = gs.time + PR_FRAMETIME;
