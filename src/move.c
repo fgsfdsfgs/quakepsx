@@ -804,7 +804,7 @@ void G_Physics(void) {
   // treat each object in turn
   //
   ent = gs.edicts;
-  for (i = 1; i <= gs.max_edict; ++i, ++ent) {
+  for (i = 0; i <= gs.max_edict; ++i, ++ent) {
     if (ent->free)
       continue;
 
