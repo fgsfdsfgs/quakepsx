@@ -454,7 +454,7 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
     const savert_t *sv2 = &alias_verts[tri->verts[2]];
 
     // cull backfaces
-    gte_ldsxy3(&sv0->pos.x, &sv1->pos.x, &sv2->pos.x);
+    gte_ldsxy3(*(u32*)&sv0->pos.x, *(u32*)&sv1->pos.x, *(u32*)&sv2->pos.x);
     gte_nclip();
     gte_stopz_m(otz);
     if (otz < 0)
@@ -486,6 +486,80 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
   }
 
   gpu_ptr = (u8 *)poly;
+}
+
+void R_DrawAliasViewModel(amodel_t *model, int frame) {
+  register int otz;
+  const u32 col = 0x808080; // TODO: calculate light level
+  const u16 tpage = model->tpage;
+  const int numverts = model->numverts;
+  const int numtris = model->numtris;
+  const u8vec3_t *averts = model->frames + (frame * numverts);
+  POLY_GT3 *poly;
+  int i;
+
+  // transform all verts first
+  const u8vec3_t *av = averts;
+  savert_t *sv = alias_verts;
+  for (i = 0; i <= numverts - 3; i += 3, av += 3, sv += 3) {
+    sv[0].pos.x = av[0].x;
+    sv[0].pos.y = av[0].y;
+    sv[0].pos.z = av[0].z;
+    sv[1].pos.x = av[1].x;
+    sv[1].pos.y = av[1].y;
+    sv[1].pos.z = av[1].z;
+    sv[2].pos.x = av[2].x;
+    sv[2].pos.y = av[2].y;
+    sv[2].pos.z = av[2].z;
+    gte_ldv3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+    gte_rtpt();
+    gte_stsxy3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+    gte_stsz3(&sv[0].pos.z, &sv[1].pos.z, &sv[2].pos.z);
+  }
+  // transform the remaining 1-2 verts
+  for (; i < numverts; ++i, ++sv, ++av) {
+    sv[0].pos.x = av[0].x;
+    sv[0].pos.y = av[0].y;
+    sv[0].pos.z = av[0].z;
+    gte_ldv0(&sv[0].pos.x);
+    gte_rtps();
+    gte_stsxy(&sv[0].pos.x);
+    gte_stsz(&sv[0].pos.z);
+  }
+
+  const atri_t *tri = model->tris;
+  for (i = 0; i < numtris; ++i, ++tri) {
+    const savert_t *sv0 = &alias_verts[tri->verts[0]];
+    const savert_t *sv1 = &alias_verts[tri->verts[1]];
+    const savert_t *sv2 = &alias_verts[tri->verts[2]];
+
+    // cull backfaces
+    gte_ldsxy3(*(u32*)&sv0->pos.x, *(u32*)&sv1->pos.x, *(u32*)&sv2->pos.x);
+    gte_nclip();
+    gte_stopz_m(otz);
+    if (otz < 0)
+      continue;
+
+    // shit is pre-sorted
+    // set positions, UVs and colors
+    poly = (POLY_GT3 *)gpu_ptr;
+    *(u32 *)&poly->x0 = *(u32 *)&sv0->pos.x;
+    *(u32 *)&poly->x1 = *(u32 *)&sv1->pos.x;
+    *(u32 *)&poly->x2 = *(u32 *)&sv2->pos.x;
+    poly->u0 = tri->uvs[0].u;
+    poly->v0 = tri->uvs[0].v;
+    poly->u1 = tri->uvs[1].u;
+    poly->v1 = tri->uvs[1].v;
+    poly->u2 = tri->uvs[2].u;
+    poly->v2 = tri->uvs[2].v;
+    *(u32 *)&poly->r0 = col;
+    *(u32 *)&poly->r1 = col;
+    *(u32 *)&poly->r2 = col;
+    setPolyGT3(poly);
+    poly->tpage = tpage;
+    poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+    R_AddScreenPrim(sizeof(*poly));
+  }
 }
 
 void R_DrawBrushModel(bmodel_t *model) {

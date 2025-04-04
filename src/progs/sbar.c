@@ -80,11 +80,11 @@ void Sbar_Init(void) {
 void Sbar_Draw(const player_state_t *p) {
   const pic_t *pic;
 
-  if (p->stats.health < 0)
+  if (p->ent->v.health < 0)
     return; // we're fucking dead
 
   // bottom row
-  DrawCounter(LEFT_X, BOTTOM_ROW_Y, PickFace(p->stats.health, p->stats.items), p->stats.health, 25, false);
+  DrawCounter(LEFT_X, BOTTOM_ROW_Y, PickFace(p->ent->v.health, p->stats.items), p->ent->v.health, 25, false);
   if (p->stats.weaponnum && p->stats.weaponnum != IT_AXE) {
     pic = pic_ammo + p->stats.ammonum;
     DrawCounter(RIGHT_X - ICON_W, BOTTOM_ROW_Y, pic, p->stats.ammo[p->stats.ammonum], 10, true);

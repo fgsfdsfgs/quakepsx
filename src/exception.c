@@ -9,8 +9,6 @@
 #include "common.h"
 #include "exception.h"
 
-extern int r_debugstream;
-
 static u32 exception_event;
 
 static inline const char *ExceptionCause(const u32 cr) {
@@ -55,8 +53,7 @@ static void ExceptionFunc(void) {
   const u32 *regs = tcb_list[0].reg;
 
   // spew to tty
-  printf("UH OH ZONE\nSTATUS=%08x\nCR=%08x\nPC=%08x\nRA=%08x\n", status, cr, regs[R_EPC], regs[R_RA]); 
-  while (1) { }
+  printf("UH OH ZONE\nSTATUS=%08x\nCR=%08x\nPC=%08x\nRA=%08x\n", status, cr, regs[R_EPC], regs[R_RA]);
 
   // setup graphics viewport and clear screen
   DISPENV disp;
@@ -69,14 +66,8 @@ static void ExceptionFunc(void) {
   PutDispEnv(&disp);
   PutDrawEnv(&draw);
 
-  // if not already loaded, load built in font
-  int stream;
-  if (r_debugstream >= 0) {
-    stream = r_debugstream;
-  } else {
-    FntLoad(960, 0);
-    stream = FntOpen(8, 16, VID_WIDTH - 8, VID_HEIGHT - 16, 0, 1024);
-  }
+  // load built in font; no guarantee we will have our normal one
+  const int stream = FntOpen(8, 16, VID_WIDTH - 8, VID_HEIGHT - 16, 0, 1024);
 
   // the most important info
   const char *cause = ExceptionCause(cr);

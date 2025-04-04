@@ -98,9 +98,9 @@ static void DrawDebug(const int debug_mode) {
   player_state_t *p = gs.player;
 
   Scr_DrawText(2, 2, C_WHITE, VA("X=%04d Y=%04d Z=%04d",
-    rs.vieworg.x>>12,
-    rs.vieworg.y>>12,
-    rs.vieworg.z>>12
+    p->ent->v.origin.x>>12,
+    p->ent->v.origin.y>>12,
+    p->ent->v.origin.z>>12
   ));
   Scr_DrawText(2, 12, C_WHITE, VA("VX=%04d VY=%04d VZ=%04d",
     p->ent->v.velocity.x>>12,

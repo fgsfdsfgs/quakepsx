@@ -27,6 +27,7 @@ const char *qmdlmap_name_for_id(const int id);
 
 qmdl_t *qmdl_add(const char *name, u8 *start, const size_t size);
 qmdl_t *qmdl_find(const char *name);
+void qmdl_sort(qmdl_t *mdl);
 
 int qmdl_init(qmdl_t *mdl, u8 *start, const size_t size);
 void qmdl_free(qmdl_t *mdl);

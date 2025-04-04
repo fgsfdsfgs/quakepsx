@@ -689,6 +689,23 @@ void G_PushMove(edict_t *pusher, x16 movetime)
   }
 }
 
+qboolean G_DropToFloor(edict_t *ent)
+{
+  x32vec3_t end = ent->v.origin;
+  end.z -= TO_FIX32(256);
+
+  const trace_t *trace = G_Move(&ent->v.origin, &ent->v.mins, &ent->v.maxs, &end, false, ent);
+  if (trace->fraction == ONE || trace->allsolid) {
+    return false;
+  } else {
+    ent->v.origin = trace->endpos;
+    G_LinkEdict(ent, false);
+    ent->v.flags |= FL_ONGROUND;
+    ent->v.groundentity = trace->ent;
+    return true;
+  }
+}
+
 static inline void PhysicsNone(edict_t *ent)
 {
   // regular thinking
@@ -814,6 +831,8 @@ static void PhysicsToss(edict_t *ent)
 
 static void PhysicsPlayer(edict_t *ent)
 {
+  ent->v.oldorigin = ent->v.origin;
+
   // call standard client pre-think
   Player_PreThink(ent);
 
@@ -871,6 +890,8 @@ void G_Physics(void)
 
   // let the progs know that a new frame has started
   // TODO
+
+  ent->v.oldorigin = ent->v.origin;
 
   //
   // treat each object in turn

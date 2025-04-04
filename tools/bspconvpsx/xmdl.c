@@ -166,15 +166,15 @@ void xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
   // generate indices
   xaliastri_t *tri = (xaliastri_t *)(xbsp_entmodeldata + xmhdr->trisofs);
   tri[0].verts[0] = 4; tri[0].verts[1] = 5; tri[0].verts[2] = 6;
-  tri[1].verts[0] = 5; tri[1].verts[1] = 6; tri[1].verts[2] = 7;
+  tri[1].verts[0] = 7; tri[1].verts[1] = 6; tri[1].verts[2] = 5;
   tri[2].verts[0] = 5; tri[2].verts[1] = 4; tri[2].verts[2] = 0;
-  tri[3].verts[0] = 4; tri[3].verts[1] = 0; tri[3].verts[2] = 1;
+  tri[3].verts[0] = 1; tri[3].verts[1] = 0; tri[3].verts[2] = 4;
   tri[4].verts[0] = 6; tri[4].verts[1] = 7; tri[4].verts[2] = 3;
-  tri[5].verts[0] = 7; tri[5].verts[1] = 3; tri[5].verts[2] = 2;
+  tri[5].verts[0] = 2; tri[5].verts[1] = 3; tri[5].verts[2] = 7;
   tri[6].verts[0] = 0; tri[6].verts[1] = 2; tri[6].verts[2] = 5;
-  tri[7].verts[0] = 2; tri[7].verts[1] = 5; tri[7].verts[2] = 7;
+  tri[7].verts[0] = 7; tri[7].verts[1] = 5; tri[7].verts[2] = 2;
   tri[8].verts[0] = 3; tri[8].verts[1] = 1; tri[8].verts[2] = 6;
-  tri[9].verts[0] = 1; tri[9].verts[1] = 6; tri[9].verts[2] = 4;
+  tri[9].verts[0] = 4; tri[9].verts[1] = 6; tri[9].verts[2] = 1;
 
   // generate UVs
   const u8 uvw = qmt->width - 1;
@@ -185,9 +185,9 @@ void xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
     tri[i + 0].uvs[0] = (u8vec2_t){{ uvx +   0, uvy +   0 }};
     tri[i + 0].uvs[1] = (u8vec2_t){{ uvx + uvw, uvy +   0 }};
     tri[i + 0].uvs[2] = (u8vec2_t){{ uvx +   0, uvy + uvh }};
-    tri[i + 1].uvs[0] = (u8vec2_t){{ uvx + uvw, uvy +   0 }};
+    tri[i + 1].uvs[2] = (u8vec2_t){{ uvx + uvw, uvy +   0 }};
     tri[i + 1].uvs[1] = (u8vec2_t){{ uvx +   0, uvy + uvh }};
-    tri[i + 1].uvs[2] = (u8vec2_t){{ uvx + uvw, uvy + uvh }};
+    tri[i + 1].uvs[0] = (u8vec2_t){{ uvx + uvw, uvy + uvh }};
   }
 
   xmhdr->tpage = xti.tpage;

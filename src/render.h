@@ -36,6 +36,8 @@
 #define GPU_SUBDIV_DIST_1 80
 #define GPU_SUBDIV_DIST_2 20
 
+#define VMODEL_SCALE 3
+
 typedef struct render_state_s {
   RECT clip;
   MATRIX matrix;
@@ -85,6 +87,7 @@ void R_RenderScene(void);
 void R_DrawWorld(void);
 void R_NewMap(void);
 void R_DrawAliasModel(amodel_t *model, int frame);
+void R_DrawAliasViewModel(amodel_t *model, int frame);
 void R_DrawBrushModel(bmodel_t *model);
 void R_DrawBBox(edict_t *ent);
 void R_DrawTextureChains(void);

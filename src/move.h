@@ -58,6 +58,8 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace);
 void G_WalkMove(edict_t *ent);
 void G_PushMove(edict_t *pusher, x16 time);
 
+qboolean G_DropToFloor(edict_t *ent);
+
 void PM_PlayerMove(const x16 dt);
 
 void G_Physics(void);

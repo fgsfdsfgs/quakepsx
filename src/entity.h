@@ -62,7 +62,9 @@ typedef struct entvars_s {
   u8 movetype;
   u8 waterlevel;
   s8 watertype;
+  u8 noise;
   u16 flags;
+  u16 spawnflags;
   s16 modelnum;
   s16 frame;
   s16 health;
@@ -71,7 +73,6 @@ typedef struct entvars_s {
   x32 ltime;
   x32 viewheight;
   void *model; // either model_t or aliashdr_t
-  void *extra; // class-specific extra data
   think_fn_t think;
   interact_fn_t touch;
   interact_fn_t blocked;
@@ -86,6 +87,16 @@ typedef struct entvars_s {
   x32vec3_t velocity;
   x16vec3_t avelocity;
   x16vec3_t angles;
+  // class-specific extra data
+  union {
+    void *extra_ptr;
+    u32 extra_field;
+    struct {
+      u32 type;
+      u16 ammotype;
+      u16 count;
+    } extra_item;
+  };
 } entvars_t;
 
 struct edict_s {

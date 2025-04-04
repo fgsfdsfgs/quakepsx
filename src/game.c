@@ -36,6 +36,7 @@ void G_ParseMapEnts(bmodel_t *mdl)
     ent->v.origin = mapent->origin;
     ent->v.angles = mapent->angles;
     ent->v.modelnum = mapent->model;
+    ent->v.spawnflags = mapent->spawnflags;
     ++ent;
   }
 
@@ -104,6 +105,17 @@ void G_Update(const x16 dt)
   G_Physics();
 }
 
+amodel_t *G_FindAliasModel(const s16 modelid)
+{
+  for (int i = 0; i < gs.worldmodel->numamodels; ++i) {
+    if (gs.amodels[i].id == modelid) {
+      return &gs.amodels[i];
+    }
+  }
+  Sys_Error("G_SetModel(0x%02x): not a valid amodel", modelid);
+  return NULL;
+}
+
 void G_SetModel(edict_t *ent, s16 modelnum)
 {
   ent->v.modelnum = modelnum;
@@ -118,13 +130,7 @@ void G_SetModel(edict_t *ent, s16 modelnum)
     G_SetSize(ent, &bmodel->mins, &bmodel->maxs);
   } else if (modelnum) {
     // for an alias model, modelnum is its positive unique id number
-    for (int i = 0; i < gs.worldmodel->numamodels; ++i) {
-      if (gs.amodels[i].id == modelnum) {
-        ent->v.model = &gs.amodels[i];
-        return;
-      }
-    }
-    Sys_Error("G_SetModel(0x%02x): not a valid amodel", modelnum);
+    ent->v.model = G_FindAliasModel(modelnum);
   } else {
     ent->v.model = NULL;
   }

@@ -13,6 +13,11 @@ static int num_qmdlmap = 0;
 int num_qmdls = 0;
 qmdl_t qmdls[MAX_QMDLS];
 
+typedef f32 (*sort_weight_fn_t)(qvec3_t va[3]);
+static qmdl_t *sort;
+static int sort_muzzlehack = 0;
+static sort_weight_fn_t sort_weight_fn;
+
 int qmdlmap_init(const char *mapfile) {
   num_qmdlmap = resmap_parse(mapfile, (char *)qmdlmap, MAX_QMDLS, sizeof(qmdlmap[0]), sizeof(qmdlmap[0]));
   printf("qmdlmap_init(): indexed %d models from %s\n", num_qmdlmap, mapfile);
@@ -51,6 +56,10 @@ qmdl_t *qmdl_add(const char *name, u8 *start, const size_t size) {
   strncpy(mdl->name, name, sizeof(mdl->name) - 1);
   qmdl_init(mdl, start, size);
   mdl->id = qmdlmap_id_for_name(name);
+
+  // pre-sort viewmodels (TODO: add a better way to detect them)
+  if (strstr(name, "/v_"))
+    qmdl_sort(mdl);
 
   return mdl;
 }
@@ -101,4 +110,67 @@ void qmdl_free(qmdl_t *mdl) {
   mdl->skins = NULL;
   free(mdl->frames);
   mdl->frames = NULL;
+}
+
+static float tri_weight_avg_x(qvec3_t va[3]) {
+  return (va[0][0] + va[1][0] + va[2][0]) / 3.f;
+}
+
+static float tri_weight_max_x(qvec3_t va[3]) {
+  f32 mx = va[0][0];
+  if (va[1][0] > mx)
+    mx = va[1][0];
+  if (va[2][0] > mx)
+    mx = va[2][0];
+  return mx;
+}
+
+static float tri_weight_min_x(qvec3_t va[3]) {
+  f32 mx = va[0][0];
+  if (va[1][0] < mx)
+    mx = va[1][0];
+  if (va[2][0] < mx)
+    mx = va[2][0];
+  return mx;
+}
+
+static int tri_cmp_x(const qaliastri_t *ta, const qaliastri_t *tb) {
+  qvec3_t va[3], vb[3];
+
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      va[i][j] = (f32)((sort->frames[0].verts + ta->vertex[i])->v[j]) * sort->header->scale[j] + sort->header->translate[j];
+      vb[i][j] = (f32)((sort->frames[0].verts + tb->vertex[i])->v[j]) * sort->header->scale[j] + sort->header->translate[j];
+    }
+  }
+
+  f32 cmp_a = sort_weight_fn(va);
+  f32 cmp_b = sort_weight_fn(vb);
+
+  // HACK: penalize the muzzle flash part, it's usually stored behind z = -1 in frame 0
+  if (sort_muzzlehack) {
+    cmp_a += (va[0][0] < -1.f && va[1][0] < -1.f && va[2][0] < -1.f) * 1000.f;
+    cmp_b += (vb[0][0] < -1.f && vb[1][0] < -1.f && vb[2][0] < -1.f) * 1000.f;
+  }
+
+  if (cmp_a < cmp_b)
+    return +1; // smaller X goes in the back so it renders later
+  if (cmp_a > cmp_b)
+    return -1; // bigger X goes in the front so it renders first
+  return 0;
+}
+
+void qmdl_sort(qmdl_t *mdl) {
+  sort = mdl;
+  // TODO: un-hardcode these
+  // if this is enabled, the muzzleflash part of the model will sort to the end
+  sort_muzzlehack = !strstr(sort->name, "v_axe") && !strstr(sort->name, "v_light");
+  // pick how to sort polys
+  if (strstr(sort->name, "v_axe"))
+    sort_weight_fn = tri_weight_max_x;
+  else if (strstr(sort->name, "v_shot2") || strstr(sort->name, "v_nail"))
+    sort_weight_fn = tri_weight_min_x;
+  else
+    sort_weight_fn = tri_weight_avg_x;
+  qsort(mdl->tris, mdl->header->numtris, sizeof(*mdl->tris), (void *)tri_cmp_x);
 }

@@ -42,6 +42,17 @@ static fb_t fb[2];
 static int fbidx;
 
 static x16 bobjrotate;
+static x32 bob_t = 0;
+
+// matrix that rotates Z going up and also scales the world a little (thank you quake very cool)
+static MATRIX mat_coord =
+{{
+  { 0,        -2 * ONE, 0        },
+  { 0,        0,        -2 * ONE },
+  { +2 * ONE, 0,        0        },
+}};
+
+static inline void DrawEntity(edict_t *ed);
 
 static inline void Plist_Append(const u32 size) {
   if (!gpu_plist->last)
@@ -133,25 +144,19 @@ void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h) {
 }
 
 void R_SetupGPU(void) {
-  // matrix that rotates Z going up (thank you quake very cool)
-  static MATRIX mr = {{
-    { 0,        -2 * ONE, 0        },
-    { 0,        0,        -2 * ONE },
-    { +2 * ONE, 0,        0        },
-  }};
-
   // gotta go fast
   VECTOR  *t = PSX_SCRATCH;
   SVECTOR *r = (SVECTOR *)(t + 1);
+  MATRIX *tm = (MATRIX *)(r + 1);
   MATRIX  *m = &rs.matrix;
 
   // rotate according to viewangles
   r->vx = rs.viewangles.x;
   r->vy = rs.viewangles.y;
   r->vz = rs.viewangles.z;
-  RotMatrix(r, &m[1]);
+  RotMatrix(r, tm);
   // apply rotation
-  MulMatrix0(&m[1], &mr, m);
+  MulMatrix0(tm, &mat_coord, m);
 
   // set translation vector
   t->vx = -rs.vieworg.x >> FIXSHIFT;
@@ -231,6 +236,46 @@ void R_MarkLeaves(void) {
   c_mark_leaves = c;
 }
 
+void R_DrawViewModel(const player_state_t *plr) {
+  if (!plr->vmodel || plr->ent->v.health <= 0)
+    return;
+
+  x32vec3_t delta;
+  XVecSub(&plr->ent->v.origin, &plr->ent->v.oldorigin, &delta);
+
+  x32vec2_t absspeed = { abs(plr->ent->v.velocity.x), abs(plr->ent->v.velocity.y) };
+  bob_t += xmul32((absspeed.x > absspeed.y ? absspeed.x : absspeed.y), gs.frametime) >> (FIXSHIFT - 5);
+
+  const x32 bob_x = rsin(bob_t);
+
+  VECTOR *t = PSX_SCRATCH;
+  VECTOR *s = (VECTOR *)(t + 1);
+  MATRIX *m = (MATRIX *)(s + 1);
+
+  *m = mat_coord;
+
+  s->vx = (x32)plr->vmodel->scale.x << VMODEL_SCALE;
+  s->vy = (x32)plr->vmodel->scale.y << VMODEL_SCALE;
+  s->vz = (x32)plr->vmodel->scale.z << VMODEL_SCALE;
+  ScaleMatrix(m, s);
+
+  t->vx = plr->vmodel->offset.x;
+  t->vx = (t->vx << VMODEL_SCALE) + (bob_x >> 9);
+  t->vy = plr->vmodel->offset.y;
+  t->vy = t->vy << VMODEL_SCALE;
+  t->vz = plr->vmodel->offset.z;
+  t->vz = t->vz << VMODEL_SCALE;
+  ApplyMatrixLV(&mat_coord, t, t);
+  TransMatrix(m, t);
+
+  gte_SetRotMatrix(m);
+  gte_SetTransMatrix(m);
+
+  R_DrawAliasViewModel(plr->vmodel, plr->vmodelframe);
+
+  PopMatrix();
+}
+
 void R_RenderScene(void) {
   R_SetupFrame();
   R_SetFrustum();
@@ -246,15 +291,19 @@ void R_NewMap(void) {
 }
 
 void R_RenderView(void) {
+  const player_state_t *plr = &gs.player[0];
+
   if (!gs.worldmodel)
     Sys_Error("R_RenderView: NULL worldmodel");
 
-  XVecAdd(&gs.player[0].ent->v.origin, &gs.player[0].viewofs, &rs.vieworg);
-  rs.viewangles = gs.player[0].viewangles;
+  XVecAdd(&plr->ent->v.origin, &plr->viewofs, &rs.vieworg);
+  rs.viewangles = plr->viewangles;
 
   rs.frametime = Sys_FixedTime();
 
   R_RenderScene();
+
+  R_DrawViewModel(plr);
 
   Scr_DrawScreen(rs.debug);
 }

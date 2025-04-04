@@ -29,6 +29,10 @@ typedef struct link_s {
 #define MAX_STYLESTRING 64
 #define MAX_VA_STRING   1024
 
+// buttons
+#define BTN_FIRE 1
+#define BTN_JUMP 2
+
 // graphics-related
 #define VID_WIDTH      320
 #define VID_HEIGHT     240
