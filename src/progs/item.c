@@ -57,13 +57,13 @@ static void weapon_touch(edict_t *self, edict_t *other) {
 
   s16 index;
   switch (self->v.extra_item.type) {
-    case IT_SUPER_SHOTGUN:    index = WEAP_SUPER_SHOTGUN; break;
-    case IT_NAILGUN:          index = WEAP_NAILGUN; break;
-    case IT_SUPER_NAILGUN:    index = WEAP_SUPER_NAILGUN; break;
-    case IT_GRENADE_LAUNCHER: index = WEAP_GRENADE_LAUNCHER; break;
-    case IT_ROCKET_LAUNCHER:  index = WEAP_ROCKET_LAUNCHER; break;
-    case IT_LIGHTNING:        index = WEAP_LIGHTNING; break;
-    default: return;
+  case IT_SUPER_SHOTGUN:    index = WEAP_SUPER_SHOTGUN; break;
+  case IT_NAILGUN:          index = WEAP_NAILGUN; break;
+  case IT_SUPER_NAILGUN:    index = WEAP_SUPER_NAILGUN; break;
+  case IT_GRENADE_LAUNCHER: index = WEAP_GRENADE_LAUNCHER; break;
+  case IT_ROCKET_LAUNCHER:  index = WEAP_ROCKET_LAUNCHER; break;
+  case IT_LIGHTNING:        index = WEAP_LIGHTNING; break;
+  default: return;
   }
 
   plr->stats.items |= self->v.extra_item.type;

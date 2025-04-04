@@ -5,13 +5,11 @@
 #include "game.h"
 #include "entity.h"
 
-edict_t *ED_Alloc(u8 classname)
-{
+edict_t *ED_Alloc(u8 classname) {
   return NULL;
 }
 
-void ED_Free(edict_t *ed)
-{
+void ED_Free(edict_t *ed) {
   G_UnlinkEdict(ed);
   ed->free = true;
   ed->v.model = NULL;

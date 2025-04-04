@@ -13,8 +13,7 @@ static mplane_t box_planes[6];
 areanode_t g_areanodes[AREA_NODES];
 int g_numareanodes;
 
-void G_InitBoxHull(void)
-{
+void G_InitBoxHull(void) {
   int i;
   int side;
 
@@ -23,8 +22,7 @@ void G_InitBoxHull(void)
   box_hull.firstclipnode = 0;
   box_hull.lastclipnode = 5;
 
-  for (i = 0; i < 6; i++)
-  {
+  for (i = 0; i < 6; i++) {
     box_clipnodes[i].planenum = i;
 
     side = i & 1;
@@ -40,14 +38,12 @@ void G_InitBoxHull(void)
   }
 }
 
-int G_HullPointContents(hull_t *hull, int num, x32vec3_t *p)
-{
+int G_HullPointContents(hull_t *hull, int num, x32vec3_t *p) {
   x32 d;
   xbspclipnode_t *node;
   mplane_t *plane;
 
-  while (num >= 0)
-  {
+  while (num >= 0) {
     if (num < hull->firstclipnode || num > hull->lastclipnode)
       Sys_Error("G_HullPointContents: node %d out of range (%d, %d)", num, (int)hull->firstclipnode, (int)hull->lastclipnode);
 
@@ -67,8 +63,7 @@ int G_HullPointContents(hull_t *hull, int num, x32vec3_t *p)
   return num;
 }
 
-int G_PointContents(x32vec3_t *p)
-{
+int G_PointContents(x32vec3_t *p) {
   int  cont;
 
   cont = G_HullPointContents(&gs.worldmodel->hulls[0], 0, p);
@@ -77,15 +72,13 @@ int G_PointContents(x32vec3_t *p)
   return cont;
 }
 
-int G_TruePointContents(x32vec3_t *p)
-{
+int G_TruePointContents(x32vec3_t *p) {
   return G_HullPointContents(&gs.worldmodel->hulls[0], 0, p);
 }
 
 #define DIST_EPSILON 128
 
-qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t *p1, x32vec3_t *p2, trace_t *trace)
-{
+qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t *p1, x32vec3_t *p2, trace_t *trace) {
   xbspclipnode_t *node;
   mplane_t *plane;
   x32 t1, t2;
@@ -96,37 +89,30 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
   x32 midf;
 
   // check for empty
-  if (num < 0)
-  {
-    if (num != CONTENTS_SOLID)
-    {
+  if (num < 0) {
+    if (num != CONTENTS_SOLID) {
       trace->allsolid = false;
       if (num == CONTENTS_EMPTY)
         trace->inopen = true;
       else
         trace->inwater = true;
-    }
-    else
+    } else {
       trace->startsolid = true;
+    }
     return true; // empty
   }
 
   if (num < hull->firstclipnode || num > hull->lastclipnode)
     Sys_Error("G_RecursiveHullCheck: bad node number");
 
-  //
   // find the point distances
-  //
   node = hull->clipnodes + num;
   plane = hull->planes + node->planenum;
 
-  if (plane->type < 3)
-  {
+  if (plane->type < 3) {
     t1 = p1->d[plane->type] - plane->dist;
     t2 = p2->d[plane->type] - plane->dist;
-  }
-  else
-  {
+  } else {
     t1 = XVecDotSL(&plane->normal, p1) - plane->dist;
     t2 = XVecDotSL(&plane->normal, p2) - plane->dist;
   }
@@ -164,13 +150,10 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
     return false; // never got out of the solid area
 
   // the other side of the node is solid, this is the impact point
-  if (!side)
-  {
+  if (!side) {
     trace->plane.normal = plane->normal;
     trace->plane.dist = plane->dist;
-  }
-  else
-  {
+  } else {
     XVecNegate(&plane->normal, &trace->plane.normal);
     trace->plane.dist = -plane->dist;
   }
@@ -181,8 +164,7 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
   return false;
 }
 
-hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs)
-{
+hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs) {
   box_planes[0].dist = maxs->d[0];
   box_planes[1].dist = mins->d[0];
   box_planes[2].dist = maxs->d[1];
@@ -192,16 +174,14 @@ hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs)
   return &box_hull;
 }
 
-hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *offset)
-{
+hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *offset) {
   bmodel_t *bmodel;
   x32vec3_t size;
   x32vec3_t hullmins, hullmaxs;
   hull_t *hull;
 
   // decide which clipping hull to use, based on the size
-  if (ent->v.solid == SOLID_BSP)
-  {
+  if (ent->v.solid == SOLID_BSP) {
     // explicit hulls in the BSP model
     bmodel = ent->v.model;
 
@@ -216,9 +196,7 @@ hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_
     // calculate an offset value to center the origin
     XVecSub(&hull->mins, mins, offset);
     XVecAdd(offset, &ent->v.origin, offset);
-  }
-  else
-  {
+  } else {
     // create a temp hull from bounding box sizes
     XVecSub(&ent->v.mins, maxs, &hullmins);
     XVecSub(&ent->v.maxs, mins, &hullmaxs);
@@ -229,8 +207,7 @@ hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_
   return hull;
 }
 
-void G_FindTouchedLeafs(edict_t *ent, mnode_t *node)
-{
+void G_FindTouchedLeafs(edict_t *ent, mnode_t *node) {
   mplane_t *splitplane;
   mleaf_t *leaf;
   int sides;
@@ -239,8 +216,7 @@ void G_FindTouchedLeafs(edict_t *ent, mnode_t *node)
   if (node->contents == CONTENTS_SOLID)
     return;
 
-  if (node->contents < 0)
-  {
+  if (node->contents < 0) {
     if (ent->num_leafs == MAX_ENT_LEAFS)
       return;
     leaf = (mleaf_t *)node;
@@ -261,8 +237,7 @@ void G_FindTouchedLeafs(edict_t *ent, mnode_t *node)
     G_FindTouchedLeafs(ent, node->children[1]);
 }
 
-areanode_t *G_CreateAreaNode (int depth, x32vec3_t *mins, x32vec3_t *maxs)
-{
+areanode_t *G_CreateAreaNode (int depth, x32vec3_t *mins, x32vec3_t *maxs) {
   areanode_t *anode;
   x32vec3_t size;
   x32vec3_t mins1, maxs1, mins2, maxs2;
@@ -273,8 +248,7 @@ areanode_t *G_CreateAreaNode (int depth, x32vec3_t *mins, x32vec3_t *maxs)
   ClearLink(&anode->trigger_edicts);
   ClearLink(&anode->solid_edicts);
 
-  if (depth == AREA_DEPTH)
-  {
+  if (depth == AREA_DEPTH) {
     anode->axis = -1;
     anode->children[0] = anode->children[1] = NULL;
     return anode;
@@ -300,22 +274,19 @@ areanode_t *G_CreateAreaNode (int depth, x32vec3_t *mins, x32vec3_t *maxs)
   return anode;
 }
 
-void G_ClearWorld(void)
-{
+void G_ClearWorld(void) {
   G_InitBoxHull();
   memset(g_areanodes, 0, sizeof(g_areanodes));
   g_numareanodes = 0;
   G_CreateAreaNode(0, &gs.worldmodel->mins, &gs.worldmodel->maxs);
 }
 
-void G_TouchLinks(edict_t *ent, areanode_t *node)
-{
+void G_TouchLinks(edict_t *ent, areanode_t *node) {
   link_t *l, *next;
   edict_t *touch;
 
   // touch linked edicts
-  for (l = node->trigger_edicts.next; l != &node->trigger_edicts; l = next)
-  {
+  for (l = node->trigger_edicts.next; l != &node->trigger_edicts; l = next) {
     next = l->next;
     touch = EDICT_FROM_AREA(l);
     if (touch == ent)
@@ -327,7 +298,7 @@ void G_TouchLinks(edict_t *ent, areanode_t *node)
     || ent->v.absmin.d[2] > touch->v.absmax.d[2]
     || ent->v.absmax.d[0] < touch->v.absmin.d[0]
     || ent->v.absmax.d[1] < touch->v.absmin.d[1]
-    || ent->v.absmax.d[2] < touch->v.absmin.d[2] )
+    || ent->v.absmax.d[2] < touch->v.absmin.d[2])
       continue;
     touch->v.touch(touch, ent);
   }
@@ -342,16 +313,14 @@ void G_TouchLinks(edict_t *ent, areanode_t *node)
     G_TouchLinks(ent, node->children[1]);
 }
 
-void G_UnlinkEdict(edict_t *ent)
-{
+void G_UnlinkEdict(edict_t *ent) {
   if (!ent->area.prev)
     return; // not linked in anywhere
   RemoveLink(&ent->area);
   ent->area.prev = ent->area.next = NULL;
 }
 
-void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
-{
+void G_LinkEdict(edict_t *ent, qboolean touch_triggers) {
   areanode_t *node;
 
   if (ent->area.prev)
@@ -386,8 +355,7 @@ void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
 
   // find the first node that the ent's box crosses
   node = g_areanodes;
-  while (1)
-  {
+  while (1) {
     if (node->axis == -1)
       break;
     if (ent->v.absmin.d[node->axis] > node->dist)
@@ -409,17 +377,12 @@ void G_LinkEdict(edict_t *ent, qboolean touch_triggers)
     G_TouchLinks(ent, g_areanodes);
 }
 
-void G_MoveBounds(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, x32vec3_t *boxmins, x32vec3_t *boxmaxs)
-{
-  for (int i = 0; i < 3; i++)
-  {
-    if (end->d[i] > start->d[i])
-    {
+void G_MoveBounds(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, x32vec3_t *boxmins, x32vec3_t *boxmaxs) {
+  for (int i = 0; i < 3; i++) {
+    if (end->d[i] > start->d[i]) {
       boxmins->d[i] = start->d[i] + mins->d[i] - ONE;
       boxmaxs->d[i] = end->d[i] + maxs->d[i] + ONE;
-    }
-    else
-    {
+    } else {
       boxmins->d[i] = end->d[i] + mins->d[i] - ONE;
       boxmaxs->d[i] = start->d[i] + maxs->d[i] + ONE;
     }

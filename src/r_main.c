@@ -15,7 +15,7 @@
 #define GPU_CLUT_Y VID_HEIGHT
 
 // for drawing 2D back to front without screwing with OTs too much
-typedef struct  {
+typedef struct {
   u32 first;
   u8 *last;
 } plist_t;
@@ -45,8 +45,7 @@ static x16 bobjrotate;
 static x32 bob_t = 0;
 
 // matrix that rotates Z going up and also scales the world a little (thank you quake very cool)
-static MATRIX mat_coord =
-{{
+static MATRIX mat_coord = {{
   { 0,        -2 * ONE, 0        },
   { 0,        0,        -2 * ONE },
   { +2 * ONE, 0,        0        },

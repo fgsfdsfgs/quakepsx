@@ -9,8 +9,7 @@
 
 game_state_t gs;
 
-void G_ParseMapEnts(bmodel_t *mdl)
-{
+void G_ParseMapEnts(bmodel_t *mdl) {
   // worldspawn
   gs.edicts[0].free = false;
   gs.edicts[0].v.solid = SOLID_BSP;
@@ -47,8 +46,7 @@ void G_ParseMapEnts(bmodel_t *mdl)
   mdl->mapents = NULL;
 }
 
-void G_StartMap(const char *path)
-{
+void G_StartMap(const char *path) {
   memset(&gs, 0, sizeof(gs));
 
   gs.num_edicts = 512;
@@ -85,8 +83,7 @@ void G_StartMap(const char *path)
   }
 }
 
-void G_Update(const x16 dt)
-{
+void G_Update(const x16 dt) {
   x32vec3_t noclipvel;
   player_state_t *plr = &gs.player[0];
   edict_t *ped = plr->ent;
@@ -105,8 +102,7 @@ void G_Update(const x16 dt)
   G_Physics();
 }
 
-amodel_t *G_FindAliasModel(const s16 modelid)
-{
+amodel_t *G_FindAliasModel(const s16 modelid) {
   for (int i = 0; i < gs.worldmodel->numamodels; ++i) {
     if (gs.amodels[i].id == modelid) {
       return &gs.amodels[i];
@@ -116,8 +112,7 @@ amodel_t *G_FindAliasModel(const s16 modelid)
   return NULL;
 }
 
-void G_SetModel(edict_t *ent, s16 modelnum)
-{
+void G_SetModel(edict_t *ent, s16 modelnum) {
   ent->v.modelnum = modelnum;
 
   if (modelnum < 0) {
@@ -136,8 +131,7 @@ void G_SetModel(edict_t *ent, s16 modelnum)
   }
 }
 
-void G_SetSize(edict_t *ent, const x32vec3_t *mins, const x32vec3_t *maxs)
-{
+void G_SetSize(edict_t *ent, const x32vec3_t *mins, const x32vec3_t *maxs) {
   ent->v.mins = *mins;
   ent->v.maxs = *maxs;
   XVecSub(maxs, mins, &ent->v.size);

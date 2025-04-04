@@ -71,10 +71,10 @@ static inline void DrawBlend(const player_state_t *plr) {
   if (rs.viewleaf) {
     // if underwater, apply constant tint
     switch (rs.viewleaf->contents) {
-      case CONTENTS_LAVA: r = 64; g = 20; b = 0; break;
-      case CONTENTS_SLIME: r = 0; g = 13; b = 3; break;
-      case CONTENTS_WATER: r = 32; g = 20; b = 12; break;
-      default: break;
+    case CONTENTS_LAVA: r = 64; g = 20; b = 0; break;
+    case CONTENTS_SLIME: r = 0; g = 13; b = 3; break;
+    case CONTENTS_WATER: r = 32; g = 20; b = 12; break;
+    default: break;
     }
   }
 
@@ -157,19 +157,19 @@ void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str) {
   u8 tu, tv;
   for (const u8 *p = (const u8 *)str; *p; ++p) {
     switch (*p) {
-      case ' ':
-        tx += FNT_SMALL_W;
-        break;
-      case '\n':
-        tx = x;
-        ty += FNT_SMALL_H;
-        break;
-      default:
-        tu = (((*p) & 0xF) << 3);
-        tv = (((*p) >> 4) << 3);
-        DrawPic8(tx, ty, tu, tv, rgb, pic_conchars);
-        tx += FNT_SMALL_W;
-        break;
+    case ' ':
+      tx += FNT_SMALL_W;
+      break;
+    case '\n':
+      tx = x;
+      ty += FNT_SMALL_H;
+      break;
+    default:
+      tu = (((*p) & 0xF) << 3);
+      tv = (((*p) >> 4) << 3);
+      DrawPic8(tx, ty, tu, tv, rgb, pic_conchars);
+      tx += FNT_SMALL_W;
+      break;
     }
   }
 }
@@ -181,10 +181,10 @@ void Scr_DrawDigits(const s16 x, const s16 y, const u32 rgb, const char *str) {
   for (const u8 *p = (const u8 *)str; *p; ++p, tx += FNT_BIG_W) {
     const pic_t *pic;
     switch (*p) {
-      case ' ': continue;
-      case '/': pic = pic_bignumbers + 10; break;
-      case ':': pic = pic_bignumbers + 11; break;
-      default: pic = pic_bignumbers + (*p - '0'); break;
+    case ' ': continue;
+    case '/': pic = pic_bignumbers + 10; break;
+    case ':': pic = pic_bignumbers + 11; break;
+    default: pic = pic_bignumbers + (*p - '0'); break;
     }
     DrawPic(tx, y, 0, 0, rgb, pic);
   }

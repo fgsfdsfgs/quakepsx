@@ -6,7 +6,7 @@
 #define ALIAS_VERSION 6
 #define ALIAS_ONSEAM  0x0020
 
-#define	MAX_SKINS	    32
+#define MAX_SKINS     32
 #define MAX_FRAMENAME 16
 
 #pragma pack(push, 1)

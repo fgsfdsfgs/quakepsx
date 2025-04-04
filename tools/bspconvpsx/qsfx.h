@@ -6,7 +6,7 @@
 #define MAX_QSFX 256
 #define MAX_QSFX_NAME 256
 
-typedef struct  {
+typedef struct {
   int id;
   int samplerate;
   int looped;

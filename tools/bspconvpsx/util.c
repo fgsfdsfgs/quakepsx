@@ -71,8 +71,7 @@ int img_quantize(const u8 *src, u8 *dst, const int w, const int h, u8 *outpal) {
 }
 
 // COM_Parse from Quake
-const char *com_parse(const char *data, char *com_token)
-{
+const char *com_parse(const char *data, char *com_token) {
   int c;
   int len;
 
@@ -84,16 +83,14 @@ const char *com_parse(const char *data, char *com_token)
 
   // skip whitespace
 skipwhite:
-  while ( (c = *data) <= ' ')
-  {
+  while ( (c = *data) <= ' ') {
     if (c == 0)
       return NULL; // end of file;
     data++;
   }
 
   // skip // comments
-  if (c=='/' && data[1] == '/')
-  {
+  if (c=='/' && data[1] == '/') {
     while (*data && *data != '\n')
       data++;
     goto skipwhite;
@@ -101,14 +98,11 @@ skipwhite:
   
 
   // handle quoted strings specially
-  if (c == '\"')
-  {
+  if (c == '\"') {
     data++;
-    while (1)
-    {
+    while (1) {
       c = *data++;
-      if (c=='\"' || !c)
-      {
+      if (c=='\"' || !c) {
         com_token[len] = 0;
         return data;
       }
@@ -118,8 +112,7 @@ skipwhite:
   }
 
   // parse single characters
-  if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
-  {
+  if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':') {
     com_token[len] = c;
     len++;
     com_token[len] = 0;
@@ -127,8 +120,7 @@ skipwhite:
   }
 
   // parse a regular word
-  do
-  {
+  do {
     com_token[len] = c;
     data++;
     len++;

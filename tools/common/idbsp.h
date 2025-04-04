@@ -10,7 +10,7 @@
 #define NUM_AMBIENTS  4  // automatic ambient sounds
 #define NUM_MIPLEVELS 4
 
-#define	MAX_MAP_MODELS       256
+#define MAX_MAP_MODELS       256
 #define MAX_MAP_PLANES       32767
 #define MAX_MAP_NODES        32767  // because negative shorts are contents
 #define MAX_MAP_CLIPNODES    32767  //

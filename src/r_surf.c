@@ -92,8 +92,7 @@ static inline u32 LightVert(const u8 *col, const u8 *styles) {
   return lit | (lit << 8) | (lit << 16);
 }
 
-static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const savert_t *sv0, const savert_t *sv1, const savert_t *sv2)
-{
+static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const savert_t *sv0, const savert_t *sv1, const savert_t *sv2) {
   if (!TriClip(poly)) {
     setPolyGT3(poly);
     poly->tpage = tpage;
@@ -105,8 +104,7 @@ static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int
   return poly;
 }
 
-static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2)
-{
+static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2) {
   if (!TriClip(poly)) {
     *(u32 *)&poly->r0 = sv0->col.word;
     *(u32 *)&poly->r1 = sv1->col.word;
@@ -124,8 +122,7 @@ static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int
   return poly;
 }
 
-static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2 , const svert_t *sv3)
-{
+static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz, const svert_t *sv0, const svert_t *sv1, const svert_t *sv2 , const svert_t *sv3) {
   if (!QuadClip(poly)) {
     *(u32 *)&poly->r0 = sv0->col.word;
     *(u32 *)&poly->r1 = sv1->col.word;
@@ -149,8 +146,7 @@ static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz
 #pragma GCC push_options
 #pragma GCC optimize("no-strict-aliasing")
 
-static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert_t *sv1)
-{
+static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert_t *sv1) {
   h01->tex.u = (s16)sv0->tex.u + (((s16)sv1->tex.u - (s16)sv0->tex.u) >> 1);
   h01->tex.v = (s16)sv0->tex.v + (((s16)sv1->tex.v - (s16)sv0->tex.v) >> 1);
   h01->col.r = (s16)sv0->col.r + (((s16)sv1->col.r - (s16)sv0->col.r) >> 1);
@@ -191,8 +187,7 @@ static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert
     poly = EmitBrushQuad((void *)poly, tpage, otz, cv0, cv1, cv2, cv3); \
   }
 
-static inline POLY_GT3 *SubdivBrushTriangle1(POLY_GT3 *poly, const u16 tpage, s32 botz, svert_t *sv0, svert_t *sv1, svert_t *sv2, svert_t *clipzone)
-{
+static inline POLY_GT3 *SubdivBrushTriangle1(POLY_GT3 *poly, const u16 tpage, s32 botz, svert_t *sv0, svert_t *sv1, svert_t *sv2, svert_t *clipzone) {
   register int otz;
 
   // calculate halfpoints on every edge
@@ -233,8 +228,7 @@ static inline POLY_GT3 *SubdivBrushTriangle1(POLY_GT3 *poly, const u16 tpage, s3
   return poly;
 }
 
-static inline POLY_GT3 *SubdivBrushTriangle2(POLY_GT3 *poly, const u16 tpage, s32 botz, svert_t *sv00, svert_t *sv01, svert_t *sv02, svert_t *clipzone)
-{
+static inline POLY_GT3 *SubdivBrushTriangle2(POLY_GT3 *poly, const u16 tpage, s32 botz, svert_t *sv00, svert_t *sv01, svert_t *sv02, svert_t *clipzone) {
   register int otz;
 
   // the original transformed verts
@@ -313,8 +307,7 @@ static inline POLY_GT3 *SubdivBrushTriangle2(POLY_GT3 *poly, const u16 tpage, s3
 
 #pragma GCC pop_options
 
-static inline POLY_GT3 *RenderBrushTriangle(POLY_GT3 *poly, const u16 tpage, svert_t *sv0, svert_t *sv1, svert_t *sv2, svert_t *clipzone)
-{
+static inline POLY_GT3 *RenderBrushTriangle(POLY_GT3 *poly, const u16 tpage, svert_t *sv0, svert_t *sv1, svert_t *sv2, svert_t *clipzone) {
   register int otz;
 
   // calculate OT Z for the big triangle
@@ -582,8 +575,7 @@ void R_DrawBrushModel(bmodel_t *model) {
   }
 }
 
-static inline LINE_F3 *DrawTwoLines(LINE_F3 *line, const int otz, const u32 col, const SVECTOR *va, const SVECTOR *vb, const SVECTOR *vc)
-{
+static inline LINE_F3 *DrawTwoLines(LINE_F3 *line, const int otz, const u32 col, const SVECTOR *va, const SVECTOR *vb, const SVECTOR *vc) {
   if (va->vx < 0 || va->vx > rs.clip.w || va->vy < 0 || va->vy > rs.clip.h)
     return line;
   if (vb->vx < 0 || vb->vx > rs.clip.w || vb->vy < 0 || vb->vy > rs.clip.h)
@@ -608,8 +600,7 @@ static inline LINE_F3 *DrawTwoLines(LINE_F3 *line, const int otz, const u32 col,
   return line;
 }
 
-void R_DrawBBox(edict_t *ent)
-{
+void R_DrawBBox(edict_t *ent) {
   register int otz1, otz2;
 
   SVECTOR *svp = PSX_SCRATCH;

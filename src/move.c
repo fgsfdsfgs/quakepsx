@@ -16,8 +16,7 @@ movevars_t *const movevars = PSX_SCRATCH;
 #define STEPSIZE TO_FIX32(18)
 #define MAX_PUSHED 64
 
-static int ClipVelocity(x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce)
-{
+static int ClipVelocity(x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce) {
   x32 backoff;
   x32 change;
   int i, blocked;
@@ -30,8 +29,7 @@ static int ClipVelocity(x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, 
 
   backoff = xmul32(overbounce, XVecDotSL(normal, in));
 
-  for (i = 0; i < 3; i++)
-  {
+  for (i = 0; i < 3; i++) {
     change = xmul32(normal->d[i], backoff);
     out->d[i] = in->d[i] - change;
     if (out->d[i] > -STOP_EPSILON && out->d[i] < STOP_EPSILON)
@@ -41,22 +39,19 @@ static int ClipVelocity(x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, 
   return blocked;
 }
 
-static inline void Impact(edict_t *e1, edict_t *e2)
-{
+static inline void Impact(edict_t *e1, edict_t *e2) {
   if (e1->v.touch && e1->v.solid != SOLID_NOT)
     e1->v.touch(e1, e2);
   if (e2->v.touch && e2->v.solid != SOLID_NOT)
     e2->v.touch(e2, e1);
 }
 
-static inline void AddGravity(edict_t *ent)
-{
+static inline void AddGravity(edict_t *ent) {
   // TODO: ent gravity
   ent->v.velocity.z -= xmul32(gs.frametime, G_GRAVITY);
 }
 
-static void ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, trace_t *trace)
-{
+static void ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, trace_t *trace) {
   x32vec3_t offset;
   x32vec3_t start_l, end_l;
   hull_t *hull;
@@ -85,8 +80,7 @@ static void ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, x3
     trace->ent = ent;
 }
 
-static qboolean CheckWater(edict_t *ent)
-{
+static qboolean CheckWater(edict_t *ent) {
   x32vec3_t point;
   int cont;
 
@@ -97,14 +91,12 @@ static qboolean CheckWater(edict_t *ent)
   ent->v.waterlevel = 0;
   ent->v.watertype = CONTENTS_EMPTY;
   cont = G_PointContents(&point);
-  if (cont <= CONTENTS_WATER)
-  {
+  if (cont <= CONTENTS_WATER) {
     ent->v.watertype = cont;
     ent->v.waterlevel = 1;
     point.d[2] = ent->v.origin.d[2] + ((ent->v.mins.d[2] + ent->v.maxs.d[2]) >> 1);
     cont = G_PointContents(&point);
-    if (cont <= CONTENTS_WATER)
-    {
+    if (cont <= CONTENTS_WATER) {
       ent->v.waterlevel = 2;
       point.d[2] = ent->v.origin.d[2] + ent->v.viewheight;
       cont = G_PointContents(&point);
@@ -116,33 +108,26 @@ static qboolean CheckWater(edict_t *ent)
   return ent->v.waterlevel > 1;
 }
 
-static void CheckWaterTransition(edict_t *ent)
-{
+static void CheckWaterTransition(edict_t *ent) {
   int cont;
   cont = G_PointContents(&ent->v.origin);
 
-  if (!ent->v.watertype)
-  {
+  if (!ent->v.watertype) {
     // just spawned here
     ent->v.watertype = cont;
     ent->v.waterlevel = 1;
     return;
   }
 
-  if (cont <= CONTENTS_WATER)
-  {
-    if (ent->v.watertype == CONTENTS_EMPTY)
-    {
+  if (cont <= CONTENTS_WATER) {
+    if (ent->v.watertype == CONTENTS_EMPTY) {
       // just crossed into water
       // TODO: StartSound(ent, 0, "misc/h2ohit1.wav", 255, 1);
     }
     ent->v.watertype = cont;
     ent->v.waterlevel = 1;
-  }
-  else
-  {
-    if (ent->v.watertype != CONTENTS_EMPTY)
-    {
+  } else {
+    if (ent->v.watertype != CONTENTS_EMPTY) {
       // just crossed into water
       // TODO: StartSound (ent, 0, "misc/h2ohit1.wav", 255, 1);
     }
@@ -151,14 +136,12 @@ static void CheckWaterTransition(edict_t *ent)
   }
 }
 
-qboolean G_RunThink(edict_t *ent)
-{
+qboolean G_RunThink(edict_t *ent) {
   x32 thinktime = ent->v.nextthink;
   if (thinktime <= 0 || thinktime > gs.time + gs.frametime || !ent->v.think)
     return true;
 
-  if (thinktime < gs.time)
-  {
+  if (thinktime < gs.time) {
     // don't let things stay in the past.
     // it is possible to start that way
     // by a trigger with a local time.
@@ -174,15 +157,13 @@ qboolean G_RunThink(edict_t *ent)
   return !ent->free;
 }
 
-void G_ClipToLinks(areanode_t *node, moveclip_t *clip)
-{
+void G_ClipToLinks(areanode_t *node, moveclip_t *clip) {
   link_t *l, *next;
   edict_t *touch;
   trace_t *trace = &clip->tmptrace;
 
   // touch linked edicts
-  for (l = node->solid_edicts.next; l != &node->solid_edicts; l = next)
-  {
+  for (l = node->solid_edicts.next; l != &node->solid_edicts; l = next) {
     next = l->next;
     touch = EDICT_FROM_AREA(l);
     if (touch->v.solid == SOLID_NOT)
@@ -198,21 +179,20 @@ void G_ClipToLinks(areanode_t *node, moveclip_t *clip)
     || clip->boxmins.d[2] > touch->v.absmax.d[2]
     || clip->boxmaxs.d[0] < touch->v.absmin.d[0]
     || clip->boxmaxs.d[1] < touch->v.absmin.d[1]
-    || clip->boxmaxs.d[2] < touch->v.absmin.d[2] )
+    || clip->boxmaxs.d[2] < touch->v.absmin.d[2])
       continue;
 
     if (clip->passedict && clip->passedict->v.size.x && !touch->v.size.x)
-      continue;	// points never interact
+      continue; // points never interact
 
     // might intersect, so do an exact clip
     if (clip->trace.allsolid)
       return;
-    if (clip->passedict)
-    {
+    if (clip->passedict) {
       if (touch->v.owner == clip->passedict)
-        continue;	// don't clip against own missiles
+        continue; // don't clip against own missiles
       if (clip->passedict->v.owner == touch)
-        continue;	// don't clip against owner
+        continue; // don't clip against owner
     }
 
     if (touch->v.flags & FL_MONSTER)
@@ -220,19 +200,17 @@ void G_ClipToLinks(areanode_t *node, moveclip_t *clip)
     else
       ClipMoveToEntity(touch, clip->start, clip->mins, clip->maxs, clip->end, &clip->tmptrace);
 
-    if (trace->allsolid || trace->startsolid || trace->fraction < clip->trace.fraction)
-    {
+    if (trace->allsolid || trace->startsolid || trace->fraction < clip->trace.fraction) {
       trace->ent = touch;
-      if (clip->trace.startsolid)
-      {
+      if (clip->trace.startsolid) {
         clip->trace = *trace;
         clip->trace.startsolid = true;
-      }
-      else
+      } else {
         clip->trace = *trace;
-    }
-    else if (trace->startsolid)
+      }
+    } else if (trace->startsolid) {
       clip->trace.startsolid = true;
+    }
   }
 
   // recurse down both sides
@@ -245,8 +223,7 @@ void G_ClipToLinks(areanode_t *node, moveclip_t *clip)
     G_ClipToLinks(node->children[1], clip);
 }
 
-const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict)
-{
+const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict) {
   moveclip_t *clip = &movevars->clip;
   int i;
 
@@ -262,16 +239,12 @@ const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec
   clip->type = type;
   clip->passedict = passedict;
 
-  if (type == MOVE_MISSILE)
-  {
-    for (i = 0; i < 3; i++)
-    {
+  if (type == MOVE_MISSILE) {
+    for (i = 0; i < 3; i++) {
       clip->mins2.d[i] = -TO_FIX32(15);
       clip->maxs2.d[i] = TO_FIX32(15);
     }
-  }
-  else
-  {
+  } else {
     clip->mins2 = *mins;
     clip->maxs2 = *maxs;
   }
@@ -285,8 +258,7 @@ const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec
   return &clip->trace;
 }
 
-edict_t *G_TestEntityPosition(edict_t *ent)
-{
+edict_t *G_TestEntityPosition(edict_t *ent) {
   const trace_t *trace;
   trace = G_Move(&ent->v.origin, &ent->v.mins, &ent->v.maxs, &ent->v.origin, 0, ent);
   if (trace->startsolid)
@@ -294,8 +266,7 @@ edict_t *G_TestEntityPosition(edict_t *ent)
   return NULL;
 }
 
-const trace_t *G_PushEntity(edict_t *ent, x32vec3_t *push)
-{
+const trace_t *G_PushEntity(edict_t *ent, x32vec3_t *push) {
   const trace_t *trace;
   x32vec3_t end;
 
@@ -318,27 +289,24 @@ const trace_t *G_PushEntity(edict_t *ent, x32vec3_t *push)
   return trace;
 }
 
-int G_TryUnstick(edict_t *ent, x32vec3_t *oldvel)
-{
-	int i;
-	x32vec3_t oldorg = ent->v.origin;
-	x32vec3_t dir = { 0 };
-	int clip;
-	const trace_t *steptrace;
+int G_TryUnstick(edict_t *ent, x32vec3_t *oldvel) {
+  int i;
+  x32vec3_t oldorg = ent->v.origin;
+  x32vec3_t dir = { 0 };
+  int clip;
+  const trace_t *steptrace;
 
-  for (i = 0; i < 8; i++)
-  {
+  for (i = 0; i < 8; i++) {
     // try pushing a little in an axial direction
-    switch (i)
-    {
-      case 0:	dir.d[0] = +2 * ONE; dir.d[1] = +0 * ONE; break;
-      case 1:	dir.d[0] = +0 * ONE; dir.d[1] = +2 * ONE; break;
-      case 2:	dir.d[0] = -2 * ONE; dir.d[1] = +0 * ONE; break;
-      case 3:	dir.d[0] = +0 * ONE; dir.d[1] = -2 * ONE; break;
-      case 4:	dir.d[0] = +2 * ONE; dir.d[1] = +2 * ONE; break;
-      case 5:	dir.d[0] = -2 * ONE; dir.d[1] = +2 * ONE; break;
-      case 6:	dir.d[0] = +2 * ONE; dir.d[1] = -2 * ONE; break;
-      case 7:	dir.d[0] = -2 * ONE; dir.d[1] = -2 * ONE; break;
+    switch (i) {
+    case 0: dir.d[0] = +2 * ONE; dir.d[1] = +0 * ONE; break;
+    case 1: dir.d[0] = +0 * ONE; dir.d[1] = +2 * ONE; break;
+    case 2: dir.d[0] = -2 * ONE; dir.d[1] = +0 * ONE; break;
+    case 3: dir.d[0] = +0 * ONE; dir.d[1] = -2 * ONE; break;
+    case 4: dir.d[0] = +2 * ONE; dir.d[1] = +2 * ONE; break;
+    case 5: dir.d[0] = -2 * ONE; dir.d[1] = +2 * ONE; break;
+    case 6: dir.d[0] = +2 * ONE; dir.d[1] = -2 * ONE; break;
+    case 7: dir.d[0] = -2 * ONE; dir.d[1] = -2 * ONE; break;
     }
 
     G_PushEntity(ent, &dir);
@@ -350,9 +318,7 @@ int G_TryUnstick(edict_t *ent, x32vec3_t *oldvel)
     clip = G_FlyMove(ent, 41, &steptrace);
 
     if (oldorg.x == ent->v.origin.x || oldorg.y == ent->v.origin.y)
-    {
       return clip;
-    }
 
     // go back to the original pos and try again
     ent->v.origin = oldorg;
@@ -365,8 +331,7 @@ int G_TryUnstick(edict_t *ent, x32vec3_t *oldvel)
   return 7; // still not moving
 }
 
-int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
-{
+int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace) {
   int bumpcount;
   x16vec3_t dir;
   x32 d;
@@ -387,8 +352,7 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
 
   time_left = time;
 
-  for (bumpcount = 0; bumpcount < 3; bumpcount++)
-  {
+  for (bumpcount = 0; bumpcount < 3; bumpcount++) {
     if (!ent->v.velocity.x && !ent->v.velocity.y && !ent->v.velocity.z)
       break;
 
@@ -397,15 +361,13 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
 
     trace = G_Move(&ent->v.origin, &ent->v.mins, &ent->v.maxs, &end, false, ent);
 
-    if (trace->allsolid)
-    {
+    if (trace->allsolid) {
       // entity is trapped in another solid
       XVecZero(&ent->v.velocity);
       return 3;
     }
 
-    if (trace->fraction > 0)
-    {
+    if (trace->fraction > 0) {
       // actually covered some distance
       ent->v.origin = trace->endpos;
       original_velocity = ent->v.velocity;
@@ -415,25 +377,19 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
     if (trace->fraction == ONE)
         break; // moved the entire distance
 
-    if (trace->plane.normal.z > G_FLOORNORMALZ)
-    {
+    if (trace->plane.normal.z > G_FLOORNORMALZ) {
       blocked |= 1;  // floor
-      if (trace->ent->v.solid == SOLID_BSP)
-      {
+      if (trace->ent->v.solid == SOLID_BSP) {
         ent->v.flags |= FL_ONGROUND;
         ent->v.groundentity = trace->ent;
       }
-    }
-    if (!trace->plane.normal.z)
-    {
+    } else if (!trace->plane.normal.z) {
       blocked |= 2; // step
       if (steptrace)
         *steptrace = trace; // save for player extrafriction
     }
 
-    //
     // run the impact function
-    //
     Impact(ent, trace->ent);
     if (ent->free)
       break; // removed by the impact function
@@ -443,16 +399,11 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
     planes[numplanes] = trace->plane.normal;
     numplanes++;
 
-    //
     // modify original_velocity so it parallels all of the clip planes
-    //
-    for (i = 0; i < numplanes; i++)
-    {
+    for (i = 0; i < numplanes; i++) {
       ClipVelocity(&original_velocity, &planes[i], &new_velocity, ONE);
-      for (j = 0; j < numplanes; j++)
-      {
-        if (j != i)
-        {
+      for (j = 0; j < numplanes; j++) {
+        if (j != i) {
           if (XVecDotSL(&planes[j], &new_velocity) < 0)
             break; // not ok
         }
@@ -460,17 +411,13 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
       if (j == numplanes)
         break;
     }
-    
-    if (i != numplanes)
-    {
+
+    if (i != numplanes) {
       // go along this plane
       ent->v.velocity = new_velocity;
-    }
-    else
-    {
+    } else {
       // go along the crease
-      if (numplanes != 2)
-      {
+      if (numplanes != 2) {
         XVecZero(&ent->v.velocity);
         return 7;
       }
@@ -479,12 +426,9 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
       XVecScaleSL(&dir, d, &ent->v.velocity);
     }
 
-    //
     // if original velocity is against the original velocity, stop dead
     // to avoid tiny occilations in sloping corners
-    //
-    if (XVecDotSL(&original_signs, &ent->v.velocity) <= 0)
-    {
+    if (XVecDotSL(&original_signs, &ent->v.velocity) <= 0) {
       XVecZero(&ent->v.velocity);
       return blocked;
     }
@@ -493,8 +437,7 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace)
   return blocked;
 }
 
-void G_WalkMove(edict_t *ent)
-{
+void G_WalkMove(edict_t *ent) {
   x32vec3_t upmove = { 0 }, downmove = { 0 };
   x32vec3_t oldorg, oldvel;
   x32vec3_t nosteporg, nostepvel;
@@ -502,9 +445,7 @@ void G_WalkMove(edict_t *ent)
   u16 oldonground;
   const trace_t *steptrace, *downtrace;
 
-  //
   // do a regular slide move unless it looks like you ran into a step
-  //
   oldonground = ent->v.flags & FL_ONGROUND;
   ent->v.flags = ent->v.flags & ~FL_ONGROUND;
 
@@ -528,10 +469,8 @@ void G_WalkMove(edict_t *ent)
   nosteporg = ent->v.origin;
   nostepvel = ent->v.velocity;
 
-  //
   // try moving up and forward to go up a step
-  //
-  ent->v.origin = oldorg;	// back to start pos
+  ent->v.origin = oldorg; // back to start pos
   upmove.z = STEPSIZE;
   downmove.z = -STEPSIZE + xmul32(gs.frametime, oldvel.z);
 
@@ -546,8 +485,7 @@ void G_WalkMove(edict_t *ent)
 
   // check for stuckness, possibly due to the limited precision of floats
   // in the clipping hulls
-  if (clip)
-  {
+  if (clip) {
     if (oldorg.y == ent->v.origin.y || oldorg.x == ent->v.origin.x)
       clip = G_TryUnstick(ent, &oldvel);
   }
@@ -559,16 +497,12 @@ void G_WalkMove(edict_t *ent)
   // move down
   downtrace = G_PushEntity(ent, &downmove); // FIXME: don't link?
 
-  if (downtrace->plane.normal.z > G_FLOORNORMALZ)
-  {
-    if (ent->v.solid == SOLID_BSP)
-    {
+  if (downtrace->plane.normal.z > G_FLOORNORMALZ) {
+    if (ent->v.solid == SOLID_BSP) {
       ent->v.flags |= FL_ONGROUND;
       ent->v.groundentity = downtrace->ent;
     }
-  }
-  else
-  {
+  } else {
     // if the push down didn't end up on good ground, use the move without
     // the step up.  This happens near wall / slope combinations, and can
     // cause the player to hop up higher on a slope too steep to climb
@@ -577,8 +511,7 @@ void G_WalkMove(edict_t *ent)
   }
 }
 
-void G_PushMove(edict_t *pusher, x16 movetime)
-{
+void G_PushMove(edict_t *pusher, x16 movetime) {
   x32vec3_t entorig;
   x32vec3_t move;
   x32vec3_t mins, maxs;
@@ -588,14 +521,12 @@ void G_PushMove(edict_t *pusher, x16 movetime)
   int num_moved;
   edict_t *check;
 
-  if (!pusher->v.velocity.x && !pusher->v.velocity.y && !pusher->v.velocity.z)
-  {
+  if (!pusher->v.velocity.x && !pusher->v.velocity.y && !pusher->v.velocity.z) {
     pusher->v.ltime += movetime;
     return;
   }
 
-  for (int i = 0; i < 3; ++i)
-  {
+  for (int i = 0; i < 3; ++i) {
     move.d[i] = xmul32(movetime, pusher->v.velocity.d[i]);
     mins.d[i] = pusher->v.absmin.d[i] + move.d[i];
     maxs.d[i] = pusher->v.absmax.d[i] + move.d[i];
@@ -611,8 +542,7 @@ void G_PushMove(edict_t *pusher, x16 movetime)
   // see if any solid entities are inside the final position
   num_moved = 0;
   check = gs.edicts + 1;
-  for (int i = 1; i <= gs.max_edict; ++i, ++check)
-  {
+  for (int i = 1; i <= gs.max_edict; ++i, ++check) {
     if (check->free)
       continue;
 
@@ -622,14 +552,13 @@ void G_PushMove(edict_t *pusher, x16 movetime)
       continue;
 
     // if the entity is standing on the pusher, it will definately be moved
-    if (!((check->v.flags & FL_ONGROUND) && check->v.groundentity == pusher))
-    {
-      if ( check->v.absmin.d[0] >= maxs.d[0]
+    if (!((check->v.flags & FL_ONGROUND) && check->v.groundentity == pusher)) {
+      if (check->v.absmin.d[0] >= maxs.d[0]
       || check->v.absmin.d[1] >= maxs.d[1]
       || check->v.absmin.d[2] >= maxs.d[2]
       || check->v.absmax.d[0] <= mins.d[0]
       || check->v.absmax.d[1] <= mins.d[1]
-      || check->v.absmax.d[2] <= mins.d[2] )
+      || check->v.absmax.d[2] <= mins.d[2])
         continue;
       // see if the ent's bbox is inside the pusher's final position
       if (!G_TestEntityPosition(check))
@@ -654,13 +583,11 @@ void G_PushMove(edict_t *pusher, x16 movetime)
     pusher->v.solid = SOLID_BSP;
 
     // if it is still inside the pusher, block
-    if (G_TestEntityPosition(check))
-    {
+    if (G_TestEntityPosition(check)) {
       // fail the move
       if (check->v.mins.x == check->v.maxs.x)
         continue;
-      if (check->v.solid == SOLID_NOT || check->v.solid == SOLID_TRIGGER)
-      {
+      if (check->v.solid == SOLID_NOT || check->v.solid == SOLID_TRIGGER) {
         // corpse
         check->v.mins.x = check->v.mins.y = 0;
         check->v.maxs = check->v.mins;
@@ -679,8 +606,7 @@ void G_PushMove(edict_t *pusher, x16 movetime)
       if (pusher->v.blocked)
         pusher->v.blocked(pusher, check);
       // move back any entities we already moved
-      for (int j = 0; j < num_moved; j++)
-      {
+      for (int j = 0; j < num_moved; j++) {
         moved_edict[j]->v.origin = moved_orig[j];
         G_LinkEdict(moved_edict[j], false);
       }
@@ -689,8 +615,7 @@ void G_PushMove(edict_t *pusher, x16 movetime)
   }
 }
 
-qboolean G_DropToFloor(edict_t *ent)
-{
+qboolean G_DropToFloor(edict_t *ent) {
   x32vec3_t end = ent->v.origin;
   end.z -= TO_FIX32(256);
 
@@ -706,42 +631,35 @@ qboolean G_DropToFloor(edict_t *ent)
   }
 }
 
-static inline void PhysicsNone(edict_t *ent)
-{
+static inline void PhysicsNone(edict_t *ent) {
   // regular thinking
   G_RunThink(ent);
 }
 
-static inline void PhysicsPusher(edict_t *ent)
-{
+static inline void PhysicsPusher(edict_t *ent) {
   x32 oldltime = ent->v.ltime;
   x32 thinktime = ent->v.nextthink;
   x16 movetime;
 
   thinktime = ent->v.nextthink;
-  if (thinktime < ent->v.ltime + gs.frametime)
-  {
+  if (thinktime < ent->v.ltime + gs.frametime) {
     movetime = thinktime - ent->v.ltime;
     if (movetime < 0)
       movetime = 0;
-  }
-  else
+  } else {
     movetime = gs.frametime;
+  }
 
   if (movetime)
-  {
     G_PushMove(ent, movetime); // advances ent->v.ltime if not blocked
-  }
 
-  if (thinktime > oldltime && thinktime <= ent->v.ltime && ent->v.think)
-  {
+  if (thinktime > oldltime && thinktime <= ent->v.ltime && ent->v.think) {
     ent->v.nextthink = 0;
     ent->v.think(ent);
   }
 }
 
-static inline void PhysicsNoclip(edict_t *ent)
-{
+static inline void PhysicsNoclip(edict_t *ent) {
   // regular thinking
   if (!G_RunThink(ent))
     return;
@@ -752,13 +670,11 @@ static inline void PhysicsNoclip(edict_t *ent)
   G_LinkEdict(ent, false);
 }
 
-static void PhysicsStep(edict_t *ent)
-{
+static void PhysicsStep(edict_t *ent) {
   qboolean hitsound;
 
   // freefall if not onground
-  if (!(ent->v.flags & (FL_ONGROUND | FL_FLY | FL_SWIM)))
-  {
+  if (!(ent->v.flags & (FL_ONGROUND | FL_FLY | FL_SWIM))) {
     if (ent->v.velocity.d[2] < (G_GRAVITY / -10))
       hitsound = true;
     else
@@ -769,8 +685,7 @@ static void PhysicsStep(edict_t *ent)
     G_FlyMove(ent, gs.frametime, NULL);
     G_LinkEdict(ent, true);
 
-    if (ent->v.flags & FL_ONGROUND)
-    {
+    if (ent->v.flags & FL_ONGROUND) {
       // just hit ground
       // if (hitsound)
       //   TODO: StartSound(ent, 0, "demon/dland2.wav", 255, 1);
@@ -783,8 +698,7 @@ static void PhysicsStep(edict_t *ent)
   CheckWaterTransition(ent);
 }
 
-static void PhysicsToss(edict_t *ent)
-{
+static void PhysicsToss(edict_t *ent) {
   x32vec3_t move;
   const trace_t *trace;
   x16 backoff;
@@ -814,10 +728,8 @@ static void PhysicsToss(edict_t *ent)
   ClipVelocity(&ent->v.velocity, &trace->plane.normal, &ent->v.velocity, backoff);
 
   // stop if on ground
-  if (trace->plane.normal.z > G_FLOORNORMALZ)
-  {
-    if (ent->v.velocity.z < TO_FIX32(60) || ent->v.movetype != MOVETYPE_BOUNCE)
-    {
+  if (trace->plane.normal.z > G_FLOORNORMALZ) {
+    if (ent->v.velocity.z < TO_FIX32(60) || ent->v.movetype != MOVETYPE_BOUNCE) {
       ent->v.flags |= FL_ONGROUND;
       ent->v.groundentity = trace->ent;
       XVecZero(&ent->v.velocity);
@@ -829,8 +741,7 @@ static void PhysicsToss(edict_t *ent)
   CheckWaterTransition(ent);
 }
 
-static void PhysicsPlayer(edict_t *ent)
-{
+static void PhysicsPlayer(edict_t *ent) {
   ent->v.oldorigin = ent->v.origin;
 
   // call standard client pre-think
@@ -841,8 +752,7 @@ static void PhysicsPlayer(edict_t *ent)
   // do a move
   // TODO: CheckVelocity?
   // decide which move function to call
-  switch (ent->v.movetype)
-  {
+  switch (ent->v.movetype) {
   case MOVETYPE_NONE:
     if (!G_RunThink(ent))
       return;
@@ -855,7 +765,7 @@ static void PhysicsPlayer(edict_t *ent)
     // CheckStuck(ent);
     G_WalkMove(ent);
     break;
-    
+
   case MOVETYPE_TOSS:
   case MOVETYPE_BOUNCE:
     PhysicsToss(ent);
@@ -866,7 +776,7 @@ static void PhysicsPlayer(edict_t *ent)
       return;
     G_FlyMove(ent, gs.frametime, NULL);
     break;
-    
+
   case MOVETYPE_NOCLIP:
     if (!G_RunThink(ent))
       return;
@@ -883,8 +793,7 @@ static void PhysicsPlayer(edict_t *ent)
   Player_PostThink(ent);
 }
 
-void G_Physics(void)
-{
+void G_Physics(void) {
   int i;
   edict_t *ent;
 
@@ -897,8 +806,7 @@ void G_Physics(void)
   // treat each object in turn
   //
   ent = gs.edicts;
-  for (i = 0; i <= gs.max_edict; ++i, ++ent)
-  {
+  for (i = 0; i <= gs.max_edict; ++i, ++ent) {
     if (ent->free)
       continue;
 
@@ -907,28 +815,28 @@ void G_Physics(void)
 
     if (i == 1)
       PhysicsPlayer(ent);
-    else switch (ent->v.movetype)
-    {
-    case MOVETYPE_NONE:
-      PhysicsNone(ent);
-      break;
-    case MOVETYPE_PUSH:
-      PhysicsPusher(ent);
-      break;
-    case MOVETYPE_NOCLIP:
-      PhysicsNoclip(ent);
-      break;
-    case MOVETYPE_STEP:
-      PhysicsStep(ent);
-      break;
-    case MOVETYPE_TOSS:
-    case MOVETYPE_BOUNCE:
-    case MOVETYPE_FLY:
-    case MOVETYPE_FLYMISSILE:
-      PhysicsToss(ent);
-    default:
-      break;
-    }
+    else
+      switch (ent->v.movetype) {
+      case MOVETYPE_NONE:
+        PhysicsNone(ent);
+        break;
+      case MOVETYPE_PUSH:
+        PhysicsPusher(ent);
+        break;
+      case MOVETYPE_NOCLIP:
+        PhysicsNoclip(ent);
+        break;
+      case MOVETYPE_STEP:
+        PhysicsStep(ent);
+        break;
+      case MOVETYPE_TOSS:
+      case MOVETYPE_BOUNCE:
+      case MOVETYPE_FLY:
+      case MOVETYPE_FLYMISSILE:
+        PhysicsToss(ent);
+      default:
+        break;
+      }
   }
 
   if (gs.force_retouch)
