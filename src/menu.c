@@ -48,17 +48,17 @@ void Menu_Update(void) {
   }
 
   if (IN_ButtonPressed(PAD_CROSS)) {
-    char map[64];
+    char map[16];
     if (dbg_episode == 0)
-      snprintf(map, sizeof(map), FS_BASE "\\MAPS\\%s.PSB;1", "START");
+      snprintf(map, sizeof(map), "%s", "START");
     else if (dbg_episode == 5)
-      snprintf(map, sizeof(map), FS_BASE "\\MAPS\\%s.PSB;1", "END");
+      snprintf(map, sizeof(map), "%s", "END");
     else
-      snprintf(map, sizeof(map), FS_BASE "\\MAPS\\E%dM%d.PSB;1", dbg_episode, dbg_map);
+      snprintf(map, sizeof(map), "E%dM%d", dbg_episode, dbg_map);
 
     Menu_Toggle();
 
-    G_StartMap(map);
+    G_RequestMap(map);
   }
 }
 

@@ -286,6 +286,12 @@ void R_RenderScene(void) {
 
 void R_NewMap(void) {
   rs.viewleaf = NULL;
+  rs.oldviewleaf = NULL;
+  rs.cur_entity = NULL;
+  rs.cur_texture = NULL;
+  rs.visframe = 0;
+  rs.frame = 0;
+  rs.frametime = 0;
   for (int i = 0; i < gs.worldmodel->numtextures; i++)
     gs.worldmodel->textures[i].texchain = NULL;
 }

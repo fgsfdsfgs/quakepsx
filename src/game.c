@@ -11,6 +11,8 @@
 
 game_state_t gs;
 
+static char g_nextmap[MAX_OSPATH];
+
 void G_ParseMapEnts(bmodel_t *mdl) {
   // worldspawn
   gs.edicts[0].free = false;
@@ -48,12 +50,25 @@ void G_ParseMapEnts(bmodel_t *mdl) {
   mdl->mapents = NULL;
 }
 
+void G_RequestMap(const char *mapname) {
+  snprintf(g_nextmap, sizeof(g_nextmap), FS_BASE "\\MAPS\\%s.PSB;1", mapname);
+}
+
+qboolean G_CheckNextMap(void) {
+  if (g_nextmap[0]) {
+    G_StartMap(g_nextmap);
+    g_nextmap[0] = 0;
+  }
+}
+
 void G_StartMap(const char *path) {
   Mem_FreeToMark(MEM_MARK_LO);
 
   memset(&gs, 0, sizeof(gs));
 
   Snd_NewMap();
+
+  gs.worldmodel = NULL;
 
   gs.num_edicts = 512;
   gs.edicts = Mem_ZeroAlloc(gs.num_edicts * sizeof(edict_t));

@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
   Mem_SetMark(MEM_MARK_LO);
 
-  G_StartMap(FS_BASE "\\MAPS\\START.PSB;1");
+  G_RequestMap("START");
 
   sndorg = gs.edicts[1].v.origin;
 
@@ -74,6 +74,12 @@ int main(int argc, char **argv) {
     then = time;
     time = Sys_FixedTime();
     gs.frametime = time - then;
+
+    if (G_CheckNextMap()) {
+      // map changed, reset time
+      gs.frametime = ONE / 10;
+    }
+
     IN_Update();
     TestInput(gs.frametime);
     G_Update(gs.frametime);

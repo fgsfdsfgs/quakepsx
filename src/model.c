@@ -195,6 +195,7 @@ void Mod_LoadNodes(bmodel_t *mod, const int fh) {
     out->firstsurf = in.firstface;
     out->numsurf = in.numfaces;
     out->visframe = 0;
+    out->contents = 0;
     for (int j = 0; j < 2; j++) {
       const int p = in.children[j];
       if (p >= 0)
