@@ -222,13 +222,14 @@ ent monster_shambler
   sfx sound/shambler/sdeath.wav
 
 ent monster_shalrath
-  progs/shalrath.mdl
+  mdl progs/shalrath.mdl
+  mdl progs/v_spike.mdl
 
 ent monster_tarbaby
-  progs/tarbaby.mdl
+  mdl progs/tarbaby.mdl
 
 ent monster_enforcer
-  progs/enforcer.mdl
+  mdl progs/enforcer.mdl
   sfx sound/enforcer/sight1.wav
   sfx sound/enforcer/idle1.wav
   sfx sound/enforcer/death1.wav
