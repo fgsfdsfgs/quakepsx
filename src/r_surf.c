@@ -401,9 +401,8 @@ void R_DrawTextureChains(void) {
   }
 }
 
-void R_DrawAliasModel(amodel_t *model, int frame) {
+void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {
   register int otz;
-  const u32 col = 0x808080; // TODO: calculate light level
   const u16 tpage = model->tpage;
   const int numverts = model->numverts;
   const int numtris = model->numtris;
@@ -471,9 +470,9 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
     poly->v1 = tri->uvs[1].v;
     poly->u2 = tri->uvs[2].u;
     poly->v2 = tri->uvs[2].v;
-    *(u32 *)&poly->r0 = col;
-    *(u32 *)&poly->r1 = col;
-    *(u32 *)&poly->r2 = col;
+    *(u32 *)&poly->r0 = tint;
+    *(u32 *)&poly->r1 = tint;
+    *(u32 *)&poly->r2 = tint;
 
     poly = EmitAliasTriangle(poly, tpage, otz, sv0, sv1, sv2);
   }
@@ -481,9 +480,8 @@ void R_DrawAliasModel(amodel_t *model, int frame) {
   gpu_ptr = (u8 *)poly;
 }
 
-void R_DrawAliasViewModel(amodel_t *model, int frame) {
+void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint) {
   register int otz;
-  const u32 col = 0x808080; // TODO: calculate light level
   const u16 tpage = model->tpage;
   const int numverts = model->numverts;
   const int numtris = model->numtris;
@@ -545,9 +543,9 @@ void R_DrawAliasViewModel(amodel_t *model, int frame) {
     poly->v1 = tri->uvs[1].v;
     poly->u2 = tri->uvs[2].u;
     poly->v2 = tri->uvs[2].v;
-    *(u32 *)&poly->r0 = col;
-    *(u32 *)&poly->r1 = col;
-    *(u32 *)&poly->r2 = col;
+    *(u32 *)&poly->r0 = tint;
+    *(u32 *)&poly->r1 = tint;
+    *(u32 *)&poly->r2 = tint;
     setPolyGT3(poly);
     poly->tpage = tpage;
     poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);

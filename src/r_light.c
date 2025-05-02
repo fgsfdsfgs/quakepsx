@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "system.h"
+#include "game.h"
 #include "render.h"
 
 u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
@@ -61,4 +62,23 @@ void R_UpdateLightStyles(const x32 time) {
     k = r_lightstyle[j].map[k] * 22;
     r_lightstylevalue[j] = k;
   }
+}
+
+void R_LightEntity(edict_t *ent) {
+  ent->v.light = 0;
+
+  if (!ent->num_leafs)
+    return;
+
+  u32 avglight = 0;
+  for (int i = 0; i < ent->num_leafs; ++i) {
+    const mleaf_t *leaf = gs.worldmodel->leafs + ent->leafnums[i] + 1;
+    const u32 light =
+      leaf->lightmap[0] * r_lightstylevalue[leaf->styles[0]] +
+      leaf->lightmap[1] * r_lightstylevalue[leaf->styles[1]];
+    avglight += light >> 8;
+  }
+
+  avglight /= ent->num_leafs;
+  ent->v.light = avglight > 0xff ? 0xff : avglight;
 }

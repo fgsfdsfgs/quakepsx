@@ -151,6 +151,8 @@ typedef struct {
   s16vec3_t maxs;
   u16 firstmarksurface;
   u16 nummarksurfaces;
+  u8 lightmap[MAX_XMAP_LIGHTVALS];
+  u8 styles[MAX_XMAP_LIGHTVALS];
 } xleaf_t;
 
 typedef struct {

@@ -63,6 +63,7 @@ typedef struct entvars_s {
   u8 waterlevel;
   s8 watertype;
   u8 noise;
+  u8 light;
   u16 flags;
   u16 spawnflags;
   s16 modelnum;

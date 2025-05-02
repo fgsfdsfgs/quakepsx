@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <assert.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -264,6 +265,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   qvec2_t qstmin = { 999999.0f, 999999.0f };
   qvec2_t qstmax = { -99999.0f, -99999.0f };
   qvec2_t qstsiz;
+  qvec2_t qlmmin, qlmsiz;
   qvec2_t quvmin, quvmax, quvsiz;
 
   // get verts
@@ -314,6 +316,11 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     quvmin[j] = fsfract(qstmin[j] / texsiz[j]);
     quvsiz[j] = qstsiz[j] / texsiz[j];
     quvmax[j] = quvmin[j] + quvsiz[j];
+
+    const f32 bmin = floorf(qstmin[j] / 16.f);
+    const f32 bmax = floorf(qstmax[j] / 16.f);
+    qlmmin[j] = bmin * 16.f;
+    qlmsiz[j] = (bmax - bmin) * 16.f;
   }
 
   for (int i = 0; i < numverts; ++i) {
@@ -340,7 +347,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
 
     // sample lightmaps
     u16 lit[MAX_LIGHTMAPS] = { 0, 0, 0, 0 };
-    qbsp_light_for_vert(qbsp, qf, qvert->v, qstmin, qstsiz, lit);
+    qbsp_light_for_vert(qbsp, qf, qvert->v, qlmmin, qlmsiz, lit);
     // assume lightstyles come without gaps
     xv->col[0] = lit[0];
     xv->col[1] = lit[1];

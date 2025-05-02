@@ -250,6 +250,10 @@ void Mod_LoadLeafs(bmodel_t *mod, const int fh) {
     out->firstmarksurf = mod->marksurfaces + in.firstmarksurface;
     out->nummarksurf = in.nummarksurfaces;
     out->compressed_vis = in.visofs < 0 ? NULL : mod->visdata + in.visofs;
+    out->styles[0] = in.styles[0];
+    out->styles[1] = in.styles[1];
+    out->lightmap[0] = in.lightmap[0];
+    out->lightmap[1] = in.lightmap[1];
     out->visframe = 0;
   }
 }

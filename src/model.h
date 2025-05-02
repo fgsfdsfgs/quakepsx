@@ -107,6 +107,8 @@ typedef struct mleaf_s {
   u8 *compressed_vis;
   msurface_t **firstmarksurf;
   u16 nummarksurf;
+  u8 lightmap[MAX_MAP_LIGHTVALS];
+  u8 styles[MAX_MAP_LIGHTVALS];
 } mleaf_t;
 
 typedef struct {

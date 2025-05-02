@@ -92,11 +92,16 @@ u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, 
   int ds = s - (int)sorg[0];
   int dt = t - (int)sorg[1];
 
+  if (ds < 0) ds = 0;
+  if (ds > sext[0]) ds = sext[0];
+  if (dt < 0) dt = 0;
+  if (dt > sext[1]) dt = sext[1];
+
   ds >>= 4;
   dt >>= 4;
 
   u32 r = 0;
-  u32 scale = 264; // max light is slightly overbright I think
+  u32 scale = 255; // og max light is 264, but for us anything above 128 is overbright
   samples += dt * (((int)sext[0] >> 4) + 1) + ds;
   for (int m = 0; m < MAX_LIGHTMAPS && qf->styles[m] != 255; m++) {
     const u32 v = *samples * scale;
@@ -104,6 +109,5 @@ u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, 
     out[m] = v >> 8;
     samples += (((int)sext[0]>>4)+1) * (((int)sext[1]>>4)+1);
   }
-  // returns light already in 0-128 range
   return r >> 8;
 }

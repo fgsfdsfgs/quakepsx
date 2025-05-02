@@ -240,6 +240,10 @@ void R_DrawViewModel(const player_state_t *plr) {
   if (!plr->vmodel || plr->ent->v.health <= 0)
     return;
 
+  plr->ent->num_leafs = 1;
+  plr->ent->leafnums[0] = rs.viewleaf - gs.worldmodel->leafs - 1;
+  R_LightEntity(plr->ent);
+
   x32vec3_t delta;
   XVecSub(&plr->ent->v.origin, &plr->ent->v.oldorigin, &delta);
 
@@ -271,7 +275,8 @@ void R_DrawViewModel(const player_state_t *plr) {
   gte_SetRotMatrix(m);
   gte_SetTransMatrix(m);
 
-  R_DrawAliasViewModel(plr->vmodel, plr->vmodelframe);
+  const u32 tint = (plr->ent->v.light << 16) | (plr->ent->v.light << 8) | (plr->ent->v.light);
+  R_DrawAliasViewModel(plr->vmodel, plr->vmodelframe, tint);
 
   PopMatrix();
 }
@@ -484,10 +489,12 @@ static inline void DrawEntity(edict_t *ed) {
   gte_SetTransMatrix(&rs.entmatrix);
 
   // draw
-  if (ed->v.modelnum < 0)
+  if (ed->v.modelnum < 0) {
     R_DrawBrushModel(ed->v.model);
-  else
-    R_DrawAliasModel(ed->v.model, ed->v.frame);
+  } else {
+    R_LightEntity(ed);
+    R_DrawAliasModel(ed->v.model, ed->v.frame, (ed->v.light << 16) | (ed->v.light << 8) | (ed->v.light));
+  }
 
   // restore the GTE matrix
   PopMatrix();

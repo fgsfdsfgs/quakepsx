@@ -137,6 +137,51 @@ static void do_visdata(void) {
   printf("visdata size: %d\n", qbsp.numvisdata);
 }
 
+static void do_leaf_light(xleaf_t *xl) {
+  // default to fully dark
+  xl->styles[0] = MAX_LIGHTSTYLES;
+  xl->styles[1] = MAX_LIGHTSTYLES;
+  xl->lightmap[0] = 0;
+  xl->lightmap[1] = 0;
+
+  // pick the brightest surface in leaf
+  u32 max_light = 0;
+  const xface_t *max_light_xf = NULL;
+  for (int i = 0; i < xl->nummarksurfaces; ++i) {
+    const xface_t *xf = xbsp_faces + xbsp_marksurfs[xl->firstmarksurface + i];
+    u32 light = 0;
+    for (int j = 0; j < xf->numverts; ++j) {
+      const xvert_t *xv = xbsp_verts + xf->firstvert + j;
+      light += xv->col[0];
+      light += xv->col[1];
+    }
+    light /= xf->numverts;
+    if (light > max_light) {
+      max_light = light;
+      max_light_xf = xf;
+    }
+  }
+
+  if (!max_light_xf)
+    return;
+
+  u32 avglight[MAX_XMAP_LIGHTVALS] = { 0, 0 };
+  for (int j = 0; j < max_light_xf->numverts; ++j) {
+    const xvert_t *xv = xbsp_verts + max_light_xf->firstvert + j;
+    avglight[0] += xv->col[0];
+    avglight[1] += xv->col[1];
+  }
+  avglight[0] /= max_light_xf->numverts;
+  avglight[1] /= max_light_xf->numverts;
+  if (avglight[0] > 0xFF) avglight[0] = 0xFF;
+  if (avglight[1] > 0xFF) avglight[1] = 0xFF;
+
+  xl->styles[0] = max_light_xf->styles[0];
+  xl->styles[1] = max_light_xf->styles[1];
+  xl->lightmap[0] = avglight[0];
+  xl->lightmap[1] = avglight[1];
+}
+
 static void do_nodes(void) {
   printf("converting %d nodes, %d clipnodes, %d leaves, %d marksurfaces\n",
     qbsp.numnodes, qbsp.numcnodes, qbsp.numleafs, qbsp.nummarksurf);
@@ -181,6 +226,9 @@ static void do_nodes(void) {
   }
 
   memcpy(xbsp_marksurfs, qbsp.marksurf, qbsp.nummarksurf * 2);
+
+  for (int i = 0; i < qbsp.numleafs; ++i)
+    do_leaf_light(xbsp_leafs + i);
 
   xbsp_nummarksurfs = qbsp.nummarksurf;
   xbsp_numnodes = qbsp.numnodes;

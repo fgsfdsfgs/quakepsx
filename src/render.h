@@ -30,7 +30,7 @@
 }
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x20000
+#define GPU_BUFSIZE 0x30000
 #define GPU_OTDEPTH 2048
 
 #define GPU_SUBDIV_DIST_1 80
@@ -86,8 +86,8 @@ void R_AddScreenPrim(const u32 primsize);
 void R_RenderScene(void);
 void R_DrawWorld(void);
 void R_NewMap(void);
-void R_DrawAliasModel(amodel_t *model, int frame);
-void R_DrawAliasViewModel(amodel_t *model, int frame);
+void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint);
+void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint);
 void R_DrawBrushModel(bmodel_t *model);
 void R_DrawBBox(edict_t *ent);
 void R_DrawTextureChains(void);
@@ -98,3 +98,4 @@ void R_Flip(void);
 void R_InitLightStyles(void);
 void R_UpdateLightStyles(const x32 time);
 void R_SetLightStyle(const int i, const char *map);
+void R_LightEntity(edict_t *ent);
