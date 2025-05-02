@@ -52,12 +52,13 @@ static inline void load_gfxwad(void) {
     panic("could not open %s in moddir %s", wadname, moddir);
 }
 
-static inline void process_pic(const char *name, const int x, const int y, const int ckey) {
+static inline void process_pic(const char *name, const int x, const int y, const int ckey, const int rgb555) {
   size_t size = 0;
   u8 *pixels = NULL;
   qpic_t *pic = NULL;
   s32 w = 0;
   s32 h = 0;
+  s32 w16 = 0;
 
   if (num_pics >= MAX_PICS)
     panic("too many pics (max %d)", MAX_PICS);
@@ -86,6 +87,8 @@ static inline void process_pic(const char *name, const int x, const int y, const
     }
   }
 
+  w16 = rgb555 ? w : (w >> 1);
+
   if (!pixels || !size || w <= 0 || h <= 0)
     panic("no such pic or empty pic: %s", name);
 
@@ -106,13 +109,19 @@ static inline void process_pic(const char *name, const int x, const int y, const
 
   const int basex = (x & 0x3C0);
   const int basey = (y & 0x100);
-  if (x < 0 || ((w >> 1) + x - basex > VRAM_TEXPAGE_WIDTH))
+  if (x < 0 || (w16 + x - basex > VRAM_TEXPAGE_WIDTH))
     panic("pic %s intersects tpage X boundary", name);
   if (y < 0 || (h + y - basey > VRAM_TEXPAGE_HEIGHT))
     panic("pic %s intersects tpage Y boundary", name);
 
-  // remap colorkey if needed
-  if (ckey != 0xFF) {
+  // convert or remap colorkey if needed
+  if (rgb555) {
+    u16 *newpixels = calloc(w * h, 2);
+    assert(newpixels);
+    for (int i = 0; i < w * h; ++i)
+      newpixels[i] = clutdata[pixels[i]];
+    pixels = (u8 *)newpixels;
+  } else if (ckey != 0xFF) {
     for (int i = 0; i < w * h; ++i) {
       if (pixels[i] == ckey)
         pixels[i] = 0xFF;
@@ -121,23 +130,26 @@ static inline void process_pic(const char *name, const int x, const int y, const
 
   // copy the data
   const u8 *src = pixels;
-  for (int i = 0; i < h; ++i, src += w)
-    memcpy(&vramdata[y + i][x - basex], src, w);
+  const s32 pitch = w  * (1 + rgb555);
+  for (int i = 0; i < h; ++i, src += pitch)
+    memcpy(&vramdata[y + i][x - basex], src, pitch);
 
   xpic_t *xpic = &pics[num_pics];
   xpic->size.x = w;
   xpic->size.y = h;
-  xpic->uv.u = ((x - basex) << 1) & 0xFF;
+  xpic->uv.u = ((x - basex) << !rgb555) & 0xFF;
   xpic->uv.v = y & 0xFF;
   xpic->tpage = PSXTPAGE(1, 0, x, y);
   snprintf(picnames[num_pics], sizeof(picnames[num_pics]), "%s", name);
 
-  printf("pic #%02x: pos (%4d, %3d), size (%3d, %3d), uv (%3d, %3d), key %02x, name %s\n",
-    num_pics, x, y, w, h, xpic->uv.u, xpic->uv.v, (u32)ckey, name);
+  printf("pic #%02x: pos (%4d, %3d), size (%3d, %3d), uv (%3d, %3d), key %02x, name %s, %dbit\n",
+    num_pics, x, y, w, h, xpic->uv.u, xpic->uv.v, (u32)ckey, name, rgb555 ? 16 : 8);
 
   ++num_pics;
 
   free(pic);
+  if (rgb555)
+    free(pixels);
 }
 
 static inline void parse_picmap(const char *fname) {
@@ -148,7 +160,12 @@ static inline void parse_picmap(const char *fname) {
   const char *delim = " \t\r\n";
   while (fgets(line, sizeof(line), f)) {
     const char *p = strtok(line, delim);
-    if (!p || strcmp(p, "pic") != 0)
+    if (!p)
+      continue;
+
+    const int ispic = strcmp(p, "pic") == 0;
+    const int ispic16 = strcmp(p, "pic16") == 0;
+    if (!ispic && !ispic16)
       continue;
 
     char *name = strtok(NULL, delim);
@@ -165,7 +182,7 @@ static inline void parse_picmap(const char *fname) {
     if (scmap && isdigit(scmap[0]))
       cmap = atoi(scmap);
 
-    process_pic(name, vx, vy, cmap);
+    process_pic(name, vx, vy, cmap, ispic16);
   }
 
   fclose(f);
@@ -210,6 +227,7 @@ int main(int argc, const char **argv) {
   printf("saving VRAM bank to %s\n", outfile);
   FILE *f = fopen(outfile, "wb");
   if (!f) panic("could not open %s for writing", outfile);
+  fwrite(clutdata, sizeof(clutdata), 1, f);
   fwrite(&num_pics, sizeof(num_pics), 1, f);
   fwrite(pics, sizeof(pics[0]), num_pics, f);
   fwrite(vramdata, sizeof(vramdata), 1, f);
