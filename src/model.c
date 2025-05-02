@@ -400,9 +400,9 @@ static void Mod_ParseBrushModel(bmodel_t *mod, const int fh) {
   Mod_LoadLeafs(mod, fh);
   Mod_LoadNodes(mod, fh);
   Mod_LoadClipnodes(mod, fh);
+  Mod_MakeHull0(mod);
   Mod_LoadSubmodels(mod, fh);
   Mod_SetupSubmodels(mod);
-  Mod_MakeHull0(mod);
 
   // load entities last so we can free the data after parsing it
   Mod_LoadEntities(mod, fh);
