@@ -30,7 +30,7 @@
 }
 
 #define BACKFACE_EPSILON 41 // F1.19.12
-#define GPU_BUFSIZE 0x30000
+#define GPU_BUFSIZE 0x20000
 #define GPU_OTDEPTH 2048
 
 #define GPU_SUBDIV_DIST_1 80
@@ -91,6 +91,7 @@ void R_DrawAliasViewModel(amodel_t *model, int frame);
 void R_DrawBrushModel(bmodel_t *model);
 void R_DrawBBox(edict_t *ent);
 void R_DrawTextureChains(void);
+void R_DrawBlitSync(const pic_t *pic, int x, const int y);
 void R_RenderView(void);
 void R_Flip(void);
 

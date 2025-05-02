@@ -524,3 +524,10 @@ void R_DrawWorld(void) {
 void R_AddScreenPrim(const u32 primsize) {
   Plist_Append(primsize);
 }
+
+void R_DrawBlitSync(const pic_t *pic, int x, const int y) {
+  RECT src = { 0, 0, pic->size.u, pic->size.v };
+  src.x = (pic->tpage & 0x0f) * 64 + pic->uv.u;
+  src.y = (pic->tpage & 0x10) * 16 + pic->uv.v;
+  MoveImage2(&src, x + fb[fbidx].disp.disp.x, y + fb[fbidx].disp.disp.y);
+}

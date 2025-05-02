@@ -10,6 +10,8 @@
 
 static const pic_t *pic_conchars;
 static const pic_t *pic_bignumbers;
+static const pic_t *pic_menudot;
+static const pic_t *pic_loading;
 static u16 scr_tpage = 0;
 
 static char scr_centermsg[MAX_SCR_LINE];
@@ -118,8 +120,11 @@ void Scr_Init(void) {
   pic_conchars = Spr_GetPic(PICID_CONCHARS);
   ASSERT(pic_conchars);
 
+  pic_loading = Spr_GetPic(PICID_DISC);
+
   // the rest should be sequential
   pic_bignumbers = Spr_GetPic(PICID_NUM_0);
+  pic_menudot = Spr_GetPic(PICID_MENUDOT1);
 
   Sbar_Init();
 }
@@ -244,4 +249,16 @@ void Scr_SetBlend(const u32 color, const x32 time) {
   scr_flash_color[1] = (color & 0x00FF00u) >> 8;
   scr_flash_color[2] = (color & 0xFF0000u) >> 16;
   scr_flash_time = rs.frametime + time;
+}
+
+void Scr_BeginLoading(void) {
+  R_DrawBlitSync(pic_loading, VID_WIDTH - pic_loading->size.u - 16, 16);
+}
+
+void Scr_TickLoading(void) {
+
+}
+
+void Scr_EndLoading(void) {
+
 }

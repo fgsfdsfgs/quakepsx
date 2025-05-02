@@ -7,6 +7,7 @@
 #include "progs.h"
 #include "sound.h"
 #include "menu.h"
+#include "screen.h"
 #include "move.h"
 
 game_state_t gs;
@@ -64,6 +65,8 @@ qboolean G_CheckNextMap(void) {
 void G_StartMap(const char *path) {
   Mem_FreeToMark(MEM_MARK_LO);
 
+  Scr_BeginLoading();
+
   memset(&gs, 0, sizeof(gs));
 
   Snd_NewMap();
@@ -102,6 +105,8 @@ void G_StartMap(const char *path) {
     ent_spawnfuncs[ent->v.classname](ent);
     G_LinkEdict(ent, false);
   }
+
+  Scr_EndLoading();
 }
 
 void G_Update(const x16 dt) {

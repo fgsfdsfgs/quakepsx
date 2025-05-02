@@ -50,4 +50,5 @@ enum picid_e {
   PICID_MENUDOT5 = 0x2e,
   PICID_MENUDOT6 = 0x2f,
   PICID_PAUSE = 0x30,
+  PICID_DISC = 0x31,
 };

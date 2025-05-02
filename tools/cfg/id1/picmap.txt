@@ -66,3 +66,6 @@ pic gfx/menudot6.lmp 1016 320
 
 # PAUSED
 pic gfx/pause.lmp 960 400
+
+# loading icon has to be in 16bpp so we could blit it with one MoveImage call
+pic16 disc 960 424
