@@ -107,7 +107,6 @@ typedef struct mleaf_s {
   u8 *compressed_vis;
   msurface_t **firstmarksurf;
   u16 nummarksurf;
-  s32 key;
 } mleaf_t;
 
 typedef struct {
