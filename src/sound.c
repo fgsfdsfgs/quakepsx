@@ -105,9 +105,9 @@ static qboolean Snd_Spatialize(struct sndchan* ch) {
       const x32 rscale = xmul32(dist, ONE + dot);
       const x32 lscale = xmul32(dist, ONE - dot);
       rvol = (rscale <= 0) ? 0 : xmul32(rscale, ch->vol);
-      rvol &= SND_MAXVOL;
+      if (rvol > SND_MAXVOL) rvol = SND_MAXVOL;
       lvol = (lscale <= 0) ? 0 : xmul32(lscale, ch->vol);
-      lvol &= SND_MAXVOL;
+      if (lvol > SND_MAXVOL) lvol = SND_MAXVOL;
     }
   }
 
