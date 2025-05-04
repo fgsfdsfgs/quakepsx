@@ -9,7 +9,7 @@ x16vec3_t x16vec3_origin = { 0 };
 
 // atan2 for an integer XY, returns in the same angle format as everything else (4096 = 360 degrees)
 // method spied in Soul Reaver (soul-re)
-x16 qatan2(s32 x, s32 y) {
+x16 qatan2(s32 y, s32 x) {
   if (x == 0)
     x = 1;
 
@@ -143,5 +143,5 @@ x16 VecToYaw(const x32vec3_t *vec) {
   const s32 iy = vec->y >> FIXSHIFT;
   if (ix == 0 && iy == 0)
     return 0;
-  return qatan2(ix, iy);
+  return qatan2(iy, ix);
 }
