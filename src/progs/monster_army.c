@@ -109,8 +109,23 @@ static void army_run(edict_t *self) {
 }
 
 static void army_fire(edict_t *self) {
+  ai_face(self);
+
   Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, SFXID_WEAPONS_GUNCOCK, &self->v.origin, SND_MAXVOL, ATTN_NORM);
   self->v.effects |= EF_MUZZLEFLASH;
+
+  // fire somewhat behind the player, so a dodging player is harder to hit
+  edict_t *en = self->v.monster->enemy;
+  x16vec3_t dir;
+  x32 sqrlen;
+  const x32vec3_t aim = {{
+    en->v.origin.x - en->v.velocity.x / 5 - self->v.origin.x,
+    en->v.origin.y - en->v.velocity.y / 5 - self->v.origin.y,
+    en->v.origin.z - en->v.velocity.z / 5 - self->v.origin.z
+  }};
+  XVecNormLS(&aim, &dir, &sqrlen);
+
+  utl_firebullets(self, 4, &dir, FTOX(0.1), FTOX(0.1));
 }
 
 static void army_missile(edict_t *self) {
@@ -143,7 +158,7 @@ static void army_start_pain(edict_t *self, edict_t *attacker, s16 damage) {
     monster_set_state(self, MSTATE_PAIN_C);
   }
 
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_SOLDIER_PAIN1, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_SOLDIER_PAIN2, &self->v.origin, SND_MAXVOL, ATTN_NORM);
 }
 
 static void army_pain_a(edict_t *self) {
