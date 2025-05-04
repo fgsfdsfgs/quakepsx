@@ -46,6 +46,10 @@ void G_ParseMapEnts(bmodel_t *mdl) {
 
   gs.max_edict = ent - gs.edicts - 1;
 
+  // mark the rest as free
+  for (i = gs.max_edict + 1; i < gs.num_edicts; ++i, ++ent)
+    ent->free = true;
+
   // this is no longer required
   Mem_Free(mdl->mapents);
   mdl->mapents = NULL;

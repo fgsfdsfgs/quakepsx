@@ -130,5 +130,5 @@ struct edict_s {
 
 #define EDICT_FROM_AREA(l) STRUCT_FROM_LINK(l, edict_t, area)
 
-edict_t *ED_Alloc(u8 classname);
+edict_t *ED_Alloc(void);
 void ED_Free(edict_t *ed);
