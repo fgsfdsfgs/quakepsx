@@ -38,7 +38,7 @@ FORCEINLINE x32 xmul32(const x32 x, const x32 y) {
 }
 
 FORCEINLINE x32 xdiv32(const x32 x, const x32 y) {
-  return ((x << FIXSHIFT) / y);
+  return (((s64)x << FIXSHIFT) / y);
 }
 
 FORCEINLINE x32 xsign32(const x32 x) {

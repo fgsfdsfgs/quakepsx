@@ -117,10 +117,15 @@ FORCEINLINE void XVecMulAddS(const x16vec3_t *a, const x16 b, const x16vec3_t *c
   out->z = a->z + xmul32(b, c->z);
 }
 
+FORCEINLINE x32 XVecDotLL(const x32vec3_t *a, const x32vec3_t *b) {
+  return (xmul32(a->x, b->x) + xmul32(a->y, b->y) + xmul32(a->z, b->z));
+}
+
+FORCEINLINE x32 XVecDotSL(const x16vec3_t *a, const x32vec3_t *b) {
+  return (xmul32(a->x, b->x) + xmul32(a->y, b->y) + xmul32(a->z, b->z));
+}
+
 extern x32 XVecLengthSqrL(const x32vec3_t *v);
 extern s32 XVecLengthSqrIntL(const x32vec3_t *v);
 extern x32 XVecNormLS(const x32vec3_t *in, x16vec3_t *out, x32 *out_xysqrlen);
-
-extern x32 XVecDotLL(const x32vec3_t *a, const x32vec3_t *b);
-extern x32 XVecDotSL(const x16vec3_t *a, const x32vec3_t *b);
 extern void XVecCrossSS(const x16vec3_t *a, const x16vec3_t *b, x16vec3_t *out);
