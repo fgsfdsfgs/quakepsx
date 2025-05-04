@@ -14,6 +14,8 @@ int BoxOnPlaneSide(const x32vec3_t *emins, const x32vec3_t *emaxs, const mplane_
 
 x16 VecToYaw(const x32vec3_t *vec);
 
+MATRIX *RotMatrixZY(SVECTOR *r, MATRIX *m);
+
 static inline x16 VecDeltaToYaw(const x32vec3_t *va, const x32vec3_t *vb) {
   x32vec3_t delta;
   XVecSub(va, vb, &delta);

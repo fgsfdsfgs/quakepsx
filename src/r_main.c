@@ -483,14 +483,13 @@ static inline void DrawEntity(edict_t *ed) {
   } else {
     // set rotation
     r->vx = ed->v.angles.z;
-    r->vy = -ed->v.angles.x;
-    r->vz = ed->v.angles.y;
+    r->vy = ed->v.angles.x;
     if (((amodel_t *)ed->v.model)->flags & EF_ROTATE) {
       r->vz = bobjrotate;
     } else {
       r->vz = ed->v.angles.y;
     }
-    RotMatrix(r, &rs.entmatrix);
+    RotMatrixZY(r, &rs.entmatrix);
     // rotate the offset first
     t->vx = ((amodel_t *)ed->v.model)->offset.x;
     t->vy = ((amodel_t *)ed->v.model)->offset.y;

@@ -145,3 +145,27 @@ x16 VecToYaw(const x32vec3_t *vec) {
     return 0;
   return qatan2(iy, ix);
 }
+
+MATRIX *RotMatrixZY(SVECTOR *r, MATRIX *m) {
+  short s[3], c[3];
+  MATRIX tm[2];
+
+  s[1] = isin(r->vy); s[2] = isin(r->vz);
+  c[1] = icos(r->vy); c[2] = icos(r->vz);
+
+  // mZ
+  tm[1].m[0][0] = c[2];  tm[1].m[0][1] = -s[2]; tm[1].m[0][2] = 0;
+  tm[1].m[1][0] = s[2];  tm[1].m[1][1] = c[2];  tm[1].m[1][2] = 0;
+  tm[1].m[2][0] = 0;     tm[1].m[2][1] = 0;     tm[1].m[2][2] = ONE;
+
+  // mY
+  tm[0].m[0][0] = c[1];  tm[0].m[0][1] = 0;     tm[0].m[0][2] = s[1];
+  tm[0].m[1][0] = 0;     tm[0].m[1][1] = ONE;   tm[0].m[1][2] = 0;
+  tm[0].m[2][0] = -s[1]; tm[0].m[2][1] = 0;     tm[0].m[2][2] = c[1];
+
+  PushMatrix();
+  MulMatrix0(&tm[1], &tm[0], m);
+  PopMatrix();
+
+  return m;
+}
