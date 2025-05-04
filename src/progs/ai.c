@@ -585,3 +585,10 @@ void ai_checkrefire(edict_t *self) {
 void ai_drop_backpack(edict_t *self) {
 
 }
+
+void ai_gib(edict_t *self) {
+  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_PLAYER_GIB, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  fx_throw_head(self, MDLID_GIB1, self->v.health);
+  fx_throw_gib(&self->v.origin, MDLID_GIB2, self->v.health);
+  fx_throw_gib(&self->v.origin, MDLID_GIB3, self->v.health);
+}

@@ -38,5 +38,9 @@ void ED_Free(edict_t *ed) {
   ed->v.angles = x16vec3_origin;
   ed->v.nextthink = -1;
   ed->v.solid = SOLID_NOT;
+  ed->v.touch = NULL;
+  ed->v.think = NULL;
+  ed->v.use = NULL;
+  ed->v.classname = 0xff;
   ed->freetime = gs.time;
 }

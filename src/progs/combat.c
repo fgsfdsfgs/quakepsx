@@ -145,9 +145,12 @@ void utl_traceattack(edict_t *self, s16 damage, const x32vec3_t *dir) {
   org.x -= dir->x * 4;
   org.y -= dir->y * 4;
   org.z -= dir->z * 4;
-  if (pr.trace->ent->v.flags & FL_TAKEDAMAGE)
+  if (pr.trace->ent->v.flags & FL_TAKEDAMAGE) {
     multidamage_add(self, pr.trace->ent, damage);
-  // TODO: particles
+    fx_spawn_blood(&org, damage);
+  } else {
+    fx_spawn_gunshot(&org);
+  }
 }
 
 void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x16 spread_x, const x16 spread_y) {

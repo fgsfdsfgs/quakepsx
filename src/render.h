@@ -15,6 +15,7 @@
 #define gte_stmac0_m(r0) __asm__ volatile( "mfc2   %0, $24;" : "=r"( r0 ) : )
 #define gte_stsxy0_m(r0) __asm__ volatile( "mfc2   %0, $12;" : "=r"( r0 ) : )
 #define gte_stsz1_m(r0)  __asm__ volatile( "mfc2   %0, $17;" : "=r"( r0 ) : )
+#define gte_stsz_m(r0)   __asm__ volatile( "mfc2   %0, $19;" : "=r"( r0 ) : )
 #define gte_stopz_m(r0)  __asm__ volatile( "mfc2   %0, $24;" : "=r"( r0 ) : )
 #define gte_ldsxy1_m(r0) __asm__ volatile( "mtc2   %0, $13;" : : "r"( r0 ) )
 #define gte_ldsz1_m(r0)  __asm__ volatile( "mtc2   %0, $17;" : : "r"( r0 ) )
@@ -38,7 +39,27 @@
 
 #define VMODEL_SCALE 3
 
+#define MAX_PARTICLES 512
+
+enum parttype_e {
+  PT_STATIC,
+  PT_GRAV,
+  PT_FIRE,
+  PT_EXPLODE,
+  PT_EXPLODE2
+};
+
+typedef struct {
+  s16vec3_t org;
+  u8 type;
+  u8 color;
+  s16vec3_t vel;
+  u8 ramp;
+  s8 die;
+} particle_t;
+
 typedef struct render_state_s {
+  particle_t particles[MAX_PARTICLES];
   RECT clip;
   MATRIX matrix;
   MATRIX entmatrix;
@@ -58,11 +79,13 @@ typedef struct render_state_s {
   u32 frame;
   u32 visframe;
   u32 debug;
+  u32 num_particles;
 } render_state_t;
 
 extern render_state_t rs;
 
 extern u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
+extern u32 r_palette[VID_NUM_COLORS]; // used for particles, etc
 
 extern int c_mark_leaves;
 extern int c_draw_polys;
@@ -92,6 +115,7 @@ void R_DrawBrushModel(bmodel_t *model);
 void R_DrawBBox(edict_t *ent);
 void R_DrawTextureChains(void);
 void R_DrawBlitSync(const pic_t *pic, int x, const int y);
+void R_DrawParticles(void);
 void R_RenderView(void);
 void R_Flip(void);
 
@@ -99,3 +123,8 @@ void R_InitLightStyles(void);
 void R_UpdateLightStyles(const x32 time);
 void R_SetLightStyle(const int i, const char *map);
 void R_LightEntity(edict_t *ent);
+
+void R_SpawnParticleEffect(const u8 type, const x32vec3_t *org, const x32vec3_t *vel, const u8 color, s16 count);
+void R_SpawnParticleExplosion(const x32vec3_t *org);
+void R_SpawnParticleTrail(const x32vec3_t *org, const x32vec3_t *oldorg, const u8 type);
+void R_UpdateParticles(void);

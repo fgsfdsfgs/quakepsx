@@ -185,13 +185,8 @@ static void dog_die_b(edict_t *self) {
 static void dog_start_die(edict_t *self) {
   // check for gib
   if (self->v.health < -35) {
-    // TODO
-    // sound(self, CHAN_VOICE, "player/udeath.wav", 1, ATTN_NORM);
-    // ThrowGib("progs/gib3.mdl", self.health);
-    // ThrowGib("progs/gib3.mdl", self.health);
-    // ThrowGib("progs/gib3.mdl", self.health);
-    // ThrowHead("progs/h_dog.mdl", self.health);
-    // return;
+    ai_gib(self);
+    return;
   }
 
   // regular death

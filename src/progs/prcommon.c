@@ -20,6 +20,15 @@ void utl_makevectors(const x16vec3_t *angles) {
   AngleVectors(angles, &pr.v_forward, &pr.v_right, &pr.v_up);
 }
 
+void utl_remove(edict_t *self) {
+  ED_Free(self);
+}
+
+void utl_remove_delayed(edict_t *self) {
+  self->v.think = utl_remove;
+  self->v.nextthink = gs.time + 1;
+}
+
 // called on map change
 void Progs_NewMap(void) {
   memset(&pr, 0, sizeof(pr));

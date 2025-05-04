@@ -36,6 +36,8 @@ plist_t *gpu_plist;
 
 render_state_t rs;
 
+u32 r_palette[VID_NUM_COLORS]; // used for particles, etc
+
 int c_mark_leaves = 0;
 int c_draw_polys = 0;
 
@@ -135,6 +137,16 @@ void R_UploadClut(const u16 *clut) {
   static RECT clut_rect = { GPU_CLUT_X, GPU_CLUT_Y, VID_NUM_COLORS, 1 };
   LoadImage(&clut_rect, (void *)clut);
   DrawSync(0);
+
+  // store an RGBA8888 copy of it for particles and the like
+  u32 *dst = r_palette;
+  for (int i = 0; i < VID_NUM_COLORS; ++i, ++dst, ++clut) {
+    const u16 c = *clut;
+    const u8 r = (c & 31) << 3;
+    const u8 g = ((c >> 5) & 31) << 3;
+    const u8 b = ((c >> 10) & 31) << 3;
+    *dst = r | (g << 8) | (b << 16);
+  }
 }
 
 void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h) {
@@ -287,6 +299,8 @@ void R_RenderScene(void) {
   R_SetupGPU();
   R_MarkLeaves();
   R_DrawWorld();
+  R_UpdateParticles();
+  R_DrawParticles();
 }
 
 void R_NewMap(void) {
@@ -438,6 +452,14 @@ static inline void DrawEntity(edict_t *ed) {
   }
   if (i == ed->num_leafs)
     return; // not in any visible leaf
+
+  // TODO: not sure where to move this
+  if (ed->v.effects & (EF_GIB | EF_ROCKET)) {
+    if (ed->v.velocity.x || ed->v.velocity.y || ed->v.velocity.z)
+      R_SpawnParticleTrail(&ed->v.origin, &ed->v.oldorigin, (ed->v.effects & EF_GIB) ? 2 : 0);
+    else
+      ed->v.effects &= ~(EF_GIB | EF_ROCKET);
+  }
 
   rs.cur_entity = ed;
   rs.modelorg.x = ed->v.origin.x - rs.vieworg.x;

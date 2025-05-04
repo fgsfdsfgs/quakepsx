@@ -93,6 +93,7 @@ enum entclass_e {
   ENT_WEAPON_ROCKETLAUNCHER = 0x56,
   ENT_WEAPON_SUPERNAILGUN = 0x57,
   ENT_WEAPON_SUPERSHOTGUN = 0x58,
+  ENT_TEMP_ENTITY = 0x59,
 };
 
 extern think_fn_t ent_spawnfuncs[];

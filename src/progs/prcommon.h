@@ -174,14 +174,23 @@ typedef struct monster_fields_s {
   s16 lefty;
 } monster_fields_t;
 
-// tracing and other utilities
-const trace_t *utl_traceline(x32vec3_t *v1, x32vec3_t *v2, const qboolean nomonsters, edict_t *ent);
-void utl_makevectors(const x16vec3_t *angles);
-
 // common thinkers
 void null_think(edict_t *self);
 void null_touch(edict_t *self, edict_t *other);
 void cycler_think(edict_t *self, const s16 idle_start, const s16 idle_end);
+
+// effects
+void fx_spawn_blood(const x32vec3_t *org, const s16 damage);
+void fx_spawn_gunshot(const x32vec3_t *org);
+void fx_spawn_explosion(const x32vec3_t *org);
+void fx_throw_gib(const x32vec3_t *org, const s16 mdlid, const s16 damage);
+void fx_throw_head(edict_t *self, const s16 mdlid, const s16 damage);
+
+// tracing and other utilities
+const trace_t *utl_traceline(x32vec3_t *v1, x32vec3_t *v2, const qboolean nomonsters, edict_t *ent);
+void utl_makevectors(const x16vec3_t *angles);
+void utl_remove(edict_t *self);
+void utl_remove_delayed(edict_t *self);
 
 // combat
 void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage);
@@ -213,6 +222,7 @@ void ai_checkrefire(edict_t *self);
 void ai_drop_backpack(edict_t *self);
 void ai_foundtarget(edict_t *self);
 void ai_attack_finished(edict_t *self, const x32 dt);
+void ai_gib(edict_t *self);
 
 // player functions
 void player_pain(edict_t *self, edict_t *attacker, s16 damage);

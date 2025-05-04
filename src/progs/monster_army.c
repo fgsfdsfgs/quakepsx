@@ -200,14 +200,9 @@ static inline void army_finish_die(edict_t *self) {
 
 static void army_start_die(edict_t *self) {
   // check for gib
-  if (self->v.health < -35) {
-    // TODO
-    // sound(self, CHAN_VOICE, "player/udeath.wav", 1, ATTN_NORM);
-    // ThrowHead("progs/h_guard.mdl", self.health);
-    // ThrowGib("progs/gib1.mdl", self.health);
-    // ThrowGib("progs/gib2.mdl", self.health);
-    // ThrowGib("progs/gib3.mdl", self.health);
-    // return;
+  if (self->v.health < 1) {
+    ai_gib(self);
+    return;
   }
 
   // regular death

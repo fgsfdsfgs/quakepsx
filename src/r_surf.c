@@ -16,6 +16,10 @@
 #define CLIP_TOP 4
 #define CLIP_BOTTOM 8
 
+#define PT_SIZE_SHIFT 8
+#define PT_SIZE_MIN 1
+#define PT_SIZE_MAX 4
+
 typedef struct {
   s16vec3_t pos;
   s16 pad;
@@ -680,4 +684,42 @@ void R_DrawBBox(edict_t *ent) {
   line = DrawTwoLines(line, otz2, 0x008000, tv21, tv31, tv01);
 
   gpu_ptr = (u8 *)line;
+}
+
+static inline TILE *DrawParticle(TILE *tile, const SVECTOR *tv, const u8 color, const s32 sz) {
+  // pad is sz
+  if (tv->vx >= 0 && tv->vy >= 0 && tv->vx < VID_WIDTH && tv->vy < VID_HEIGHT) {
+    s32 r = PT_SIZE_MIN + ((0x7FFF / sz) >> PT_SIZE_SHIFT);
+    if (r > PT_SIZE_MAX) r = PT_SIZE_MAX;
+    *(u32 *)&tile->r0 = r_palette[color];
+    setTile(tile);
+    setWH(tile, r, r);
+    setXY0(tile, tv->vx - (r >> 1), tv->vy - (r >> 1));
+    addPrim(gpu_ot + sz, tile);
+    ++c_draw_polys;
+    ++tile;
+  }
+  return tile;
+}
+
+void R_DrawParticles(void) {
+  register s32 sz;
+  SVECTOR *tv = PSX_SCRATCH;
+  TILE* tile = (TILE *)gpu_ptr;
+
+  // TODO: figure out how to transform these in threes while still respecting p->die
+  particle_t *p = rs.particles;
+  for (int i = 0; i < rs.num_particles; ++i, ++p) {
+    if (p->die <= 0)
+      continue;
+    gte_ldv0(&p->org.x);
+    gte_rtps();
+    gte_stsxy(tv);
+    gte_stsz_m(sz);
+    sz >>= 2;
+    if (sz > 0 && sz < GPU_OTDEPTH)
+      tile = DrawParticle(tile, tv, p->color, sz);
+  }
+
+  gpu_ptr = (u8 *)tile;
 }
