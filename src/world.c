@@ -10,6 +10,8 @@ static hull_t box_hull;
 static xbspclipnode_t box_clipnodes[6];
 static mplane_t box_planes[6];
 
+static u8 checkpvs[1024];
+
 areanode_t g_areanodes[AREA_NODES];
 int g_numareanodes;
 
@@ -38,7 +40,7 @@ void G_InitBoxHull(void) {
   }
 }
 
-int G_HullPointContents(hull_t *hull, int num, x32vec3_t *p) {
+int G_HullPointContents(hull_t *hull, int num, const x32vec3_t *p) {
   x32 d;
   xbspclipnode_t *node;
   mplane_t *plane;
@@ -63,7 +65,7 @@ int G_HullPointContents(hull_t *hull, int num, x32vec3_t *p) {
   return num;
 }
 
-int G_PointContents(x32vec3_t *p) {
+int G_PointContents(const x32vec3_t *p) {
   int  cont;
 
   cont = G_HullPointContents(&gs.worldmodel->hulls[0], 0, p);
@@ -72,7 +74,7 @@ int G_PointContents(x32vec3_t *p) {
   return cont;
 }
 
-int G_TruePointContents(x32vec3_t *p) {
+int G_TruePointContents(const x32vec3_t *p) {
   return G_HullPointContents(&gs.worldmodel->hulls[0], 0, p);
 }
 
@@ -387,4 +389,85 @@ void G_MoveBounds(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t
       boxmaxs->d[i] = start->d[i] + maxs->d[i] + ONE;
     }
   }
+}
+
+edict_t *G_FindInRadius(const x32vec3_t *origin, s32 radius) {
+  edict_t *chain = gs.edicts;
+
+  const s32 sqrradius = radius * radius;
+
+  for (int i = 1; i < gs.num_edicts; ++i) {
+    edict_t *ent = gs.edicts + i;
+    if (!ent->free || !ent->v.solid)
+      continue;
+
+    x32vec3_t eorg;
+    for (int j = 0; j < 3; ++j)
+      eorg.d[j] = origin->d[j] - (ent->v.origin.d[j] + ((ent->v.mins.d[j] + ent->v.maxs.d[j]) >> 1));
+
+    if (XVecLengthSqrIntL(&eorg) > sqrradius)
+      continue;
+
+    ent->v.chain = chain;
+    chain = ent;
+  }
+
+  return chain;
+}
+
+edict_t *G_FindByTargetname(edict_t *start, const u16 targetname) {
+  edict_t *ed = start ? start : gs.edicts;
+  for (int i = EDICT_NUM(start); i < gs.num_edicts; ++i, ++ed) {
+    if (!ed->free && ed->v.targetname == targetname)
+      return ed;
+  }
+  return gs.edicts;
+}
+
+edict_t *G_FindByClassname(edict_t *start, const u8 classname) {
+  edict_t *ed = start ? start : gs.edicts;
+  for (int i = EDICT_NUM(start); i < gs.num_edicts; ++i, ++ed) {
+    if (!ed->free && ed->v.classname == classname)
+      return ed;
+  }
+  return gs.edicts;
+}
+
+static inline s32 G_NewCheckClient(s32 check) {
+  // TODO: multiple players maybe
+  if (check < 1)
+    check = 1;
+
+  edict_t *ent = gs.edicts + check;
+
+  // get the PVS for the entity
+  x32vec3_t org = {{ ent->v.origin.x, ent->v.origin.y, ent->v.origin.z + ent->v.viewheight }};
+  mleaf_t *leaf = Mod_PointInLeaf(&org, gs.worldmodel);
+  const u8 *pvs = Mod_LeafPVS(leaf, gs.worldmodel);
+  memcpy(checkpvs, pvs, (gs.worldmodel->numleafs+7)>>3);
+
+  return check;
+}
+
+edict_t *G_CheckClient(edict_t *self) {
+  // find a new check if on a new frame
+  if (gs.time - gs.lastchecktime >= PR_FRAMETIME) {
+    gs.lastcheck = G_NewCheckClient(gs.lastcheck);
+    gs.lastchecktime = gs.time;
+  }
+
+  // return check if it might be visible
+  edict_t *ent = gs.edicts + gs.lastcheck;
+  if (ent->free || ent->v.health <= 0)
+    return gs.edicts;
+
+  // if current entity can't possibly see the check entity, return 0
+  x32vec3_t view = {{ self->v.origin.x, self->v.origin.y, self->v.origin.z + self->v.viewheight }};
+  mleaf_t *leaf = Mod_PointInLeaf(&view, gs.worldmodel);
+  const int l = leaf - gs.worldmodel->leafs - 1;
+  if ((l < 0) || !(checkpvs[l >> 3] & (1 << (l & 7))))
+    return gs.edicts;
+
+  // might be able to see it
+  return ent;
 }

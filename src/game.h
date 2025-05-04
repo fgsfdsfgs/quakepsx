@@ -4,6 +4,9 @@
 #include "model.h"
 #include "entity.h"
 
+// progs frame time
+#define PR_FRAMETIME 410 // ~0.1 sec
+
 #define MAX_AMMO_TYPES 4
 
 enum player_flags_e {
@@ -32,6 +35,7 @@ typedef struct player_state_s {
   amodel_t *vmodel;
   x32 movespeed;
   x32 fallspeed;
+  x32 show_hostile;
   u32 buttons;
   u16 flags;
   s16 vmodelframe;
@@ -39,6 +43,8 @@ typedef struct player_state_s {
 
 typedef struct game_state_s {
   x32 time;
+  x32 lastchecktime;
+  s32 lastcheck;
   x16 frametime;
   s16 num_edicts;
   s16 max_edict;

@@ -97,6 +97,8 @@ void G_StartMap(const char *path) {
 
   R_NewMap();
 
+  Progs_NewMap();
+
   edict_t *ent = gs.edicts + 1;
   for (int i = 1; i <= gs.max_edict; ++i, ++ent) {
     G_SetModel(ent, ent->v.modelnum);

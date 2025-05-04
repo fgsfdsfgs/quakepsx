@@ -7,6 +7,9 @@
 #include "progs/entclasses.h"
 #include "progs/picids.h"
 
+// global
+void Progs_NewMap(void);
+
 // status bar
 void Sbar_Init(void);
 void Sbar_Draw(const player_state_t *p);

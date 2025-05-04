@@ -41,6 +41,13 @@
 #define FL_JUMPRELEASED  (1 << 12) // for jump debouncing
 #define FL_DEAD          (1 << 13)
 #define FL_TAKEDAMAGE    (1 << 14)
+#define FL_AUTOAIM       (1 << 15)
+
+// entity effects
+#define EF_BRIGHTFIELD 1
+#define EF_MUZZLEFLASH 2
+#define EF_BRIGHTLIGHT 4
+#define EF_DIMLIGHT    8
 
 // spawnflags
 #define SPAWNFLAG_NOT_EASY       256
@@ -52,9 +59,13 @@
 #define EDICT_NUM(e) ((e) - gs.edicts)
 
 typedef struct edict_s edict_t;
+typedef struct player_state_s player_state_t;
+typedef struct monster_fields_s monster_fields_t;
 
 typedef void (*think_fn_t)(edict_t *self);
 typedef void (*interact_fn_t)(edict_t *self, edict_t *other);
+typedef void (*damage_fn_t)(edict_t *self, edict_t *attacker, s16 damage);
+typedef qboolean (*check_fn_t)(edict_t *self);
 
 typedef struct entvars_s {
   u8 classname;
@@ -64,6 +75,10 @@ typedef struct entvars_s {
   s8 watertype;
   u8 noise;
   u8 light;
+  u8 effects;
+  u8 cnt;
+  u16 target;
+  u16 targetname;
   u16 flags;
   u16 spawnflags;
   s16 modelnum;
@@ -78,8 +93,10 @@ typedef struct entvars_s {
   interact_fn_t touch;
   interact_fn_t blocked;
   interact_fn_t use;
+  think_fn_t th_die;
   edict_t *owner;
   edict_t *groundentity;
+  edict_t *chain;
   x32vec3_t absmin, mins;
   x32vec3_t absmax, maxs;
   x32vec3_t size;
@@ -92,6 +109,8 @@ typedef struct entvars_s {
   union {
     void *extra_ptr;
     u32 extra_field;
+    player_state_t *player;
+    monster_fields_t *monster;
     struct {
       u32 type;
       u16 ammotype;

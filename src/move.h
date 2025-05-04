@@ -24,6 +24,8 @@
 
 #define G_FLOORNORMALZ 2867 // TO_FIX32(0.7)
 
+#define G_STEPSIZE TO_FIX32(18)
+
 typedef struct {
   x32vec3_t boxmins, boxmaxs; // enclose the test object along entire move
   x32vec3_t *mins, *maxs;     // size of the moving object
@@ -59,6 +61,7 @@ void G_WalkMove(edict_t *ent);
 void G_PushMove(edict_t *pusher, x16 time);
 
 qboolean G_DropToFloor(edict_t *ent);
+qboolean G_CheckBottom(edict_t *ent);
 
 void PM_PlayerMove(const x16 dt);
 

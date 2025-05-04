@@ -65,6 +65,13 @@ void R_UpdateLightStyles(const x32 time) {
 }
 
 void R_LightEntity(edict_t *ent) {
+  if (ent->v.effects & EF_MUZZLEFLASH) {
+    const u16 boost = ent->v.light + 0x80;
+    ent->v.light = boost > 0xFF ? 0xFF : boost;
+    ent->v.effects &= ~EF_MUZZLEFLASH; // FIXME: clear this for all entities
+    return;
+  }
+
   ent->v.light = 0;
 
   if (!ent->num_leafs)

@@ -1,7 +1,7 @@
 #include "prcommon.h"
 
 static void player_think(edict_t *self) {
-  player_state_t *plr = self->v.extra_ptr;
+  player_state_t *plr = self->v.player;
 
   // test gun
   if (!plr->vmodelframe && (plr->buttons & BTN_FIRE)) {
@@ -11,6 +11,8 @@ static void player_think(edict_t *self) {
       plr->vmodelframe++;
       Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, weap_table[plr->stats.weaponnum].noise,
         &self->v.origin, SND_MAXVOL, ATTN_NORM);
+      if (plr->stats.weaponnum != WEAP_AXE)
+        self->v.effects |= EF_MUZZLEFLASH;
     }
   } else if (plr->vmodelframe) {
     plr->vmodelframe++;
@@ -23,7 +25,7 @@ static void player_think(edict_t *self) {
 
 void spawn_player(edict_t *self) {
   player_state_t *plr = gs.player + EDICT_NUM(self) - 1;
-  self->v.extra_ptr = plr;
+  self->v.player = plr;
   plr->ent = self;
 
   self->v.solid = SOLID_SLIDEBOX;
@@ -35,6 +37,7 @@ void spawn_player(edict_t *self) {
   self->v.nextthink = 1;
   self->v.health = PLAYER_HEALTH;
   self->v.max_health = self->v.health;
+  self->v.flags |= FL_TAKEDAMAGE | FL_GODMODE;
 
   plr->viewofs.z = self->v.viewheight;
   plr->viewangles.y = gs.edicts[1].v.angles.y;
@@ -43,10 +46,12 @@ void spawn_player(edict_t *self) {
   plr->stats.weaponnum = WEAP_SHOTGUN;
   plr->stats.ammonum = AMMO_SHELLS;
   plr->vmodel = G_FindAliasModel(MDLID_V_SHOT);
+
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
 }
 
 void Player_PreThink(edict_t *ent) {
-  player_state_t *plr = ent->v.extra_ptr;
+  player_state_t *plr = ent->v.player;
 
   plr->flags &= ~PFL_JUMPED;
 
@@ -57,7 +62,7 @@ void Player_PreThink(edict_t *ent) {
 }
 
 void Player_PostThink(edict_t *ent) {
-  player_state_t *plr = ent->v.extra_ptr;
+  player_state_t *plr = ent->v.player;
 
   const u16 oldwater = (plr->flags & PFL_INWATER);
   const u16 newwater = (ent->v.watertype == CONTENTS_WATER) || (ent->v.watertype == CONTENTS_SLIME)
@@ -82,7 +87,7 @@ void Player_PostThink(edict_t *ent) {
 }
 
 void Player_SetWeapon(edict_t *ent, const s16 num) {
-  player_state_t *plr = ent->v.extra_ptr;
+  player_state_t *plr = ent->v.player;
 
   if ((plr->stats.items & weap_table[num].item) == 0)
     return;
@@ -96,7 +101,7 @@ void Player_SetWeapon(edict_t *ent, const s16 num) {
 }
 
 void Player_NextWeapon(edict_t *ent) {
-  player_state_t *plr = ent->v.extra_ptr;
+  player_state_t *plr = ent->v.player;
 
   s16 next = plr->stats.weaponnum + 1;
   for (; next < WEAP_COUNT && (plr->stats.items & weap_table[next].item) == 0; ++next);

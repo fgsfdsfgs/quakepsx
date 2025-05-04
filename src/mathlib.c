@@ -4,8 +4,47 @@
 #include "vector.h"
 #include "model.h"
 
-const x32vec3_t x32vec3_origin = { 0 };
-const x16vec3_t x16vec3_origin = { 0 };
+x32vec3_t x32vec3_origin = { 0 };
+x16vec3_t x16vec3_origin = { 0 };
+
+// atan2 for an integer XY, returns in the same angle format as everything else (4096 = 360 degrees)
+// method spied in Soul Reaver (soul-re)
+x16 qatan2(s32 x, s32 y) {
+  if (x == 0)
+    x = 1;
+
+  if (y == 0)
+    return (x < 1) * TO_DEG16(180);
+
+  const s32 ax = abs(x);
+  const s32 ay = abs(y);
+
+  if (x > 0) {
+    if (y > 0) {
+      if (ax < ay)
+        return (1024 - ((ax * 512) / ay));
+      else
+        return ((ay * 512) / ax);
+    } else {
+      if (ay < ax)
+        return (4096 - ((ay * 512) / ax));
+      else
+        return (((ax * 512) / ay) + 3072);
+    }
+  }
+
+  if (y > 0) {
+    if (ax < ay)
+      return (((ax * 512) / ay) + 1024);
+    else
+      return (2048 - ((ay * 512) / ax));
+  }
+
+  if (ay < ax)
+    return (((ay * 512) / ax) + 2048);
+  else
+    return (3072 - ((ax * 512) / ay));
+}
 
 void AngleVectors(const x16vec3_t *angles, x16vec3_t *forward, x16vec3_t *right, x16vec3_t *up) {
   register x16 angle;
@@ -97,4 +136,12 @@ int BoxOnPlaneSide(const x32vec3_t *emins, const x32vec3_t *emaxs, const mplane_
     sides |= 2;
 
   return sides;
+}
+
+x16 VecToYaw(const x32vec3_t *vec) {
+  const s32 ix = vec->x >> FIXSHIFT;
+  const s32 iy = vec->y >> FIXSHIFT;
+  if (ix == 0 && iy == 0)
+    return 0;
+  return qatan2(ix, iy);
 }

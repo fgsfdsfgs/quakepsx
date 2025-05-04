@@ -13,7 +13,6 @@ movevars_t *const movevars = PSX_SCRATCH;
 
 #define MAX_CLIP_PLANES 4
 #define STOP_EPSILON 256
-#define STEPSIZE TO_FIX32(18)
 #define MAX_PUSHED 64
 
 static int ClipVelocity(x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce) {
@@ -471,8 +470,8 @@ void G_WalkMove(edict_t *ent) {
 
   // try moving up and forward to go up a step
   ent->v.origin = oldorg; // back to start pos
-  upmove.z = STEPSIZE;
-  downmove.z = -STEPSIZE + xmul32(gs.frametime, oldvel.z);
+  upmove.z = G_STEPSIZE;
+  downmove.z = -G_STEPSIZE + xmul32(gs.frametime, oldvel.z);
 
   // move up
   G_PushEntity(ent, &upmove); // FIXME: don't link?
@@ -629,6 +628,62 @@ qboolean G_DropToFloor(edict_t *ent) {
     ent->v.groundentity = trace->ent;
     return true;
   }
+}
+
+qboolean G_CheckBottom(edict_t *ent) {
+  x32vec3_t mins, maxs, start, stop;
+  const trace_t *trace;
+  int x, y;
+  x32 mid, bottom;
+
+  XVecAdd(&ent->v.origin, &ent->v.mins, &mins);
+  XVecAdd(&ent->v.origin, &ent->v.maxs, &maxs);
+
+  // if all of the points under the corners are solid world, don't bother
+  // with the tougher checks
+  // the corners must be within 16 of the midpoint
+  start.z = mins.z - ONE;
+  for (x = 0; x <= 1; x++) {
+    for (y = 0; y <= 1; y++) {
+      start.x = x ? maxs.x : mins.x;
+      start.y = y ? maxs.y : mins.y;
+      if (G_PointContents(&start) != CONTENTS_SOLID)
+        goto realcheck;
+    }
+  }
+
+  // we got out easy
+  return true;
+
+realcheck:
+  // check it for real...
+  start.z = mins.z;
+
+  // the midpoint must be within 16 of the bottom
+  start.x = stop.x = (mins.x + maxs.x) >> 1;
+  start.y = stop.y = (mins.y + maxs.y) >> 1;
+  stop.z = start.z - 2 * G_STEPSIZE;
+  trace = G_Move(&start, &x32vec3_origin, &x32vec3_origin, &stop, true, ent);
+
+  if (trace->fraction == ONE)
+    return false;
+
+  mid = bottom = trace->endpos.z;
+
+  // the corners must be within 16 of the midpoint
+  for (x = 0; x <= 1; x++) {
+    for (y = 0; y <= 1; y++) {
+      start.x = stop.x = x ? maxs.x : mins.x;
+      start.y = stop.y = y ? maxs.y : mins.y;
+      trace = G_Move(&start, &x32vec3_origin, &x32vec3_origin, &stop, true, ent);
+      if (trace->fraction != ONE && trace->endpos.z > bottom)
+        bottom = trace->endpos.z;
+      if (trace->fraction == ONE || mid - trace->endpos.z > G_STEPSIZE)
+        return false;
+    }
+  }
+
+  return true;
 }
 
 static inline void PhysicsNone(edict_t *ent) {

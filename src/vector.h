@@ -54,11 +54,14 @@ DECLARE_VEC2_T_WORD(x16, u32);
 DECLARE_VEC2_T_WORD(s16, u32);
 DECLARE_VEC2_T_WORD(u8, u16);
 
-extern const x32vec3_t x32vec3_origin;
-extern const x16vec3_t x16vec3_origin;
+extern x32vec3_t x32vec3_origin;
+extern x16vec3_t x16vec3_origin;
 
 #define XVecAdd(a, b, c) \
   { (c)->x = (a)->x + (b)->x; (c)->y = (a)->y + (b)->y; (c)->z = (a)->z + (b)->z; }
+
+#define XVecAddInt(a, bx, by, bz, c) \
+  { (c)->x = (a)->x + TO_FIX32(bx); (c)->y = (a)->y + TO_FIX32(by); (c)->z = (a)->z + TO_FIX32(bz); }
 
 #define XVecSub(a, b, c) \
   { (c)->x = (a)->x - (b)->x; (c)->y = (a)->y - (b)->y; (c)->z = (a)->z - (b)->z; }
@@ -74,6 +77,9 @@ extern const x16vec3_t x16vec3_origin;
 
 #define XVecScaleSL(a, b, c) \
   { (c)->x = xmul32((a)->x, (x32)(b)); (c)->y = xmul32((a)->y, (x32)(b)); (c)->z = xmul32((a)->z, (x32)(b)); }
+
+#define XVecScaleInt(a, b, c) \
+  { (c)->x = (a)->x * (x32)(b); (c)->y = (a)->y * (x32)(b); (c)->z = (a)->z * (x32)(b); }
 
 #define XVecLengthS(v) \
   (SquareRoot12((v)->x * (v)->x + (v)->y * (v)->y + (v)->z * (v)->z))
@@ -112,6 +118,7 @@ FORCEINLINE void XVecMulAddS(const x16vec3_t *a, const x16 b, const x16vec3_t *c
 }
 
 extern x32 XVecLengthSqrL(const x32vec3_t *v);
+extern s32 XVecLengthSqrIntL(const x32vec3_t *v);
 extern x32 XVecNormLS(const x32vec3_t *in, x16vec3_t *out, x32 *out_xysqrlen);
 
 extern x32 XVecDotLL(const x32vec3_t *a, const x32vec3_t *b);

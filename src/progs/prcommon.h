@@ -13,8 +13,6 @@
 #include "picids.h"
 #include "sfxids.h"
 
-#define PR_FRAMETIME 410 // ~0.1 sec
-
 // player stuff
 #define PLAYER_HEALTH 100
 
@@ -64,12 +62,11 @@
 #define AMMO_ROCKETS 2
 #define AMMO_CELLS 3
 
-// common thinkers
-void null_think(edict_t *self);
-void cycler_think(edict_t *self, const s16 idle_start, const s16 idle_end);
-
-// status bar
-void Sbar_IndicateDamage(void);
+// sight range
+#define RANGE_MELEE 0
+#define RANGE_NEAR 1
+#define RANGE_MID 2
+#define RANGE_FAR 3
 
 // weapon table
 typedef struct {
@@ -81,3 +78,133 @@ typedef struct {
 } weapdesc_t;
 
 extern const weapdesc_t weap_table[WEAP_COUNT];
+
+// prog globals
+
+typedef struct {
+  // last result of a utl_makevectors
+  x16vec3_t v_forward;
+  x16vec3_t v_right;
+  x16vec3_t v_up;
+
+  // last trace
+  const trace_t *trace;
+
+  // when a monster becomes angry at a player, that monster will be used
+  // as the sight target the next frame so that monsters near that one
+  // will wake up even if they wouldn't have noticed the player
+  edict_t *sight_entity;
+  x32 sight_entity_time;
+
+  // combat globals
+  qboolean enemy_vis;
+  qboolean enemy_infront;
+  s16 enemy_range;
+  x16 enemy_yaw;
+
+  // stats
+  s16 total_monsters;
+  s16 killed_monsters;
+} pr_globals_t;
+
+extern pr_globals_t pr;
+
+// extra data for monsters
+
+enum monsterstate_e {
+  MSTATE_STAND,
+  MSTATE_WALK,
+  MSTATE_RUN,
+  MSTATE_MISSILE,
+  MSTATE_MELEE,
+  MSTATE_DIE_A,
+  MSTATE_DIE_B,
+  MSTATE_PAIN_A,
+  MSTATE_PAIN_B,
+  MSTATE_PAIN_C,
+  MSTATE_EXTRA,
+  MSTATE_COUNT
+};
+
+enum attackstate_e {
+  AS_NONE,
+  AS_SLIDING,
+  AS_STRAIGHT,
+  AS_MELEE,
+  AS_MISSILE
+};
+
+typedef struct {
+  think_fn_t think_fn;
+  s16 first_frame;
+  s16 last_frame;
+} monster_state_t;
+
+typedef struct {
+  const monster_state_t *state_table;
+  damage_fn_t fn_start_pain;
+  think_fn_t fn_start_die;
+  check_fn_t fn_check_attack;
+  s16 sight_sound;
+} monster_class_t;
+
+typedef struct monster_fields_s {
+  const monster_class_t *class;
+  const monster_state_t *state;
+  edict_t *enemy;
+  edict_t *oldenemy;
+  edict_t *movetarget;
+  edict_t *goalentity;
+  x32 hunt_time;
+  x32 pause_time;
+  x32 search_time;
+  x32 pain_finished;
+  x32 attack_finished;
+  x32 show_hostile;
+  x16 ideal_yaw;
+  x16 yaw_speed;
+  s16 state_num;
+  s16 attack_state;
+  s16 ammo_shells;
+  s16 ammo_rockets;
+  s16 lefty;
+} monster_fields_t;
+
+// tracing and other utilities
+const trace_t *utl_traceline(x32vec3_t *v1, x32vec3_t *v2, const qboolean nomonsters, edict_t *ent);
+void utl_makevectors(const x16vec3_t *angles);
+void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage);
+void utl_killed(edict_t *self, edict_t *attacker);
+
+// common thinkers
+void null_think(edict_t *self);
+void null_touch(edict_t *self, edict_t *other);
+void cycler_think(edict_t *self, const s16 idle_start, const s16 idle_end);
+
+// monster initialization
+void monster_set_state(edict_t *self, const s16 state);
+void monster_loop_state(edict_t *self, const s16 state);
+void monster_end_state(edict_t *self, const s16 state, const s16 next_state);
+void walkmonster_start(edict_t *self, const monster_class_t *class);
+void flymonster_start(edict_t *self, const monster_class_t *class);
+void swimmonster_start(edict_t *self, const monster_class_t *class);
+
+// monster physics and ai
+void monster_death_use(edict_t *self);
+qboolean ai_movestep(edict_t *ent, const x32vec3_t *move, const qboolean relink);
+qboolean ai_walkmove(edict_t *ent, x16 yaw, const x32 dist);
+void ai_stand(edict_t *self);
+void ai_face(edict_t *self);
+void ai_walk(edict_t *self, const x32 dist);
+void ai_run(edict_t *self, const x32 dist);
+void ai_back(edict_t *self, const x32 dist);
+void ai_pain(edict_t *self, const x32 dist);
+void ai_painforward(edict_t *self, const x32 dist);
+void ai_charge(edict_t *self, const x32 dist);
+void ai_checkrefire(edict_t *self);
+void ai_drop_backpack(edict_t *self);
+void ai_foundtarget(edict_t *self);
+void ai_attack_finished(edict_t *self, const x32 dt);
+
+// status bar
+void Sbar_IndicateDamage(const s16 damage);

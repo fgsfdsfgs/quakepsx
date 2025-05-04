@@ -26,7 +26,7 @@ static void ammo_touch(edict_t *self, edict_t *other) {
   if (other->v.classname != ENT_PLAYER)
     return;
 
-  player_state_t *plr = other->v.extra_ptr;
+  player_state_t *plr = other->v.player;
   const s16 ammo_type = (s16)self->v.extra_item.ammotype;
   const s16 ammo_count = (s16)self->v.extra_item.count;
   if (plr->stats.ammo[ammo_type] >= ammo_max[ammo_type])
@@ -45,7 +45,7 @@ static void weapon_touch(edict_t *self, edict_t *other) {
   if (other->v.classname != ENT_PLAYER)
     return;
 
-  player_state_t *plr = other->v.extra_ptr;
+  player_state_t *plr = other->v.player;
 
   s16 ammo = plr->stats.ammo[self->v.extra_item.ammotype];
   const s16 max_ammo = ammo_max[self->v.extra_item.ammotype];
@@ -84,7 +84,7 @@ static void health_touch(edict_t *self, edict_t *other) {
   if (other->v.classname != ENT_PLAYER)
     return;
 
-  player_state_t *plr = other->v.extra_ptr;
+  player_state_t *plr = other->v.player;
 
   if (self->v.extra_item.type == 2) {
     // megahealth
@@ -109,7 +109,7 @@ static void armor_touch(edict_t *self, edict_t *other) {
   if (other->v.classname != ENT_PLAYER)
     return;
 
-  player_state_t *plr = other->v.extra_ptr;
+  player_state_t *plr = other->v.player;
   if (plr->stats.armor >= self->v.extra_item.count)
     return;
 
@@ -136,7 +136,7 @@ static void place_item(edict_t *self) {
     Sys_Printf(
       "Item %d (%02x) fell out of world at (%d, %d, %d)\n",
       EDICT_NUM(self), self->v.classname,
-      self->v.origin.x, self->v.origin.y, self->v.origin.z
+      self->v.origin.x >> FIXSHIFT, self->v.origin.y >> FIXSHIFT, self->v.origin.z >> FIXSHIFT
     );
     ED_Free(self);
   }

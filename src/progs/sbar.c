@@ -112,6 +112,6 @@ void Sbar_Draw(const player_state_t *p) {
     DrawCrosshair();
 }
 
-void Sbar_IndicateDamage(void) {
+void Sbar_IndicateDamage(const s16 damage) {
   face_pain_time = rs.frametime + TO_FIX32(1);
 }

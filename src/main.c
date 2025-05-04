@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
   Mem_SetMark(MEM_MARK_LO);
 
-  G_RequestMap("START");
+  G_RequestMap("E1M1");
 
   sndorg = gs.edicts[1].v.origin;
 

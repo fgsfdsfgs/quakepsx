@@ -130,6 +130,30 @@ XVec2LengthSqrL:
   jr    $ra
   addu  $v0, $t1
 
+# takes a F1.19.12 vector, converts it to a F1.31.0 vector and returns the square of its length
+.global XVecLengthSqrIntL
+.type XVecLengthSqrIntL, @function
+XVecLengthSqrIntL:
+  # a0 - pointer to input vector
+  # v0 - return
+  lw     $t0, 0($a0)
+  lw     $t1, 4($a0)
+  sra    $t0, 12
+  lw     $t2, 8($a0)
+  sra    $t1, 12
+  mtc2   $t0, C2_IR1
+  sra    $t2, 12
+  mtc2   $t1, C2_IR2
+  mtc2   $t2, C2_IR3
+  nSQR(0)
+  mfc2  $t0, C2_MAC1
+  mfc2  $t1, C2_MAC2
+  move  $v0, $t0
+  mfc2  $t2, C2_MAC3
+  addu  $v0, $t1
+  jr    $ra
+  addu  $v0, $t2
+
 # calculates cross product of two x16vec3s pointed to by a0 and a1 and puts it in a2
 .global XVecCrossSS
 .type XVecCrossSS, @function
