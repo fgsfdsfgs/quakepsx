@@ -87,6 +87,9 @@ extern x16vec3_t x16vec3_origin;
 #define XVecLengthL(v) \
   (SquareRoot12(XVecLengthSqrL(v)))
 
+#define XVecLengthIntL(v) \
+  (SquareRoot0(XVecLengthSqrIntL(v)))
+
 #define XVecZero(v) \
   { (v)->x = 0; (v)->y = 0; (v)->z = 0; }
 

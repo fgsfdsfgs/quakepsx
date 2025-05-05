@@ -288,7 +288,7 @@ void R_DrawViewModel(const player_state_t *plr) {
   gte_SetTransMatrix(m);
 
   const u32 tint = (plr->ent->v.light << 16) | (plr->ent->v.light << 8) | (plr->ent->v.light);
-  R_DrawAliasViewModel(plr->vmodel, plr->vmodelframe, tint);
+  R_DrawAliasViewModel(plr->vmodel, plr->vmodel_frame, tint);
 
   PopMatrix();
 }
@@ -322,7 +322,10 @@ void R_RenderView(void) {
   const player_state_t *plr = &gs.player[0];
 
   XVecAdd(&plr->ent->v.origin, &plr->viewofs, &rs.vieworg);
-  rs.viewangles = plr->viewangles;
+
+  rs.viewangles.x = plr->viewangles.x + plr->punchangle;
+  rs.viewangles.y = plr->viewangles.y;
+  rs.viewangles.z = plr->viewangles.z;
 
   rs.frametime = Sys_FixedTime();
 
@@ -438,6 +441,8 @@ void R_RecursiveWorldNode(mnode_t *node) {
 }
 
 static inline void DrawEntity(edict_t *ed) {
+  ed->v.flags &= ~FL_VISIBLE;
+
   // check if the entity is in frustum
   if (R_CullBox(&ed->v.absmin, &ed->v.absmax))
     return;
@@ -452,6 +457,9 @@ static inline void DrawEntity(edict_t *ed) {
   }
   if (i == ed->num_leafs)
     return; // not in any visible leaf
+
+  // just rendered
+  ed->v.flags |= FL_VISIBLE;
 
   // TODO: not sure where to move this
   if (ed->v.effects & (EF_GIB | EF_ROCKET)) {

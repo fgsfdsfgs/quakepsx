@@ -35,6 +35,9 @@ static void TestInput(const x16 dt) {
       plr->ent->v.movetype = MOVETYPE_WALK;
   }
 
+  if (IN_ButtonPressed(PAD_R3))
+    Player_NextWeapon(plr->ent);
+
   if (IN_ButtonPressed(PAD_L2))
     onspeed = !onspeed;
 

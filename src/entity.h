@@ -38,7 +38,7 @@
 #define FL_ONGROUND      (1 <<  9)
 #define FL_PARTIALGROUND (1 << 10) // not all corners are valid
 #define FL_WATERJUMP     (1 << 11) // player jumping out of water
-#define FL_JUMPRELEASED  (1 << 12) // for jump debouncing
+#define FL_VISIBLE       (1 << 12) // was rendered last frame
 #define FL_DEAD          (1 << 13)
 #define FL_TAKEDAMAGE    (1 << 14)
 #define FL_AUTOAIM       (1 << 15)

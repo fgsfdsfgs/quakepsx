@@ -26,19 +26,22 @@ typedef struct stats_s {
 typedef struct player_state_s {
   stats_t stats;
   x16vec3_t viewangles;
-  x16vec3_t punchangle;
   x16vec3_t anglemove;
   s16vec3_t vmodelofs;
   x32vec3_t move;
   x32vec3_t viewofs;
   edict_t *ent;
   amodel_t *vmodel;
+  think_fn_t vmodel_think;
   x32 movespeed;
   x32 fallspeed;
   x32 show_hostile;
+  x32 attack_finished;
   u32 buttons;
   u16 flags;
-  s16 vmodelframe;
+  s16 vmodel_frame;
+  s16 vmodel_end_frame;
+  x16 punchangle;
 } player_state_t;
 
 typedef struct game_state_s {

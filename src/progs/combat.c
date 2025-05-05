@@ -1,9 +1,5 @@
 #include "prcommon.h"
 
-static inline x32 trace_random(void) {
-  return 2 * (xrand32() - HALF);
-}
-
 void multidamage_clear(void) {
   pr.multi_damage = 0;
   pr.multi_ent = gs.edicts;
@@ -154,8 +150,6 @@ void utl_traceattack(edict_t *self, s16 damage, const x32vec3_t *dir) {
 }
 
 void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x16 spread_x, const x16 spread_y) {
-  utl_makevectors(&self->v.angles);
-
   x32vec3_t src = {{
     self->v.origin.x + pr.v_forward.x * 10,
     self->v.origin.y + pr.v_forward.y * 10,
@@ -183,4 +177,174 @@ void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x
 
   multidamage_apply(self);
   // TODO: particles
+}
+
+static qboolean can_damage(edict_t *self, edict_t *targ, edict_t *inflictor) {
+  x32vec3_t end;
+  const trace_t *trace;
+
+  // bmodels need special checking because their origin is 0, 0, 0
+  if (targ->v.movetype == MOVETYPE_PUSH) {
+    end.x = (targ->v.absmin.x + targ->v.absmax.x) >> 1;
+    end.y = (targ->v.absmin.y + targ->v.absmax.y) >> 1;
+    end.z = (targ->v.absmin.z + targ->v.absmax.z) >> 1;
+    trace = utl_traceline(&inflictor->v.origin, &end, true, self);
+    return (trace->fraction == ONE) || (trace->ent == targ);
+  }
+
+  trace = utl_traceline(&inflictor->v.origin, &targ->v.origin, true, self);
+  if (trace->fraction == ONE)
+    return true;
+
+  // no direct LOS, check corners
+  // TODO: how much does this matter? seems a bit wasteful
+
+  end.x = targ->v.origin.x + TO_FIX32(15);
+  end.y = targ->v.origin.y + TO_FIX32(15);
+  end.z = targ->v.origin.z;
+  trace = utl_traceline(&inflictor->v.origin, &end, true, self);
+  if (trace->fraction == ONE)
+    return true;
+
+  end.x = targ->v.origin.x - TO_FIX32(15);
+  end.y = targ->v.origin.y - TO_FIX32(15);
+  trace = utl_traceline(&inflictor->v.origin, &end, true, self);
+  if (trace->fraction == ONE)
+    return true;
+
+  end.x = targ->v.origin.x - TO_FIX32(15);
+  end.y = targ->v.origin.y + TO_FIX32(15);
+  trace = utl_traceline(&inflictor->v.origin, &end, true, self);
+  if (trace->fraction == ONE)
+    return true;
+
+  end.x = targ->v.origin.x + TO_FIX32(15);
+  end.y = targ->v.origin.y - TO_FIX32(15);
+  trace = utl_traceline(&inflictor->v.origin, &end, true, self);
+  if (trace->fraction == ONE)
+    return true;
+
+  return false;
+}
+
+void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, edict_t *ignore) {
+  x32vec3_t org, delta;
+
+  edict_t *head = G_FindInRadius(&inflictor->v.origin, damage + 40);
+
+  for (; head && head != gs.edicts; head = head->v.chain) {
+    if (head == ignore || (head->v.flags & FL_TAKEDAMAGE) == 0)
+      continue;
+
+    org.x = head->v.origin.x + ((head->v.mins.x + head->v.maxs.x) >> 1);
+    org.y = head->v.origin.y + ((head->v.mins.y + head->v.maxs.y) >> 1);
+    org.z = head->v.origin.z + ((head->v.mins.z + head->v.maxs.z) >> 1);
+
+    XVecSub(&inflictor->v.origin, &org, &delta);
+
+    s32 points = XVecLengthIntL(&delta);
+    if (points < 0)
+      points = 0;
+
+    points = damage - points;
+
+    if (head == attacker)
+      points >>= 1;
+
+    if (points < 1)
+      continue;
+
+    if (can_damage(attacker, head, inflictor)) {
+      // shambler takes half damage from all explosions
+      if (head->v.classname == ENT_MONSTER_SHAMBLER)
+        points >>= 1;
+      utl_damage(head, inflictor, attacker, points);
+    }
+  }
+}
+
+void utl_become_explosion(edict_t *self) {
+  self->v.movetype = MOVETYPE_NONE;
+  self->v.velocity.x = 0;
+  self->v.velocity.y = 0;
+  self->v.velocity.z = 0;
+  self->v.touch = null_touch;
+  self->v.think = utl_remove;
+  self->v.nextthink = gs.time + FTOX(0.6);
+  self->v.solid = SOLID_NOT;
+  G_SetModel(self, 0);
+  // TODO: sprite
+  fx_spawn_explosion(&self->v.origin);
+}
+
+void utl_aim(edict_t *self, x16vec3_t *result) {
+  const trace_t *trace;
+
+#if !PLAYER_AIM_ENABLED
+  // TODO: setting
+  *result = pr.v_forward;
+  return;
+#endif
+
+  x32vec3_t start;
+  start.x = self->v.origin.x;
+  start.y = self->v.origin.y;
+  start.z = self->v.origin.z + TO_FIX32(20);
+
+  x32vec3_t end;
+  end.x = start.x + (x32)pr.v_forward.x * 2048;
+  end.y = start.y + (x32)pr.v_forward.y * 2048;
+  end.z = start.z + (x32)pr.v_forward.z * 2048;
+
+  // try sending a trace straight
+  trace = utl_traceline(&start, &end, false, self);
+  if (trace->ent && (trace->ent->v.flags & (FL_TAKEDAMAGE | FL_AUTOAIM)) == (FL_TAKEDAMAGE | FL_AUTOAIM)) {
+    *result = pr.v_forward;
+    return;
+  }
+
+  // try all possible entities that were visible last frame
+  x32 dist;
+  x32 bestdist = PLAYER_AIM_MINDIST;
+  x32 sqrdist;
+  x32vec3_t delta;
+  x16vec3_t dir;
+  x16vec3_t bestdir;
+  edict_t *check = gs.edicts + 1;
+  edict_t *bestent = NULL;
+  for (int i = 1; i <= gs.max_edict; ++i, ++check) {
+    if (check == self || (check->v.flags & (FL_TAKEDAMAGE | FL_AUTOAIM | FL_VISIBLE)) != (FL_TAKEDAMAGE | FL_AUTOAIM | FL_VISIBLE))
+      continue;
+
+    end.x = check->v.origin.x + ((check->v.mins.x + check->v.maxs.x) >> 1);
+    end.y = check->v.origin.y + ((check->v.mins.y + check->v.maxs.y) >> 1);
+    end.z = check->v.origin.z + ((check->v.mins.z + check->v.maxs.z) >> 1);
+
+    XVecSub(&end, &start, &delta);
+    XVecNormLS(&delta, &dir, &sqrdist);
+
+    dist = XVecDotSS(&dir, &pr.v_forward);
+    if (dist < bestdist)
+      continue;
+
+    trace = utl_traceline(&start, &end, false, self);
+    if (trace->ent == check) {
+      // can shoot at this one
+      bestdist = dist;
+      bestent = check;
+      bestdir = dir;
+    }
+  }
+
+  if (bestent) {
+    // uncomment this for vertical-only autoaim
+    // XVecSub(&bestent->v.origin, &self->v.origin, &delta);
+    // dist = XVecDotSL(&pr.v_forward, &delta);
+    // delta.x = xmul32(pr.v_forward.x, dist);
+    // delta.y = xmul32(pr.v_forward.y, dist);
+    // XVecNormLS(&delta, result, &sqrdist);
+    *result = bestdir;
+  } else {
+    *result = pr.v_forward;
+  }
 }

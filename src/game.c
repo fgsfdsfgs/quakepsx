@@ -132,6 +132,10 @@ void G_Update(const x16 dt) {
   else if (plr->viewangles.x > TO_DEG16(89))
     plr->viewangles.x = TO_DEG16(89);
 
+  plr->punchangle += XMUL16(TO_DEG16(10), gs.frametime);
+  if (plr->punchangle > 0)
+    plr->punchangle = 0;
+
   ped->v.angles.x = 0;
   ped->v.angles.y = plr->viewangles.y;
   ped->v.angles.z = 0;
@@ -165,6 +169,7 @@ void G_SetModel(edict_t *ent, s16 modelnum) {
     ent->v.model = G_FindAliasModel(modelnum);
   } else {
     ent->v.model = NULL;
+    ent->v.flags &= ~FL_VISIBLE;
   }
 }
 

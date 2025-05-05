@@ -125,6 +125,7 @@ static void army_fire(edict_t *self) {
   }};
   XVecNormLS(&aim, &dir, &sqrlen);
 
+  utl_makevectors(&self->v.angles);
   utl_firebullets(self, 4, &dir, FTOX(0.1), FTOX(0.1));
 }
 
@@ -200,7 +201,7 @@ static inline void army_finish_die(edict_t *self) {
 
 static void army_start_die(edict_t *self) {
   // check for gib
-  if (self->v.health < 1) {
+  if (self->v.health < -35) {
     ai_gib(self);
     return;
   }

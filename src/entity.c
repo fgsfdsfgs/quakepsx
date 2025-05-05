@@ -32,7 +32,7 @@ void ED_Free(edict_t *ed) {
   ed->free = true;
   ed->v.model = NULL;
   ed->v.modelnum = 0;
-  ed->v.flags &= ~(FL_TAKEDAMAGE | FL_AUTOAIM);
+  ed->v.flags &= ~(FL_TAKEDAMAGE | FL_AUTOAIM | FL_VISIBLE);
   ed->v.frame = 0;
   ed->v.origin = x32vec3_origin;
   ed->v.angles = x16vec3_origin;

@@ -20,6 +20,27 @@ void utl_makevectors(const x16vec3_t *angles) {
   AngleVectors(angles, &pr.v_forward, &pr.v_right, &pr.v_up);
 }
 
+void utl_vectoangles(const x16vec3_t *dir) {
+  x16 yaw, pitch;
+  x16 forward;
+
+  if (dir->x == 0 && dir->y == 0) {
+    yaw = 0;
+    if (dir->z > 0)
+      pitch = TO_DEG16(90);
+    else
+      pitch = TO_DEG16(270);
+  } else {
+    yaw = qatan2(dir->y, dir->x);
+    forward = SquareRoot12(XMUL16(dir->x, dir->x) + XMUL16(dir->y, dir->y));
+    pitch = qatan2(dir->z, forward);
+  }
+
+  pr.v_angles.x = pitch;
+  pr.v_angles.y = yaw;
+  pr.v_angles.z = 0;
+}
+
 void utl_remove(edict_t *self) {
   ED_Free(self);
 }

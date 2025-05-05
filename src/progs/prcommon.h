@@ -14,7 +14,9 @@
 #include "sfxids.h"
 
 // player stuff
-#define PLAYER_HEALTH 100
+#define PLAYER_HEALTH      100
+#define PLAYER_AIM_MINDIST FTOX(0.95)
+#define PLAYER_AIM_ENABLED 1
 
 // weapons
 #define WEAP_AXE              0
@@ -72,6 +74,7 @@
 typedef struct {
   const char *name;
   u32 item;
+  think_fn_t attack;
   s16 vmdl;
   s16 ammo;
   s16 noise;
@@ -86,6 +89,9 @@ typedef struct {
   x16vec3_t v_forward;
   x16vec3_t v_right;
   x16vec3_t v_up;
+
+  // last result of a utl_vectoangles
+  x16vec3_t v_angles;
 
   // last trace
   const trace_t *trace;
@@ -189,6 +195,7 @@ void fx_throw_head(edict_t *self, const s16 mdlid, const s16 damage);
 // tracing and other utilities
 const trace_t *utl_traceline(x32vec3_t *v1, x32vec3_t *v2, const qboolean nomonsters, edict_t *ent);
 void utl_makevectors(const x16vec3_t *angles);
+void utl_vectoangles(const x16vec3_t *dir);
 void utl_remove(edict_t *self);
 void utl_remove_delayed(edict_t *self);
 
@@ -197,6 +204,9 @@ void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage
 void utl_killed(edict_t *self, edict_t *attacker);
 void utl_traceattack(edict_t *self, s16 damage, const x32vec3_t *dir);
 void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x16 spread_x, const x16 spread_y);
+void utl_become_explosion(edict_t *self);
+void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, edict_t *ignore);
+void utl_aim(edict_t *self, x16vec3_t *result);
 
 // monster initialization
 void monster_set_state(edict_t *self, const s16 state);
@@ -230,3 +240,8 @@ void player_die(edict_t *self);
 
 // status bar
 void Sbar_IndicateDamage(const s16 damage);
+
+// combat random
+static inline x32 trace_random(void) {
+  return 2 * (xrand32() - HALF);
+}
