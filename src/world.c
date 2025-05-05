@@ -398,7 +398,7 @@ edict_t *G_FindInRadius(const x32vec3_t *origin, s32 radius) {
 
   for (int i = 1; i < gs.num_edicts; ++i) {
     edict_t *ent = gs.edicts + i;
-    if (!ent->free || !ent->v.solid)
+    if (ent->free || !ent->v.solid)
       continue;
 
     x32vec3_t eorg;
