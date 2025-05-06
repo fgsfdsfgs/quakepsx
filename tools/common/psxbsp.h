@@ -19,6 +19,7 @@
 #define MAX_XMAP_ENTMODELS  128
 #define MAX_XMAP_VISIBILITY 0x40000
 #define MAX_XMAP_LIGHTVALS  2
+#define MAX_XMAP_STRINGS  8192
 
 #define MAX_ENTITIES        1024
 #define MAX_SOUNDS          255
@@ -59,6 +60,7 @@
  * xbsplump_t XLMP_NODES
  * xbsplump_t XLMP_CLIPNODES
  * xbsplump_t XLMP_MODELS
+ * xbsplump_t XLMP_STRINGS
  * xbsplump_t XLMP_ENTITIES
  */
 
@@ -80,6 +82,7 @@ enum xbsplump_e {
   XLMP_NODES,
   XLMP_CLIPNODES,
   XLMP_MODELS,
+  XLMP_STRINGS,
   XLMP_ENTITIES,
 
   XLMP_COUNT
@@ -167,10 +170,17 @@ typedef struct {
 
 typedef struct {
   u8 classname;
+  s8 noise;
   u16 spawnflags;
   s16 model; // negative = brush models, positive = alias models
-  x32vec3_t origin;
+  s16 health;
+  s16 count; // also speed, damage, etc
+  u16 target;
+  u16 targetname;
+  u16 message; // offset into string lump
+  x32 wait;
   x16vec3_t angles;
+  x32vec3_t origin;
 } xmapent_t;
 
 typedef struct {

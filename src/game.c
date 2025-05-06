@@ -41,6 +41,13 @@ void G_ParseMapEnts(bmodel_t *mdl) {
     ent->v.angles = mapent->angles;
     ent->v.modelnum = mapent->model;
     ent->v.spawnflags = mapent->spawnflags;
+    ent->v.noise = mapent->noise;
+    ent->v.count = mapent->count;
+    ent->v.health = mapent->health;
+    ent->v.target = mapent->target;
+    ent->v.targetname = mapent->targetname;
+    ent->v.extra_trigger.wait = mapent->wait;
+    ent->v.extra_trigger.message = mapent->message;
     ++ent;
   }
 

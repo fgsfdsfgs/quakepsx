@@ -68,7 +68,7 @@ static inline void monster_start_go(edict_t *self, const x16 default_yawspeed, c
   if (self->v.target) {
     mon->movetarget = mon->goalentity = G_FindByTargetname(gs.edicts, self->v.target);
     if (mon->movetarget == gs.edicts) {
-      Sys_Printf("Monster %d (%02x) can't find target\n", EDICT_NUM(self), self->v.classname);
+      Sys_Printf("Monster %d (%02x) can't find target %x\n", EDICT_NUM(self), self->v.classname, self->v.target);
     } else {
       mon->ideal_yaw = VecDeltaToYaw(&mon->goalentity->v.origin, &self->v.origin);
       if (mon->movetarget->v.classname == ENT_PATH_CORNER) {

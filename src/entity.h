@@ -76,7 +76,7 @@ typedef struct entvars_s {
   u8 noise;
   u8 light;
   u8 effects;
-  u8 cnt;
+  s16 count;
   u16 target;
   u16 targetname;
   u16 flags;
@@ -108,14 +108,16 @@ typedef struct entvars_s {
   // class-specific extra data
   union {
     void *extra_ptr;
-    u32 extra_field;
     player_state_t *player;
     monster_fields_t *monster;
     struct {
       u32 type;
       u16 ammotype;
-      u16 count;
     } extra_item;
+    struct {
+      x32 wait;
+      u16 message;
+    } extra_trigger;
   };
 } entvars_t;
 

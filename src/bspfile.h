@@ -17,6 +17,7 @@
 #define MAX_MAP_MARKSURF   65535
 #define MAX_MAP_VISIBILITY 0x40000
 #define MAX_MAP_LIGHTVALS  2 // different light values on a single surface
+#define MAX_MAP_STRCHARS   8192
 
 #pragma pack(push, 1)
 
@@ -37,6 +38,7 @@
  * xbsplump_t LUMP_CLIPNODES
  * xbsplump_t LUMP_MODELS
  * xbsplump_t LUMP_ENTITIES
+ * xbsplump_t LUMP_STRINGS
  */
 
 enum xbsplump_e {
@@ -57,6 +59,7 @@ enum xbsplump_e {
   LUMP_NODES,
   LUMP_CLIPNODES,
   LUMP_MODELS,
+  LUMP_STRINGS,
   LUMP_ENTITIES,
 
   LUMP_COUNT
@@ -137,10 +140,17 @@ typedef struct {
 
 typedef struct {
   u8 classname;
+  s8 noise;
   u16 spawnflags;
   s16 model; // negative = brush models, positive = alias models
-  x32vec3_t origin;
+  s16 health;
+  s16 count; // also speed, damage, etc
+  u16 target;
+  u16 targetname;
+  u16 message; // offset into string lump
+  x32 wait;
   x16vec3_t angles;
+  x32vec3_t origin;
 } xbspent_t;
 
 typedef struct {

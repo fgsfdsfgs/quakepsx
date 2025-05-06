@@ -28,7 +28,7 @@ static void ammo_touch(edict_t *self, edict_t *other) {
 
   player_state_t *plr = other->v.player;
   const s16 ammo_type = (s16)self->v.extra_item.ammotype;
-  const s16 ammo_count = (s16)self->v.extra_item.count;
+  const s16 ammo_count = (s16)self->v.count;
   if (plr->stats.ammo[ammo_type] >= ammo_max[ammo_type])
     return;
 
@@ -67,7 +67,7 @@ static void weapon_touch(edict_t *self, edict_t *other) {
   }
 
   plr->stats.items |= self->v.extra_item.type;
-  ammo += self->v.extra_item.count;
+  ammo += self->v.count;
   if (ammo > max_ammo)
     ammo = max_ammo;
   plr->stats.ammo[self->v.extra_item.ammotype] = ammo;
@@ -90,17 +90,17 @@ static void health_touch(edict_t *self, edict_t *other) {
     // megahealth
     if (other->v.health >= 250)
       return;
-    // if (!T_Heal(other, self->v.extra_item.count, true))
+    // if (!T_Heal(other, self->v.count, true))
     //   return;
     plr->stats.items |= IT_SUPERHEALTH;
   } else {
     if (other->v.health >= other->v.max_health)
       return;
-    // if (!T_Heal(other, self->v.extra_item.count, false))
+    // if (!T_Heal(other, self->v.count, false))
     //   return;
   }
 
-  Scr_SetTopMsg(VA("You receive %d health", self->v.extra_item.count));
+  Scr_SetTopMsg(VA("You receive %d health", self->v.count));
 
   item_touch(self, other);
 }
@@ -110,12 +110,12 @@ static void armor_touch(edict_t *self, edict_t *other) {
     return;
 
   player_state_t *plr = other->v.player;
-  if (plr->stats.armor >= self->v.extra_item.count)
+  if (plr->stats.armor >= self->v.count)
     return;
 
-  plr->stats.armor += self->v.extra_item.count;
-  if (plr->stats.armor > self->v.extra_item.count)
-    plr->stats.armor = self->v.extra_item.count;
+  plr->stats.armor += self->v.count;
+  if (plr->stats.armor > self->v.count)
+    plr->stats.armor = self->v.count;
 
   Scr_SetTopMsg("You got armor");
 
@@ -149,7 +149,7 @@ static void spawn_item(edict_t *self, const s16 model, const u32 type, const s16
   self->v.touch = item_touch;
   self->v.nextthink = gs.time + PR_FRAMETIME * 2;
   self->v.extra_item.type = type;
-  self->v.extra_item.count = count;
+  self->v.count = count;
   self->v.noise = noise;
 }
 

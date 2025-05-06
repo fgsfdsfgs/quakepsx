@@ -317,10 +317,15 @@ static void do_entities(void) {
       xent->origin = qvec3_to_x32vec3(tmpvec);
 
     // angles
-    if (qent_get_vector(qent, "angles", tmpvec))
+    if (qent_get_vector(qent, "angles", tmpvec)) {
       xent->angles = qvec3_to_x16vec3_angles(tmpvec);
-    else if (qent_get_float(qent, "angle", &tmpfloat))
-      xent->angles.y = f32_to_x16deg(tmpfloat);
+    } else if (qent_get_float(qent, "angle", &tmpfloat)) {
+      // -1 and -2 are special angles for up and down
+      if (tmpfloat == -1.f || tmpfloat == -2.f)
+        xent->angles.y = (s32)tmpfloat;
+      else
+        xent->angles.y = f32_to_x16deg(tmpfloat);
+    }
 
     // model: models beginning with * are brush models
     xent->model = 0;
@@ -333,19 +338,42 @@ static void do_entities(void) {
       }
     }
 
-    // default to whatever we have in the model slot, for renderer testing purposes
-    if (!xent->model) {
-      if (strncmp(qent->classname, "info_", 5) != 0 && qent->info->mdlnums[0]) {
-        xent->model = qent->info->mdlnums[0];
-      }
-    }
+    // string fields
+
+    tmpstr = qent_get_string(qent, "message");
+    if (tmpstr)
+      xent->message = xbsp_string_add(tmpstr);
+
+    tmpstr = qent_get_string(qent, "target");
+    if (tmpstr)
+      xent->target = xbsp_targetname_id(tmpstr);
+
+    tmpstr = qent_get_string(qent, "targetname");
+    if (tmpstr)
+      xent->targetname = xbsp_targetname_id(tmpstr);
+
+    // other fields
 
     if (qent_get_int(qent, "spawnflags", &tmpint))
       xent->spawnflags = tmpint;
+
+    if (qent_get_int(qent, "sounds", &tmpint))
+      xent->noise = tmpint;
+
+    if (qent_get_int(qent, "count", &tmpint))
+      xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+
+    if (qent_get_float(qent, "wait", &tmpfloat))
+      xent->wait = f32_to_x32(tmpfloat);
+
+    if (qent_get_float(qent, "health", &tmpfloat))
+      xent->health = f32_to_x32(tmpfloat);
   }
 
   xbsp_lumps[XLMP_ENTITIES].size = sizeof(*xent) * xbsp_numentities;
-  printf("converted to %d entities, entity lump size = %d\n", xbsp_numentities, xbsp_lumps[XLMP_ENTITIES].size);
+  xbsp_lumps[XLMP_STRINGS].size = xbsp_numstrings;
+  printf("converted to %d entities, entity lump size = %d, string lump size = %d\n",
+    xbsp_numentities, xbsp_lumps[XLMP_ENTITIES].size, xbsp_lumps[XLMP_STRINGS].size);
 }
 
 static void load_entmodel(const int id, const char *mdlname) {

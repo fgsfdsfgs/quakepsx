@@ -416,8 +416,8 @@ edict_t *G_FindInRadius(const x32vec3_t *origin, s32 radius) {
 }
 
 edict_t *G_FindByTargetname(edict_t *start, const u16 targetname) {
-  edict_t *ed = start ? start : gs.edicts;
-  for (int i = EDICT_NUM(start); i < gs.num_edicts; ++i, ++ed) {
+  edict_t *ed = start;
+  for (int i = EDICT_NUM(start); i <= gs.max_edict; ++i, ++ed) {
     if (!ed->free && ed->v.targetname == targetname)
       return ed;
   }
@@ -425,8 +425,8 @@ edict_t *G_FindByTargetname(edict_t *start, const u16 targetname) {
 }
 
 edict_t *G_FindByClassname(edict_t *start, const u8 classname) {
-  edict_t *ed = start ? start : gs.edicts;
-  for (int i = EDICT_NUM(start); i < gs.num_edicts; ++i, ++ed) {
+  edict_t *ed = start;
+  for (int i = EDICT_NUM(start); i <= gs.max_edict; ++i, ++ed) {
     if (!ed->free && ed->v.classname == classname)
       return ed;
   }

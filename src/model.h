@@ -181,6 +181,9 @@ typedef struct bmodel_s {
   int numamodels;
   amodel_t *amodels;
 
+  int stringslen;
+  char *strings;
+
   struct bmodel_s *bmodels;
   struct bmodel_s **bmodelptrs;
 

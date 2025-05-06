@@ -284,6 +284,13 @@ void Mod_LoadSubmodels(bmodel_t *mod, const int fh) {
   Sys_FileRead(fh, out, lump.size); // same struct
 }
 
+void Mod_LoadStrings(bmodel_t *mod, const int fh) {
+  INIT_LUMP(lump, LUMP_STRINGS, sizeof(char), fh);
+  mod->strings = Mem_Alloc(lump.size);
+  mod->stringslen = lump.size;
+  Sys_FileRead(fh, mod->strings, lump.size);
+}
+
 void Mod_LoadEntities(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_ENTITIES, sizeof(xbspent_t), fh);
   const int numents = lump.size / sizeof(xbspent_t);
@@ -403,6 +410,7 @@ static void Mod_ParseBrushModel(bmodel_t *mod, const int fh) {
   Mod_MakeHull0(mod);
   Mod_LoadSubmodels(mod, fh);
   Mod_SetupSubmodels(mod);
+  Mod_LoadStrings(mod, fh);
 
   // load entities last so we can free the data after parsing it
   Mod_LoadEntities(mod, fh);

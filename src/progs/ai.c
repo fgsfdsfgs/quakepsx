@@ -263,7 +263,7 @@ void ai_movetogoal(edict_t *ent, const x32 dist) {
   some monsters refire twice automatically
 */
 void ai_attack_finished(edict_t *self, const x32 dt) {
-  self->v.cnt = 0; // refire count for nightmare
+  self->v.count = 0; // refire count for nightmare
   if (/*skill != */ 3)
     self->v.monster->attack_finished = gs.time + dt;
 }

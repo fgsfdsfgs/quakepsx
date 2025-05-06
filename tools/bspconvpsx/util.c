@@ -163,3 +163,11 @@ int resmap_parse(const char *fname, char *list, const int max_num, const int ent
 
   return max_index + 1;
 }
+
+const void *qmemsearch(const void *src, size_t src_len, const void *find, size_t find_len) {
+  for (; find_len <= src_len; src = (u8 *)src + 1, --src_len) {
+    if (!memcmp(src, find, find_len))
+      return src;
+  }
+  return NULL;
+}

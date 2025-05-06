@@ -51,6 +51,8 @@ int         xbsp_numentmodels;
 u8         *xbsp_entmodeldataptr = xbsp_entmodeldata;
 xmapent_t   xbsp_entities[MAX_ENTITIES];
 int         xbsp_numentities;
+char        xbsp_strings[MAX_XMAP_STRINGS];
+int         xbsp_numstrings = 1; // actually the number of chars; empty string is always present
 xmapsnd_t   xbsp_sounds[MAX_SOUNDS];
 int         xbsp_numsounds;
 u32         xbsp_spuptr = 0;
@@ -62,6 +64,10 @@ static u8  xbsp_texbitmap[VRAM_NUM_PAGES][VRAM_PAGE_WIDTH][VRAM_PAGE_HEIGHT];
 static u16 xbsp_texmaxy = 0;
 
 static u8  xbsp_spuram[SPURAM_SIZE];
+
+// same principle as the strings lump
+static char xbsp_targetnames[MAX_XMAP_STRINGS * 2];
+static int xbsp_numtargetnames = 1;
 
 xmapsnd_t *xbsp_spu_fit(qsfx_t *src) {
   for (s32 i = 0; i < xbsp_numsounds; ++i) {
@@ -368,6 +374,35 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   xbsp_faces[xbsp_numfaces++] = *xf;
 }
 
+static u16 xbsp_stringbuffer_add(const char *str, char *buf, int *bufnum, const int maxnum) {
+  if (str == NULL || !str[0])
+    return 0; // empty string
+
+  const int len = strlen(str) + 1;
+
+  const char *ptr = qmemsearch(buf, maxnum, str, len);
+  if (ptr)
+    return ptr - buf; // string already in lump
+
+  if (*bufnum + len > maxnum)
+    panic("ran out of string buffer space when adding the string: '%s'", str);
+
+  memcpy(buf + *bufnum, str, len);
+
+  const u16 ofs = *bufnum;
+  *bufnum += len;
+
+  return ofs;
+}
+
+u16 xbsp_string_add(const char *str) {
+  return xbsp_stringbuffer_add(str, xbsp_strings, &xbsp_numstrings, sizeof(xbsp_strings));
+}
+
+u16 xbsp_targetname_id(const char *targetname) {
+  return xbsp_stringbuffer_add(targetname, xbsp_targetnames, &xbsp_numtargetnames, sizeof(xbsp_targetnames));
+}
+
 int xbsp_write(const char *fname) {
   FILE *f = fopen(fname, "wb");
   if (!f) return -1;
@@ -415,6 +450,7 @@ int xbsp_write(const char *fname) {
   WRITE_LUMP(NODES,     nodes,      xnode_t,     f);
   WRITE_LUMP(CLIPNODES, clipnodes,  xclipnode_t, f);
   WRITE_LUMP(MODELS,    models,     xmodel_t,    f);
+  WRITE_LUMP(STRINGS,   strings,    char,        f);
   WRITE_LUMP(ENTITIES,  entities,   xmapent_t,   f);
 
   #undef WRITE_LUMP
