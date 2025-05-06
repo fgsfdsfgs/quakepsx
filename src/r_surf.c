@@ -96,9 +96,10 @@ static inline u32 LightVert(const u8 *col, const u8 *styles) {
   return lit | (lit << 8) | (lit << 16);
 }
 
-static inline void *EmitAliasTriangle(POLY_GT3 *poly, const u16 tpage, const int otz, const savert_t *sv0, const savert_t *sv1, const savert_t *sv2) {
-  if (!TriClip(poly)) {
-    setPolyGT3(poly);
+static inline void *EmitAliasTriangle(POLY_FT3 *poly, const u16 tpage, const int otz, const savert_t *sv0, const savert_t *sv1, const savert_t *sv2) {
+  // FT3 and GT3 have XY at the same offset, so this will work
+  if (!TriClip((POLY_GT3 *)poly)) {
+    setPolyFT3(poly);
     poly->tpage = tpage;
     poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
     addPrim(gpu_ot + otz, poly);
@@ -411,7 +412,7 @@ void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {
   const int numverts = model->numverts;
   const int numtris = model->numtris;
   const u8vec3_t *averts = model->frames + (frame * numverts);
-  POLY_GT3 *poly = (POLY_GT3 *)gpu_ptr;
+  POLY_FT3 *poly = (POLY_FT3 *)gpu_ptr;
   int i;
 
   // transform all verts first
@@ -475,8 +476,6 @@ void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {
     poly->u2 = tri->uvs[2].u;
     poly->v2 = tri->uvs[2].v;
     *(u32 *)&poly->r0 = tint;
-    *(u32 *)&poly->r1 = tint;
-    *(u32 *)&poly->r2 = tint;
 
     poly = EmitAliasTriangle(poly, tpage, otz, sv0, sv1, sv2);
   }
@@ -490,7 +489,7 @@ void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint) {
   const int numverts = model->numverts;
   const int numtris = model->numtris;
   const u8vec3_t *averts = model->frames + (frame * numverts);
-  POLY_GT3 *poly;
+  POLY_FT3 *poly;
   int i;
 
   // transform all verts first
@@ -537,7 +536,7 @@ void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint) {
 
     // shit is pre-sorted
     // set positions, UVs and colors
-    poly = (POLY_GT3 *)gpu_ptr;
+    poly = (POLY_FT3 *)gpu_ptr;
     *(u32 *)&poly->x0 = *(u32 *)&sv0->pos.x;
     *(u32 *)&poly->x1 = *(u32 *)&sv1->pos.x;
     *(u32 *)&poly->x2 = *(u32 *)&sv2->pos.x;
@@ -548,9 +547,7 @@ void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint) {
     poly->u2 = tri->uvs[2].u;
     poly->v2 = tri->uvs[2].v;
     *(u32 *)&poly->r0 = tint;
-    *(u32 *)&poly->r1 = tint;
-    *(u32 *)&poly->r2 = tint;
-    setPolyGT3(poly);
+    setPolyFT3(poly);
     poly->tpage = tpage;
     poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
     R_AddScreenPrim(sizeof(*poly));
