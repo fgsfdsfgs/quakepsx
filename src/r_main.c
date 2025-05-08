@@ -484,10 +484,15 @@ static inline void DrawEntity(edict_t *ed) {
   // if this is an alias model, rotate it and add its offset and scale to the matrix
   // otherwise just translate by origin, since brush models don't rotate
   if (ed->v.modelnum < 0) {
-    t->vx = ed->v.origin.x >> FIXSHIFT;
-    t->vy = ed->v.origin.y >> FIXSHIFT;
-    t->vz = ed->v.origin.z >> FIXSHIFT;
-    TransMatrix(&rs.entmatrix, t);
+    rs.entmatrix = (MATRIX){{
+      ONE, 0,   0,
+      0,   ONE, 0,
+      0,   0,   ONE
+    }, {
+      ed->v.origin.x >> FIXSHIFT,
+      ed->v.origin.y >> FIXSHIFT,
+      ed->v.origin.z >> FIXSHIFT
+    }};
   } else {
     // set rotation
     r->vx = ed->v.angles.z;
@@ -511,10 +516,10 @@ static inline void DrawEntity(edict_t *ed) {
     s->vz = ((amodel_t *)ed->v.model)->scale.z;
     ScaleMatrix(&rs.entmatrix, s);
     TransMatrix(&rs.entmatrix, t);
-    CompMatrixLV(&rs.matrix, &rs.entmatrix, &rs.entmatrix);
-    gte_SetRotMatrix(&rs.entmatrix);
   }
 
+  CompMatrixLV(&rs.matrix, &rs.entmatrix, &rs.entmatrix);
+  gte_SetRotMatrix(&rs.entmatrix);
   gte_SetTransMatrix(&rs.entmatrix);
 
   // draw
@@ -550,11 +555,11 @@ void R_DrawWorld(void) {
   // first collect world surfaces into texchains
   R_RecursiveWorldNode(gs.worldmodel->nodes);
 
-  // then draw alias entities and add BSP submodels into texchains
-  R_DrawEntities();
-
   // then draw the texchains
   R_DrawTextureChains();
+
+  // then draw alias entities and BSP submodels
+  R_DrawEntities();
 }
 
 void R_AddScreenPrim(const u32 primsize) {

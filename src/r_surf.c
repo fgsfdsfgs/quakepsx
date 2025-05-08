@@ -565,11 +565,11 @@ void R_DrawBrushModel(bmodel_t *model) {
     // find which side of the node we are on
     pplane = psurf->plane;
     dot = XVecDotSL(&pplane->normal, &rs.vieworg) - pplane->dist;
-    // draw the polygon
+    // draw the polygon right away
     if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
       (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON))) {
-      psurf->texchain = psurf->texture->texchain;
-      psurf->texture->texchain = psurf;
+      if ((psurf->texture->flags & (TEX_INVISIBLE | TEX_SKY | TEX_NULL)) == 0)
+        RenderBrushPoly(psurf);
     }
   }
 }
