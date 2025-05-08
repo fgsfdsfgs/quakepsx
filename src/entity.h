@@ -77,6 +77,8 @@ typedef struct entvars_s {
   u8 light;
   u8 effects;
   s16 count;
+  s16 dmg;
+  s16 speed;
   u16 targetname;
   u16 target;
   u16 killtarget;

@@ -372,10 +372,10 @@ static void do_entities(void) {
       xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
     if (qent_get_int(qent, "dmg", &tmpint))
-      xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+      xent->dmg = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
     if (qent_get_int(qent, "speed", &tmpint))
-      xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+      xent->speed = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
     if (qent_get_int(qent, "height", &tmpint))
       xent->height = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;

@@ -43,6 +43,8 @@ void G_ParseMapEnts(bmodel_t *mdl) {
     ent->v.spawnflags = mapent->spawnflags;
     ent->v.noise = mapent->noise;
     ent->v.count = mapent->count;
+    ent->v.speed = mapent->speed;
+    ent->v.dmg = mapent->dmg;
     ent->v.health = mapent->health;
     ent->v.target = mapent->target;
     ent->v.killtarget = mapent->killtarget;

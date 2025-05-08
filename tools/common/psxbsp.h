@@ -174,7 +174,9 @@ typedef struct {
   u16 spawnflags;
   s16 model; // negative = brush models, positive = alias models
   s16 health;
-  s16 count; // also speed, damage, etc
+  s16 dmg;
+  s16 speed;
+  s16 count;
   s16 height;
   u16 target;
   u16 killtarget;

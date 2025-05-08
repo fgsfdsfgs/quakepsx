@@ -122,8 +122,8 @@ static void spike_touch(edict_t *self, edict_t *other) {
 
   // hit something that bleeds
   if (other->v.flags & FL_TAKEDAMAGE) {
-    fx_spawn_blood(&self->v.origin, self->v.count);
-    utl_damage(other, self, self->v.owner, self->v.count);
+    fx_spawn_blood(&self->v.origin, self->v.dmg);
+    utl_damage(other, self, self->v.owner, self->v.dmg);
   } else {
     fx_spawn_gunshot(&self->v.origin);
   }
@@ -144,7 +144,7 @@ static edict_t *launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_
   newmis->v.velocity.x = (x32)dir->x * 1000;
   newmis->v.velocity.y = (x32)dir->y * 1000;
   newmis->v.velocity.z = (x32)dir->z * 1000;
-  newmis->v.count = 9; // damage
+  newmis->v.dmg = 9;
   G_SetModel(newmis, MDLID_SPIKE);
   G_SetSize(newmis, &x32vec3_origin, &x32vec3_origin);
   G_LinkEdict(newmis, false);
@@ -184,7 +184,7 @@ static void nailgun_attack_cycle(edict_t *self) {
 
   if (is_super && plr->stats.ammo[AMMO_NAILS]) {
     plr->stats.ammo[AMMO_NAILS]--;
-    newmis->v.count = 18;
+    newmis->v.dmg = 18;
   }
 
   attack_cycle(self);
