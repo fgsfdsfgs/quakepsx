@@ -175,10 +175,13 @@ typedef struct {
   s16 model; // negative = brush models, positive = alias models
   s16 health;
   s16 count; // also speed, damage, etc
+  s16 height;
   u16 target;
+  u16 killtarget;
   u16 targetname;
-  u16 message; // offset into string lump
+  u16 string; // offset into string lump
   x32 wait;
+  x32 delay;
   x16vec3_t angles;
   x32vec3_t origin;
 } xmapent_t;

@@ -57,5 +57,6 @@ int xbsp_texture_shrink(int *w, int *h);
 int xbsp_vram_height(void);
 void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp);
 u16 xbsp_string_add(const char *str);
+u16 xbsp_string_add_upper(const char *str);
 u16 xbsp_targetname_id(const char *targetname);
 int xbsp_write(const char *fname);

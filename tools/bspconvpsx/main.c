@@ -342,11 +342,19 @@ static void do_entities(void) {
 
     tmpstr = qent_get_string(qent, "message");
     if (tmpstr)
-      xent->message = xbsp_string_add(tmpstr);
+      xent->string = xbsp_string_add(tmpstr);
+
+    tmpstr = qent_get_string(qent, "map");
+    if (tmpstr)
+      xent->string = xbsp_string_add_upper(tmpstr);
 
     tmpstr = qent_get_string(qent, "target");
     if (tmpstr)
       xent->target = xbsp_targetname_id(tmpstr);
+
+    tmpstr = qent_get_string(qent, "killtarget");
+    if (tmpstr)
+      xent->killtarget = xbsp_targetname_id(tmpstr);
 
     tmpstr = qent_get_string(qent, "targetname");
     if (tmpstr)
@@ -363,8 +371,20 @@ static void do_entities(void) {
     if (qent_get_int(qent, "count", &tmpint))
       xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
+    if (qent_get_int(qent, "dmg", &tmpint))
+      xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+
+    if (qent_get_int(qent, "speed", &tmpint))
+      xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+
+    if (qent_get_int(qent, "height", &tmpint))
+      xent->height = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+
     if (qent_get_float(qent, "wait", &tmpfloat))
       xent->wait = f32_to_x32(tmpfloat);
+
+    if (qent_get_float(qent, "delay", &tmpfloat))
+      xent->delay = f32_to_x32(tmpfloat);
 
     if (qent_get_float(qent, "health", &tmpfloat))
       xent->health = f32_to_x32(tmpfloat);

@@ -97,6 +97,7 @@ enum entclass_e {
   ENT_SPIKE = 0x5a,
   ENT_GRENADE = 0x5b,
   ENT_ROCKET = 0x5c,
+  ENT_DELAYED_USE = 0x5d,
 };
 
 extern think_fn_t ent_spawnfuncs[];

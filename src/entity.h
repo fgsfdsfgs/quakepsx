@@ -77,8 +77,9 @@ typedef struct entvars_s {
   u8 light;
   u8 effects;
   s16 count;
-  u16 target;
   u16 targetname;
+  u16 target;
+  u16 killtarget;
   u16 flags;
   u16 spawnflags;
   s16 modelnum;
@@ -88,12 +89,13 @@ typedef struct entvars_s {
   x32 nextthink;
   x32 ltime;
   x32 viewheight;
+  x32 delay;
   void *model; // either model_t or aliashdr_t
   think_fn_t think;
   interact_fn_t touch;
   interact_fn_t blocked;
   interact_fn_t use;
-  think_fn_t th_die;
+  interact_fn_t th_die;
   edict_t *owner;
   edict_t *groundentity;
   edict_t *chain;
@@ -116,7 +118,7 @@ typedef struct entvars_s {
     } extra_item;
     struct {
       x32 wait;
-      u16 message;
+      u16 string;
     } extra_trigger;
   };
 } entvars_t;

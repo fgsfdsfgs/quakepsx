@@ -84,6 +84,42 @@ void R_SpawnParticleExplosion(const x32vec3_t *org) {
     rs.num_particles = i;
 }
 
+void R_SpawnParticleTeleport(const x32vec3_t *org) {
+  s16 i, j, k, n;
+  particle_t *p = rs.particles;
+
+  const s16vec3_t sorg = {{ org->x >> FIXSHIFT, org->y >> FIXSHIFT, org->z >> FIXSHIFT }};
+
+  n = 0;
+  for (i = -16; i < 16; i += 8) {
+    for (j = -16; j < 16; j += 8) {
+      for (k = -16; k < 16; k += 8) {
+        for (; n < MAX_PARTICLES; ++n, ++p) {
+          if (p->die > 0)
+            continue;
+          p->ramp = 0;
+          p->die = 1 + (rand() & 7);
+          p->color = 7 + (rand() & 7);
+          p->type = PT_GRAV;
+          p->org.x = sorg.x + i + (rand() & 3);
+          p->org.y = sorg.y + j + (rand() & 3);
+          p->org.z = sorg.z + k + (rand() & 3);
+          p->vel.x = i * (8 + (rand() & 63));
+          p->vel.y = j * (8 + (rand() & 63));
+          p->vel.z = k * (8 + (rand() & 63));
+          break;
+        }
+        if (n == MAX_PARTICLES)
+          goto _end;
+      }
+    }
+  }
+
+_end:
+  if (n > rs.num_particles)
+    rs.num_particles = n;
+}
+
 void R_SpawnParticleTrail(const x32vec3_t *org, const x32vec3_t *oldorg, const u8 type) {
   x32vec3_t delta;
   XVecSub(org, oldorg, &delta);

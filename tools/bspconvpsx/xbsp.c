@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #include <assert.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -397,6 +398,21 @@ static u16 xbsp_stringbuffer_add(const char *str, char *buf, int *bufnum, const 
 
 u16 xbsp_string_add(const char *str) {
   return xbsp_stringbuffer_add(str, xbsp_strings, &xbsp_numstrings, sizeof(xbsp_strings));
+}
+
+u16 xbsp_string_add_upper(const char *str) {
+  char tmp[256];
+
+  if (!str || !str[0])
+    return 0;
+
+  const int len = strlen(str);
+  int i;
+  for (i = 0; i < len && i < 255; ++i)
+    tmp[i] = toupper(str[i]);
+  tmp[i] = 0;
+
+  return xbsp_string_add(tmp);
 }
 
 u16 xbsp_targetname_id(const char *targetname) {

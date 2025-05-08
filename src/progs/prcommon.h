@@ -115,6 +115,8 @@ typedef struct {
   // stats
   s16 total_monsters;
   s16 killed_monsters;
+  s16 total_secrets;
+  s16 found_secrets;
 } pr_globals_t;
 
 extern pr_globals_t pr;
@@ -153,7 +155,7 @@ typedef struct {
 typedef struct {
   const monster_state_t *state_table;
   damage_fn_t fn_start_pain;
-  think_fn_t fn_start_die;
+  interact_fn_t fn_start_die;
   check_fn_t fn_check_attack;
   s16 sight_sound;
 } monster_class_t;
@@ -189,6 +191,7 @@ void cycler_think(edict_t *self, const s16 idle_start, const s16 idle_end);
 void fx_spawn_blood(const x32vec3_t *org, const s16 damage);
 void fx_spawn_gunshot(const x32vec3_t *org);
 void fx_spawn_explosion(const x32vec3_t *org);
+void fx_spawn_telefog(const x32vec3_t *org);
 void fx_throw_gib(const x32vec3_t *org, const s16 mdlid, const s16 damage);
 void fx_throw_head(edict_t *self, const s16 mdlid, const s16 damage);
 
@@ -198,6 +201,9 @@ void utl_makevectors(const x16vec3_t *angles);
 void utl_vectoangles(const x16vec3_t *dir);
 void utl_remove(edict_t *self);
 void utl_remove_delayed(edict_t *self);
+void utl_set_movedir(edict_t *self, x16vec3_t *movedir);
+void utl_usetargets(edict_t *self, edict_t *activator);
+void utl_sound(edict_t *self, const s16 chan, const s16 sndid, const u8 vol, const x32 attn);
 
 // combat
 void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage);
@@ -236,7 +242,7 @@ void ai_gib(edict_t *self);
 
 // player functions
 void player_pain(edict_t *self, edict_t *attacker, s16 damage);
-void player_die(edict_t *self);
+void player_die(edict_t *self, edict_t *killer);
 
 // status bar
 void Sbar_IndicateDamage(const s16 damage);

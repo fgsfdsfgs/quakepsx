@@ -45,9 +45,12 @@ void G_ParseMapEnts(bmodel_t *mdl) {
     ent->v.count = mapent->count;
     ent->v.health = mapent->health;
     ent->v.target = mapent->target;
+    ent->v.killtarget = mapent->killtarget;
     ent->v.targetname = mapent->targetname;
     ent->v.extra_trigger.wait = mapent->wait;
-    ent->v.extra_trigger.message = mapent->message;
+    ent->v.extra_trigger.string = mapent->string;
+    if (mapent->height)
+      ent->v.velocity.z = TO_FIX32(mapent->height);
     ++ent;
   }
 

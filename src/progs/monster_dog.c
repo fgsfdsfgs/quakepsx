@@ -32,7 +32,7 @@ static void dog_pain_b(edict_t *self);
 static void dog_die_a(edict_t *self);
 static void dog_die_b(edict_t *self);
 
-static void dog_start_die(edict_t *self);
+static void dog_start_die(edict_t *self, edict_t *killer);
 static void dog_start_pain(edict_t *self, edict_t *attacker, s16 damage);
 static qboolean dog_check_attack(edict_t *self);
 
@@ -182,7 +182,7 @@ static void dog_die_b(edict_t *self) {
   monster_end_state(self, MSTATE_DIE_B, -1);
 }
 
-static void dog_start_die(edict_t *self) {
+static void dog_start_die(edict_t *self, edict_t *killer) {
   // check for gib
   if (self->v.health < -35) {
     ai_gib(self);

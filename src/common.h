@@ -102,4 +102,4 @@ extern char com_vastring[MAX_VA_STRING];
 
 void COM_Init(void);
 
-extern qboolean registered;
+extern qboolean com_registered;

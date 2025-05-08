@@ -31,7 +31,7 @@ void utl_killed(edict_t *self, edict_t *attacker) {
   if (self->v.movetype == MOVETYPE_PUSH || self->v.movetype == MOVETYPE_NONE) {
     // doors, triggers, etc.
     if (self->v.th_die)
-      self->v.th_die(self);
+      self->v.th_die(self, attacker);
     return;
   }
 
@@ -49,7 +49,7 @@ void utl_killed(edict_t *self, edict_t *attacker) {
 
   monster_death_use(self);
   if (self->v.th_die)
-    self->v.th_die(self);
+    self->v.th_die(self, attacker);
 }
 
 void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage) {

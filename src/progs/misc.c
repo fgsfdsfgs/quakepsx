@@ -28,3 +28,21 @@ void spawn_ambient_swamp2(edict_t *self) {
   // SWAMP2 is basically the same as SWAMP1
   spawn_ambient(self, SFXID_AMBIENCE_SWAMP1, SND_MAXVOL >> 1);
 }
+
+void spawn_misc_explobox(edict_t *self) {
+  G_SetModel(self, MDLID_B_EXPLOB);
+  self->v.mins = ((amodel_t *)self->v.model)->mins;
+  self->v.maxs = ((amodel_t *)self->v.model)->maxs;
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
+  self->v.solid = SOLID_BBOX;
+  self->v.movetype = MOVETYPE_NONE;
+}
+
+void spawn_misc_explobox2(edict_t *self) {
+  G_SetModel(self, MDLID_B_EXBOX2);
+  self->v.mins = ((amodel_t *)self->v.model)->mins;
+  self->v.maxs = ((amodel_t *)self->v.model)->maxs;
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
+  self->v.solid = SOLID_BBOX;
+  self->v.movetype = MOVETYPE_NONE;
+}

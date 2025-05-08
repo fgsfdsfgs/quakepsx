@@ -50,6 +50,86 @@ void utl_remove_delayed(edict_t *self) {
   self->v.nextthink = gs.time + 1;
 }
 
+void utl_set_movedir(edict_t *self, x16vec3_t *movedir) {
+  if (self->v.angles.x == 0 && self->v.angles.z == 0) {
+    if (self->v.angles.y == -1) {
+      // up
+      movedir->x = 0;
+      movedir->y = 0;
+      movedir->z = ONE;
+      return;
+    } else if (self->v.angles.z == -2) {
+      // down
+      movedir->x = 0;
+      movedir->y = 0;
+      movedir->z = -ONE;
+      return;
+    }
+  }
+
+  utl_makevectors(&self->v.angles);
+  *movedir = pr.v_forward;
+
+  XVecZero(&self->v.angles);
+}
+
+static void delay_think(edict_t *self) {
+  utl_usetargets(self, self->v.extra_ptr);
+  utl_remove(self);
+}
+
+void utl_usetargets(edict_t *self, edict_t *activator) {
+  // check for a delay
+  if (self->v.delay) {
+    // create a temp object to fire at a later time
+    edict_t *t = ED_Alloc();
+    t->v.classname = ENT_DELAYED_USE;
+    t->v.nextthink = gs.time + self->v.delay;
+    t->v.think = delay_think;
+    t->v.owner = self;
+    t->v.target = self->v.target;
+    t->v.killtarget = self->v.killtarget;
+    t->v.extra_trigger.string = self->v.extra_trigger.string;
+    t->v.extra_ptr = activator;
+    return;
+  }
+
+  // print the string
+  const u16 msg = self->v.extra_trigger.string;
+  if (activator->v.classname == ENT_PLAYER && (msg || self->v.classname == ENT_TRIGGER_SECRET)) {
+    Scr_SetCenterMsg(msg ? (gs.worldmodel->strings + msg) : "You found a secret area!");
+    if (!self->v.noise)
+      utl_sound(activator, CHAN_VOICE, SFXID_MISC_TALK, SND_MAXVOL, ATTN_NORM);
+  }
+
+  // kill the killtargets
+  if (self->v.killtarget) {
+    edict_t *t = G_FindByTargetname(gs.edicts, self->v.killtarget);
+    while (t != gs.edicts) {
+      utl_remove(t);
+      t = G_FindByTargetname(t, self->v.killtarget);
+    }
+  }
+
+  // fire targets
+  if (self->v.target) {
+    edict_t *t = G_FindByTargetname(gs.edicts, self->v.target);
+    while (t != gs.edicts) {
+      if (t->v.use)
+        t->v.use(t, activator);
+      t = G_FindByTargetname(t, self->v.target);
+    }
+  }
+}
+
+void utl_sound(edict_t *self, const s16 chan, const s16 sndid, const u8 vol, const x32 attn) {
+  x32vec3_t org;
+  org.x = self->v.origin.x + ((self->v.mins.x + self->v.maxs.x) >> 1);
+  org.y = self->v.origin.y + ((self->v.mins.y + self->v.maxs.y) >> 1);
+  org.z = self->v.origin.z + ((self->v.mins.z + self->v.maxs.z) >> 1);
+  Snd_StartSoundId(EDICT_NUM(self), chan, sndid, &org, vol, attn);
+}
+
 // called on map change
 void Progs_NewMap(void) {
   memset(&pr, 0, sizeof(pr));

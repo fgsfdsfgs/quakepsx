@@ -37,6 +37,7 @@ typedef struct player_state_s {
   x32 fallspeed;
   x32 show_hostile;
   x32 attack_finished;
+  x32 teleport_time;
   u32 buttons;
   u16 flags;
   s16 vmodel_frame;

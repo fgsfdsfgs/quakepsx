@@ -25,7 +25,7 @@ extern void spawn_info_player_coop(edict_t *self) { }
 extern void spawn_info_player_deathmatch(edict_t *self) { }
 extern void spawn_info_player_start(edict_t *self) { }
 extern void spawn_info_player_start2(edict_t *self) { }
-extern void spawn_info_teleport_destination(edict_t *self) { }
+extern void spawn_info_teleport_destination(edict_t *self);
 extern void spawn_item_armor1(edict_t *self);
 extern void spawn_item_armor2(edict_t *self);
 extern void spawn_item_armorInv(edict_t *self);
@@ -71,18 +71,18 @@ extern void spawn_monster_wizard(edict_t *self);
 extern void spawn_monster_zombie(edict_t *self);
 extern void spawn_path_corner(edict_t *self) { }
 extern void spawn_trap_spikeshooter(edict_t *self) { }
-extern void spawn_trigger_changelevel(edict_t *self) { }
-extern void spawn_trigger_counter(edict_t *self) { }
-extern void spawn_trigger_hurt(edict_t *self) { }
-extern void spawn_trigger_monsterjump(edict_t *self) { }
-extern void spawn_trigger_multiple(edict_t *self) { }
-extern void spawn_trigger_once(edict_t *self) { }
-extern void spawn_trigger_onlyregistered(edict_t *self) { }
-extern void spawn_trigger_push(edict_t *self) { }
-extern void spawn_trigger_relay(edict_t *self) { }
-extern void spawn_trigger_secret(edict_t *self) { }
-extern void spawn_trigger_setskill(edict_t *self) { }
-extern void spawn_trigger_teleport(edict_t *self) { }
+extern void spawn_trigger_changelevel(edict_t *self);
+extern void spawn_trigger_counter(edict_t *self);
+extern void spawn_trigger_hurt(edict_t *self);
+extern void spawn_trigger_monsterjump(edict_t *self);
+extern void spawn_trigger_multiple(edict_t *self);
+extern void spawn_trigger_once(edict_t *self);
+extern void spawn_trigger_onlyregistered(edict_t *self);
+extern void spawn_trigger_push(edict_t *self);
+extern void spawn_trigger_relay(edict_t *self);
+extern void spawn_trigger_secret(edict_t *self);
+extern void spawn_trigger_setskill(edict_t *self);
+extern void spawn_trigger_teleport(edict_t *self);
 extern void spawn_weapon_grenadelauncher(edict_t *self);
 extern void spawn_weapon_lightning(edict_t *self);
 extern void spawn_weapon_nailgun(edict_t *self);

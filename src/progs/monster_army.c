@@ -38,7 +38,7 @@ static void army_pain_c(edict_t *self);
 static void army_die_a(edict_t *self);
 static void army_die_b(edict_t *self);
 
-static void army_start_die(edict_t *self);
+static void army_start_die(edict_t *self, edict_t *killer);
 static void army_start_pain(edict_t *self, edict_t *attacker, s16 damage);
 static qboolean army_check_attack(edict_t *self);
 
@@ -199,7 +199,7 @@ static inline void army_finish_die(edict_t *self) {
   ai_drop_backpack(self);
 }
 
-static void army_start_die(edict_t *self) {
+static void army_start_die(edict_t *self, edict_t *killer) {
   // check for gib
   if (self->v.health < -35) {
     ai_gib(self);

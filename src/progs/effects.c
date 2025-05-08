@@ -12,6 +12,20 @@ void fx_spawn_explosion(const x32vec3_t *org) {
   R_SpawnParticleExplosion(org);
 }
 
+static void telefog_play(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_MISC_R_TELE3, SND_MAXVOL, ATTN_NORM);
+  utl_remove(self);
+}
+
+void fx_spawn_telefog(const x32vec3_t *org) {
+  edict_t *s = ED_Alloc();
+  s->v.classname = ENT_TEMP_ENTITY;
+  s->v.origin = *org;
+  s->v.nextthink = gs.time + PR_FRAMETIME * 2;
+  s->v.think = telefog_play;
+  R_SpawnParticleTeleport(org);
+}
+
 static inline void velocity_for_damage(x32vec3_t *vel, const s16 damage) {
   vel->x = 200 * xrand32();
   vel->y = 200 * xrand32();

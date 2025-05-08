@@ -21,6 +21,7 @@ ent worldspawn
   mdl progs/gib3.mdl
   sfx sound/misc/r_tele3.wav
   sfx sound/misc/secret.wav
+  sfx sound/misc/talk.wav
   sfx sound/player/axhit2.wav
   sfx sound/player/death1.wav
   sfx sound/player/gib.wav
@@ -289,5 +290,11 @@ ent ambient_swamp1
 ent ambient_swamp2
   # swamp1.wav and swamp2.wav are basically the same
   sfx sound/ambience/swamp1.wav
+
+ent misc_explobox
+  mdl maps/b_explob.bsp
+
+ent misc_explobox2
+  mdl maps/b_exbox2.bsp
 
 # TODO: drip1.wav is insanely long

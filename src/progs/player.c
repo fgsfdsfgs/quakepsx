@@ -42,7 +42,7 @@ void player_pain(edict_t *self, edict_t *attacker, s16 damage) {
   Sbar_IndicateDamage(damage);
 }
 
-void player_die(edict_t *self) {
+void player_die(edict_t *self, edict_t *killer) {
   player_state_t *plr = self->v.player;
 
   plr->vmodel = NULL;

@@ -126,5 +126,6 @@ void R_LightEntity(edict_t *ent);
 
 void R_SpawnParticleEffect(const u8 type, const x32vec3_t *org, const x32vec3_t *vel, const u8 color, s16 count);
 void R_SpawnParticleExplosion(const x32vec3_t *org);
+void R_SpawnParticleTeleport(const x32vec3_t *org);
 void R_SpawnParticleTrail(const x32vec3_t *org, const x32vec3_t *oldorg, const u8 type);
 void R_UpdateParticles(void);
