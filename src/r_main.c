@@ -535,18 +535,12 @@ static inline void DrawEntity(edict_t *ed) {
 void R_DrawEntities(void) {
   bobjrotate = (gs.time >> 2) & (FIXSCALE - 1);
 
-  // save gte matrix
-  PushMatrix();
-
   edict_t *ed = gs.edicts;
   for (int i = 0; i <= gs.max_edict; ++i, ++ed) {
     if (ed->free || !ed->v.model)
       continue;
     DrawEntity(ed);
   }
-
-  // restore gte matrix
-  PopMatrix();
 }
 
 void R_DrawWorld(void) {
@@ -564,6 +558,10 @@ void R_DrawWorld(void) {
 
   // then draw alias entities and BSP submodels
   R_DrawEntities();
+
+  // restore gte matrix
+  gte_SetRotMatrix(&rs.matrix);
+  gte_SetTransMatrix(&rs.matrix);
 }
 
 void R_AddScreenPrim(const u32 primsize) {
