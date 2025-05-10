@@ -567,15 +567,16 @@ void ai_charge(edict_t *self, const x32 dist) {
 }
 
 void ai_back(edict_t *self, const x32 dist) {
-
+  const x16 reverse = (self->v.monster->ideal_yaw + TO_DEG16(180)) & (ONE - 1);
+  ai_walkmove(self, reverse, dist);
 }
 
 void ai_pain(edict_t *self, const x32 dist) {
-
+  ai_back(self, dist);
 }
 
 void ai_painforward(edict_t *self, const x32 dist) {
-
+  ai_walkmove(self, self->v.monster->ideal_yaw, dist);
 }
 
 void ai_checkrefire(edict_t *self, const s16 state) {
