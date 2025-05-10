@@ -482,8 +482,6 @@ static inline void DrawEntity(edict_t *ed) {
   VECTOR *s = (VECTOR *)(t + 1);
   SVECTOR *r = (SVECTOR *)(s + 1);
 
-  PushMatrix();
-
   // if this is an alias model, rotate it and add its offset and scale to the matrix
   // otherwise just translate by origin, since brush models don't rotate
   if (ed->v.modelnum < 0) {
@@ -532,13 +530,13 @@ static inline void DrawEntity(edict_t *ed) {
     R_LightEntity(ed);
     R_DrawAliasModel(ed->v.model, ed->v.frame, (ed->v.light << 16) | (ed->v.light << 8) | (ed->v.light));
   }
-
-  // restore the GTE matrix
-  PopMatrix();
 }
 
 void R_DrawEntities(void) {
   bobjrotate = (gs.time >> 2) & (FIXSCALE - 1);
+
+  // save gte matrix
+  PushMatrix();
 
   edict_t *ed = gs.edicts;
   for (int i = 0; i <= gs.max_edict; ++i, ++ed) {
@@ -546,6 +544,9 @@ void R_DrawEntities(void) {
       continue;
     DrawEntity(ed);
   }
+
+  // restore gte matrix
+  PopMatrix();
 }
 
 void R_DrawWorld(void) {
