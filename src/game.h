@@ -8,10 +8,12 @@
 #define PR_FRAMETIME 410 // ~0.1 sec
 
 #define MAX_AMMO_TYPES 4
+#define MAX_POWERUPS 5
 
 enum player_flags_e {
   PFL_JUMPED = (1 << 0),
   PFL_INWATER = (1 << 1),
+  PFL_NOAIR = (1 << 2),
 };
 
 typedef struct stats_s {
@@ -37,7 +39,11 @@ typedef struct player_state_s {
   x32 fallspeed;
   x32 show_hostile;
   x32 attack_finished;
+  x32 pain_finished;
+  x32 air_finished;
   x32 teleport_time;
+  x32 power_time[MAX_POWERUPS];
+  x32 power_warn[MAX_POWERUPS];
   u32 buttons;
   u16 flags;
   s16 vmodel_frame;

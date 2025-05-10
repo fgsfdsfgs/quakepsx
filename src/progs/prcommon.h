@@ -29,6 +29,13 @@
 #define WEAP_LIGHTNING        7
 #define WEAP_COUNT            8
 
+// powerups
+#define POWER_MEGAHEALTH 0
+#define POWER_INVIS      1
+#define POWER_INVULN     2
+#define POWER_SUIT       3
+#define POWER_QUAD       4
+
 // items
 #define IT_SHOTGUN          1u
 #define IT_SUPER_SHOTGUN    2u
@@ -236,6 +243,7 @@ void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x
 void utl_become_explosion(edict_t *self);
 void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, edict_t *ignore);
 void utl_aim(edict_t *self, x16vec3_t *result);
+qboolean utl_heal(edict_t *e, const s16 amount, const qboolean ignore_max);
 
 // monster initialization
 void monster_set_state(edict_t *self, const s16 state);

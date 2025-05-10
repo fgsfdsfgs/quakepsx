@@ -35,11 +35,11 @@ extern void spawn_item_artifact_invulnerability(edict_t *self);
 extern void spawn_item_artifact_super_damage(edict_t *self);
 extern void spawn_item_cells(edict_t *self);
 extern void spawn_item_health(edict_t *self);
-extern void spawn_item_key1(edict_t *self) { }
-extern void spawn_item_key2(edict_t *self) { }
+extern void spawn_item_key1(edict_t *self);
+extern void spawn_item_key2(edict_t *self);
 extern void spawn_item_rockets(edict_t *self);
 extern void spawn_item_shells(edict_t *self);
-extern void spawn_item_sigil(edict_t *self) { }
+extern void spawn_item_sigil(edict_t *self);
 extern void spawn_item_spikes(edict_t *self);
 extern void spawn_item_weapon(edict_t *self);
 extern void spawn_light(edict_t *self) { }

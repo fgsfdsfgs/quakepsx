@@ -348,3 +348,20 @@ void utl_aim(edict_t *self, x16vec3_t *result) {
     *result = pr.v_forward;
   }
 }
+
+qboolean utl_heal(edict_t *e, const s16 amount, const qboolean ignore_max) {
+  if (e->v.health <= 0)
+    return false;
+
+  if (!ignore_max && e->v.health >= e->v.max_health)
+    return false;
+
+  e->v.health += amount;
+  if (!ignore_max && e->v.health >= e->v.max_health)
+    e->v.health = e->v.max_health;
+
+  if (e->v.health > 250)
+    e->v.health = 250;
+
+  return true;
+}
