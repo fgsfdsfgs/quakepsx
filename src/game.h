@@ -59,6 +59,7 @@ typedef struct game_state_s {
   s16 num_edicts;
   s16 max_edict;
   s16 force_retouch;
+  s16 skill;
   qboolean paused;
   bmodel_t *worldmodel;
   bmodel_t **bmodels;

@@ -276,7 +276,9 @@ void spawn_info_teleport_destination(edict_t *self) {
 
 static void setskill_touch(edict_t *self, edict_t *other) {
   if (other->v.classname == ENT_PLAYER) {
-    // TODO: skill
+    // skill value is stored as a string for some reason, in the message field
+    const char *str = gs.worldmodel->strings + self->v.extra_trigger.string;
+    gs.skill = str[0] - '0';
   }
 }
 

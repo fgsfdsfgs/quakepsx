@@ -130,7 +130,7 @@ void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage
     if (targ->v.monster->class->fn_start_pain) {
       targ->v.monster->class->fn_start_pain(targ, attacker, take);
       // nightmare mode monsters don't go into pain frames often
-      if (/* skill == 3*/ 0)
+      if (gs.skill == 3)
         targ->v.monster->pain_finished = gs.time + TO_FIX32(5);
     }
   }

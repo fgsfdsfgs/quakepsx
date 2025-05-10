@@ -35,6 +35,12 @@ void G_ParseMapEnts(bmodel_t *mdl) {
   for (i = 2; i < mdl->nummapents; ++i, ++mapent) {
     if ((mapent->spawnflags & SPAWNFLAG_SKILL_MASK) == SPAWNFLAG_SKILL_MASK)
       continue; // deathmatch only
+    if ((mapent->spawnflags & SPAWNFLAG_NOT_EASY) && gs.skill == 0)
+      continue; // we're playing on easy and this does not spawn on easy
+    if ((mapent->spawnflags & SPAWNFLAG_NOT_MEDIUM) && gs.skill == 1)
+      continue; // we're playing on normal and this does not spawn on normal
+    if ((mapent->spawnflags & SPAWNFLAG_NOT_HARD) && gs.skill >= 2)
+      continue; // we're playing on hard or nightmare and this does not spawn on hard
     ent->free = false;
     ent->v.classname = mapent->classname;
     ent->v.origin = mapent->origin;
@@ -83,11 +89,12 @@ void G_StartMap(const char *path) {
 
   Scr_BeginLoading();
 
+  // wipe game state, but preserve skill
+  const s16 skill = gs.skill;
   memset(&gs, 0, sizeof(gs));
+  gs.skill = skill;
 
   Snd_NewMap();
-
-  gs.worldmodel = NULL;
 
   gs.num_edicts = 512;
   gs.edicts = Mem_ZeroAlloc(gs.num_edicts * sizeof(edict_t));
@@ -110,6 +117,8 @@ void G_StartMap(const char *path) {
     gs.edicts[1].v.origin.x >> FIXSHIFT,
     gs.edicts[1].v.origin.y >> FIXSHIFT,
     gs.edicts[1].v.origin.z >> FIXSHIFT);
+
+  Sys_Printf("skill is %d\n", gs.skill);
 
   R_NewMap();
 
