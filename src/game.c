@@ -115,8 +115,9 @@ void G_StartMap(const char *path) {
 
   Progs_NewMap();
 
+  const s16 max_edict = gs.max_edict; // don't spawn entities created during the loop
   edict_t *ent = gs.edicts + 1;
-  for (int i = 1; i <= gs.max_edict; ++i, ++ent) {
+  for (int i = 1; i <= max_edict; ++i, ++ent) {
     G_SetModel(ent, ent->v.modelnum);
     // TODO: move this to an appropriate place
     // execute the spawn function
