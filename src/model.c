@@ -282,6 +282,17 @@ void Mod_LoadSubmodels(bmodel_t *mod, const int fh) {
   mod->submodels = out;
   mod->numsubmodels = nummodels;
   Sys_FileRead(fh, out, lump.size); // same struct
+
+  // spread the mins / maxs by a pixel
+  xmodel_t *m = mod->submodels;
+  for (int i = 0; i < nummodels; ++i, ++m) {
+    m->mins.x -= 1;
+    m->mins.y -= 1;
+    m->mins.z -= 1;
+    m->maxs.x += 1;
+    m->maxs.y += 1;
+    m->maxs.z += 1;
+  }
 }
 
 void Mod_LoadStrings(bmodel_t *mod, const int fh) {
