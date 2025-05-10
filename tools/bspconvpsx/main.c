@@ -383,14 +383,14 @@ static void do_entities(void) {
     if (qent_get_int(qent, "height", &tmpint))
       xent->height = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
+    if (qent_get_int(qent, "health", &tmpint))
+      xent->health = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+
     if (qent_get_float(qent, "wait", &tmpfloat))
       xent->wait = f32_to_x32(tmpfloat);
 
     if (qent_get_float(qent, "delay", &tmpfloat))
       xent->delay = f32_to_x32(tmpfloat);
-
-    if (qent_get_float(qent, "health", &tmpfloat))
-      xent->health = f32_to_x32(tmpfloat);
   }
 
   xbsp_lumps[XLMP_ENTITIES].size = sizeof(*xent) * xbsp_numentities;
