@@ -59,7 +59,7 @@ static void player_tick_powerups(edict_t *self) {
         Scr_SetBlend(C_YELLOW, SCR_FLASH_TIME);
         // TODO: sound
         plr->power_warn[i] = gs.time + ONE;
-      } else if (plr->power_time[i] < gs.time) {
+      } else if (plr->power_warn[i] < gs.time) {
         Scr_SetBlend(C_YELLOW, SCR_FLASH_TIME);
         // TODO: sound
         plr->power_warn[i] = gs.time + ONE;
