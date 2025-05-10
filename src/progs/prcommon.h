@@ -186,6 +186,7 @@ typedef struct door_fields_s {
   x32vec3_t pos1;
   x32vec3_t pos2;
   x32vec3_t dest;
+  x32vec3_t start;
   edict_t *linked;
   edict_t *field;
   think_fn_t reached;

@@ -1,26 +1,8 @@
 #include "prcommon.h"
 
-void spawn_func_bossgate(edict_t *self) {
-  self->v.solid = SOLID_BSP;
-  self->v.movetype = MOVETYPE_PUSH;
-}
-
 void spawn_func_button(edict_t *self) {
   self->v.solid = SOLID_BSP;
   self->v.movetype = MOVETYPE_PUSH;
-}
-
-void spawn_func_door_secret(edict_t *self) {
-  self->v.solid = SOLID_BSP;
-  self->v.movetype = MOVETYPE_PUSH;
-}
-
-void spawn_func_episodegate(edict_t *self) {
-  self->v.solid = SOLID_BSP;
-  self->v.movetype = MOVETYPE_PUSH;
-  // TODO
-  self->v.nextthink = gs.time + PR_FRAMETIME;
-  self->v.think = utl_remove;
 }
 
 void spawn_func_illusionary(edict_t *self) {

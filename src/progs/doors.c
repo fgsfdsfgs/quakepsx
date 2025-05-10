@@ -1,10 +1,16 @@
 #include "prcommon.h"
 
-#define SPAWNFLAG_START_OPEN 1
-#define SPAWNFLAG_DONT_LINK 4
-#define SPAWNFLAG_GOLD_KEY 8
-#define SPAWNFLAG_SILVER_KEY 16
-#define SPAWNFLAG_TOGGLE 32
+#define SF_START_OPEN 1
+#define SF_DONT_LINK 4
+#define SF_GOLD_KEY 8
+#define SF_SILVER_KEY 16
+#define SF_TOGGLE 32
+
+#define SF_SECRET_OPEN_ONCE 1 // stays open
+#define SF_SECRET_1ST_LEFT 2  // 1st move is left of arrow
+#define SF_SECRET_1ST_DOWN 4  // 1st move is down from arrow
+#define SF_SECRET_NO_SHOOT 8  // only opened by trigger
+#define SF_SECRET_YES_SHOOT 16 // shootable even if targeted
 
 enum door_state_e {
   STATE_TOP,
@@ -79,10 +85,10 @@ static void door_touch(edict_t *self, edict_t *other) {
 
   // key door stuff
 
-  if ((owner->v.spawnflags & (SPAWNFLAG_GOLD_KEY | SPAWNFLAG_SILVER_KEY)) == 0)
+  if ((owner->v.spawnflags & (SF_GOLD_KEY | SF_SILVER_KEY)) == 0)
     return;
 
-  if (owner->v.spawnflags & SPAWNFLAG_SILVER_KEY) {
+  if (owner->v.spawnflags & SF_SILVER_KEY) {
     if ((other->v.player->stats.items & IT_KEY1) == 0) {
       utl_sound(other, CHAN_VOICE, SFXID_DOORS_MEDTRY, SND_MAXVOL, ATTN_NORM);
       Scr_SetCenterMsg("You need the silver key");
@@ -90,7 +96,7 @@ static void door_touch(edict_t *self, edict_t *other) {
     } else {
       other->v.player->stats.items &= ~IT_KEY1;
     }
-  } else if (owner->v.spawnflags & SPAWNFLAG_GOLD_KEY) {
+  } else if (owner->v.spawnflags & SF_GOLD_KEY) {
     if ((other->v.player->stats.items & IT_KEY2) == 0) {
       utl_sound(other, CHAN_VOICE, SFXID_DOORS_MEDTRY, SND_MAXVOL, ATTN_NORM);
       Scr_SetCenterMsg("You need the gold key");
@@ -136,14 +142,14 @@ static void door_killed(edict_t *self, edict_t *killer) {
 
 static void door_fire(edict_t *self, edict_t *activator) {
   // play use key sound
-  if (self->v.spawnflags & (SPAWNFLAG_GOLD_KEY | SPAWNFLAG_SILVER_KEY))
+  if (self->v.spawnflags & (SF_GOLD_KEY | SF_SILVER_KEY))
     utl_sound(self, CHAN_VOICE, SFXID_DOORS_MEDUSE, SND_MAXVOL, ATTN_NORM);
 
   self->v.extra_trigger.string = 0; // no more message
 
   edict_t *starte;
 
-  if (self->v.spawnflags & SPAWNFLAG_TOGGLE) {
+  if (self->v.spawnflags & SF_TOGGLE) {
     if (self->v.door->state == STATE_UP || self->v.door->state == STATE_TOP) {
       starte = self;
       do {
@@ -165,7 +171,7 @@ static void door_fire(edict_t *self, edict_t *activator) {
 static void door_hit_top(edict_t *self) {
   utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_TOP;
-  if (self->v.spawnflags & SPAWNFLAG_TOGGLE)
+  if (self->v.spawnflags & SF_TOGGLE)
     return; // don't come down automatically
   self->v.think = door_go_down;
   self->v.nextthink = self->v.ltime + self->v.door->wait;
@@ -224,7 +230,7 @@ static void door_link(edict_t *self) {
   if (self->v.door->linked != gs.edicts)
     return; // already linked by another door
 
-  if (self->v.spawnflags & SPAWNFLAG_DONT_LINK) {
+  if (self->v.spawnflags & SF_DONT_LINK) {
     self->v.owner = self->v.door->linked = self;
     return; // don't want to link this door
   }
@@ -257,7 +263,7 @@ static void door_link(edict_t *self) {
         return;
       if (self->v.targetname)
         return;
-      if (self->v.spawnflags & (SPAWNFLAG_GOLD_KEY | SPAWNFLAG_SILVER_KEY))
+      if (self->v.spawnflags & (SF_GOLD_KEY | SF_SILVER_KEY))
         return;
       self->v.owner->v.door->field = spawn_door_trigger(self, &cmins, &cmaxs);
       return;
@@ -318,9 +324,9 @@ void spawn_func_door(edict_t *self) {
   self->v.door->pos2.y = self->v.door->pos1.y + xmul32(self->v.avelocity.y, mult);
   self->v.door->pos2.z = self->v.door->pos1.z + xmul32(self->v.avelocity.z, mult);
 
-  // SPAWNFLAG_START_OPEN is to allow an entity to be lighted in the closed position
+  // SF_START_OPEN is to allow an entity to be lighted in the closed position
   // but spawn in the open position
-  if (self->v.spawnflags & SPAWNFLAG_START_OPEN) {
+  if (self->v.spawnflags & SF_START_OPEN) {
     self->v.origin = self->v.door->pos2;
     self->v.door->pos2 = self->v.door->pos1;
     self->v.door->pos1 = self->v.origin;
@@ -333,11 +339,167 @@ void spawn_func_door(edict_t *self) {
     self->v.th_die = door_killed;
   }
 
-  if (self->v.spawnflags & (SPAWNFLAG_GOLD_KEY | SPAWNFLAG_SILVER_KEY))
+  if (self->v.spawnflags & (SF_GOLD_KEY | SF_SILVER_KEY))
     self->v.door->wait = -1;
 
   // LinkDoors can't be done until all of the doors have been spawned, so
   // the sizes can be detected properly.
   self->v.think = door_link;
   self->v.nextthink = self->v.ltime + PR_FRAMETIME;
+}
+
+static void secret_done(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
+  if (!self->v.targetname || (self->v.spawnflags & SF_SECRET_YES_SHOOT)) {
+    self->v.health = 1;
+    self->v.flags |= FL_TAKEDAMAGE;
+  }
+}
+
+static void secret_move6(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
+  utl_calc_move(self, &self->v.door->start, self->v.speed, secret_done);
+}
+
+static void secret_move5(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
+  self->v.nextthink = self->v.ltime + ONE;
+  self->v.think = secret_move6;
+}
+
+static void secret_move4(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
+  utl_calc_move(self, &self->v.door->pos1, self->v.speed, secret_move5);
+}
+
+static void secret_move3(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
+  if ((self->v.spawnflags & SF_SECRET_OPEN_ONCE) == 0) {
+    self->v.nextthink = self->v.ltime + self->v.door->wait;
+    self->v.think = secret_move4;
+  }
+}
+
+static void secret_move2(edict_t *self) {
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
+  utl_calc_move(self, &self->v.door->pos2, self->v.speed, secret_move3);
+}
+
+static void secret_move1(edict_t *self) {
+  self->v.nextthink = self->v.ltime + ONE;
+  self->v.think = secret_move2;
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
+}
+
+static void secret_use(edict_t *self, edict_t *activator) {
+  self->v.health = 1;
+
+  // exit if still moving around...
+  if (self->v.origin.x != self->v.oldorigin.x || self->v.origin.y != self->v.oldorigin.y || self->v.origin.z != self->v.oldorigin.z)
+    return;
+
+  self->v.extra_trigger.string = 0; // no more message
+
+  utl_usetargets(self, activator);
+
+  if ((self->v.spawnflags & SF_SECRET_NO_SHOOT) == 0)
+    self->v.flags &= ~FL_TAKEDAMAGE; // will be reset upon return
+
+  XVecZero(&self->v.velocity);
+
+  // Make a sound, wait a little...
+  utl_sound(self, CHAN_VOICE, SFXID_BUTTONS_SWITCH04, SND_MAXVOL, ATTN_NORM);
+  self->v.nextthink = self->v.ltime + PR_FRAMETIME;
+
+  const s32 temp = 1 - (self->v.spawnflags & SF_SECRET_1ST_LEFT); // 1 or -1
+  utl_makevectors(&self->v.angles);
+
+  // NOTE: these are overridable fields in the original quake, but no official maps seem to actually do it?
+  x32 t_width;
+  if (self->v.spawnflags & SF_SECRET_1ST_DOWN)
+    t_width = abs(XVecDotSL(&pr.v_up, &self->v.size));
+  else
+    t_width = abs(XVecDotSL(&pr.v_right, &self->v.size));
+  const x32 t_length = abs(XVecDotSL(&pr.v_forward, &self->v.size));
+
+  if (self->v.flags & SF_SECRET_1ST_DOWN) {
+    self->v.door->pos1.x = self->v.origin.x - xmul32(pr.v_up.x, t_width);
+    self->v.door->pos1.y = self->v.origin.y - xmul32(pr.v_up.y, t_width);
+    self->v.door->pos1.z = self->v.origin.z - xmul32(pr.v_up.z, t_width);
+  } else {
+    self->v.door->pos1.x = self->v.origin.x + xmul32(pr.v_right.x, t_width * temp);
+    self->v.door->pos1.y = self->v.origin.y + xmul32(pr.v_right.y, t_width * temp);
+    self->v.door->pos1.z = self->v.origin.z + xmul32(pr.v_right.z, t_width * temp);
+  }
+
+  self->v.door->pos2.x = self->v.door->pos1.x + xmul32(pr.v_forward.x, t_length);
+  self->v.door->pos2.y = self->v.door->pos1.y + xmul32(pr.v_forward.y, t_length);
+  self->v.door->pos2.z = self->v.door->pos1.z + xmul32(pr.v_forward.z, t_length);
+
+  utl_calc_move(self, &self->v.door->pos1, self->v.speed, secret_move1);
+  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
+}
+
+static void secret_blocked(edict_t *self, edict_t *other) {
+  if (self->v.door->touch_finished > gs.time)
+    return;
+
+  self->v.door->touch_finished = gs.time + FTOX(0.5);
+
+  utl_damage(other, self, self, self->v.dmg);
+}
+
+static void secret_touch(edict_t *self, edict_t *other) {
+  if (other->v.classname != ENT_PLAYER)
+    return;
+
+  if (self->v.door->touch_finished > gs.time)
+    return;
+
+  self->v.door->touch_finished = gs.time + TO_FIX32(2);
+
+  if (self->v.extra_trigger.string) {
+    utl_sound(other, CHAN_VOICE, SFXID_MISC_TALK, SND_MAXVOL, ATTN_NORM);
+    Scr_SetCenterMsg(gs.worldmodel->strings + self->v.extra_trigger.string);
+  }
+}
+
+void spawn_func_door_secret(edict_t *self) {
+  // TODO: noise
+  self->v.max_health = self->v.health;
+  self->v.solid = SOLID_BSP;
+  self->v.movetype = MOVETYPE_PUSH;
+  self->v.speed = 50;
+  self->v.touch = secret_touch;
+  self->v.blocked = secret_blocked;
+  self->v.use = secret_use;
+
+  if (!self->v.extra_trigger.wait)
+    self->v.extra_trigger.wait = TO_FIX32(5); // this will get moved to v.door->wait
+
+  if (!self->v.dmg)
+    self->v.dmg = 2;
+
+  door_init(self);
+
+  if (!self->v.targetname || (self->v.spawnflags & SF_SECRET_YES_SHOOT)) {
+    self->v.health = 1;
+    self->v.flags |= FL_TAKEDAMAGE;
+    self->v.th_die = secret_use;
+  }
+
+  self->v.door->start = self->v.origin;
+}
+
+void spawn_func_bossgate(edict_t *self) {
+  self->v.solid = SOLID_BSP;
+  self->v.movetype = MOVETYPE_PUSH;
+}
+
+void spawn_func_episodegate(edict_t *self) {
+  self->v.solid = SOLID_BSP;
+  self->v.movetype = MOVETYPE_PUSH;
+  // TODO
+  self->v.nextthink = gs.time + PR_FRAMETIME;
+  self->v.think = utl_remove;
 }
