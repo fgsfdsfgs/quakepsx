@@ -235,6 +235,7 @@ void Scr_SetTopMsg(const char *str) {
   scr_msg[MAX_SCR_LINE - 1] = 0;
   scr_msg_time = rs.frametime + SCR_LINE_TIME;
   scr_msg_len = strlen(scr_msg);
+  Sys_Printf("%s\n", str);
 }
 
 void Scr_SetCenterMsg(const char *str) {
@@ -242,6 +243,7 @@ void Scr_SetCenterMsg(const char *str) {
   scr_centermsg[MAX_SCR_LINE - 1] = 0;
   scr_centermsg_time = rs.frametime + SCR_LINE_TIME;
   scr_centermsg_len = strlen(scr_centermsg);
+  Sys_Printf("%s\n", str);
 }
 
 void Scr_SetBlend(const u32 color, const x32 time) {
