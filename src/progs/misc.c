@@ -1,5 +1,7 @@
 #include "prcommon.h"
 
+#define SF_LIGHT_START_OFF 1
+
 static inline void spawn_ambient(edict_t *self, const s16 sfxid, const s16 vol) {
   Snd_StaticSoundId(sfxid, &self->v.origin, vol, ATTN_STATIC);
 }
@@ -45,4 +47,62 @@ void spawn_misc_explobox2(edict_t *self) {
   G_SetSize(self, &self->v.mins, &self->v.maxs);
   self->v.solid = SOLID_BBOX;
   self->v.movetype = MOVETYPE_NONE;
+}
+
+static void light_use(edict_t *self, edict_t *activator) {
+  if (self->v.spawnflags & SF_LIGHT_START_OFF) {
+    R_SetLightStyle(self->v.count, "m");
+    self->v.spawnflags &= ~SF_LIGHT_START_OFF;
+  } else {
+    R_SetLightStyle(self->v.count, "a");
+    self->v.spawnflags |= SF_LIGHT_START_OFF;
+  }
+}
+
+void spawn_light(edict_t *self) {
+  if (!self->v.targetname) {
+    // inert light
+    utl_remove_delayed(self);
+    return;
+  }
+
+  // style
+  if (self->v.count >= 32) {
+    self->v.use = light_use;
+    if (self->v.spawnflags & SF_LIGHT_START_OFF)
+      R_SetLightStyle(self->v.count, "a");
+    else
+      R_SetLightStyle(self->v.count, "m");
+  }
+}
+
+void spawn_light_fluoro(edict_t *self) {
+  spawn_light(self);
+  // TODO: hum?
+}
+
+void spawn_light_fluorospark(edict_t *self) {
+  if (!self->v.count)
+    self->v.count = 10;
+  // TODO: buzz?
+}
+
+void spawn_light_globe(edict_t *self) {
+  /* unused */
+}
+
+void spawn_light_flame_large_yellow(edict_t *self) {
+  // TODO
+}
+
+void spawn_light_flame_small_white(edict_t *self) {
+  // TODO
+}
+
+void spawn_light_flame_small_yellow(edict_t *self) {
+  // TODO
+}
+
+void spawn_light_torch_small_walltorch(edict_t *self) {
+  // TODO
 }

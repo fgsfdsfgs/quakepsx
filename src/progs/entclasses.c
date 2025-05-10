@@ -42,14 +42,14 @@ extern void spawn_item_shells(edict_t *self);
 extern void spawn_item_sigil(edict_t *self);
 extern void spawn_item_spikes(edict_t *self);
 extern void spawn_item_weapon(edict_t *self);
-extern void spawn_light(edict_t *self) { }
-extern void spawn_light_flame_large_yellow(edict_t *self) { }
-extern void spawn_light_flame_small_white(edict_t *self) { }
-extern void spawn_light_flame_small_yellow(edict_t *self) { }
-extern void spawn_light_fluoro(edict_t *self) { }
-extern void spawn_light_fluorospark(edict_t *self) { }
-extern void spawn_light_globe(edict_t *self) { }
-extern void spawn_light_torch_small_walltorch(edict_t *self) { }
+extern void spawn_light(edict_t *self);
+extern void spawn_light_flame_large_yellow(edict_t *self);
+extern void spawn_light_flame_small_white(edict_t *self);
+extern void spawn_light_flame_small_yellow(edict_t *self);
+extern void spawn_light_fluoro(edict_t *self);
+extern void spawn_light_fluorospark(edict_t *self);
+extern void spawn_light_globe(edict_t *self);
+extern void spawn_light_torch_small_walltorch(edict_t *self);
 extern void spawn_misc_explobox(edict_t *self);
 extern void spawn_misc_explobox2(edict_t *self);
 extern void spawn_misc_fireball(edict_t *self) { }

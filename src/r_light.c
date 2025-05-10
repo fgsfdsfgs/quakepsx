@@ -13,11 +13,16 @@ struct {
 } r_lightstyle[MAX_USERSTYLES];
 
 void R_SetLightStyle(const int i, const char *map) {
-  ASSERT(i < MAX_USERSTYLES);
-  strncpy(r_lightstyle[i].map, map, MAX_STYLESTRING - 1);
-  r_lightstyle[i].len = strlen(map);
-  for (u16 j = 0; j < r_lightstyle[i].len; ++j)
-    r_lightstyle[i].map[j] -= 'a';
+  if (i < MAX_USERSTYLES) {
+    // proper lightstyle string
+    strncpy(r_lightstyle[i].map, map, MAX_STYLESTRING - 1);
+    r_lightstyle[i].len = strlen(map);
+    for (u16 j = 0; j < r_lightstyle[i].len; ++j)
+      r_lightstyle[i].map[j] -= 'a';
+  } else if (i < MAX_LIGHTSTYLES) {
+    // toggleable light; set value directly
+    r_lightstylevalue[i] = (s32)(map[0] - 'a') * 22;
+  }
 }
 
 void R_InitLightStyles(void) {

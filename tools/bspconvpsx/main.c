@@ -474,6 +474,9 @@ static void do_entities(void) {
     if (qent_get_int(qent, "lip", &tmpint))
       xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
+    if (qent_get_int(qent, "style", &tmpint))
+      xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
+
     if (qent_get_int(qent, "dmg", &tmpint))
       xent->dmg = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
