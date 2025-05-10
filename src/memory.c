@@ -31,6 +31,9 @@ static struct {
 extern u8 _end[];
 
 void Mem_Init(void) {
+  // shrink libc heap to acceptable levels; we still probably need it for some things
+  InitHeap(_end + 4, MALLOC_HEAP_SIZE - 4);
+
   mem_base = _end + MALLOC_HEAP_SIZE;
   mem_base = (u8 *)ALIGN((u32)mem_base, MEM_ALIGNMENT);
   mem_size = mem_left = (u8 *)RAM_END - mem_base - STACK_SIZE;

@@ -59,8 +59,8 @@ static void TestInput(const x16 dt) {
 }
 
 int main(int argc, char **argv) {
-  Sys_Init();
   Mem_Init();
+  Sys_Init();
   Snd_Init();
   R_Init();
   IN_Init();
