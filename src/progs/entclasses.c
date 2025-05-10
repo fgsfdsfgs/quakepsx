@@ -53,7 +53,7 @@ extern void spawn_light_torch_small_walltorch(edict_t *self) { }
 extern void spawn_misc_explobox(edict_t *self);
 extern void spawn_misc_explobox2(edict_t *self);
 extern void spawn_misc_fireball(edict_t *self) { }
-extern void spawn_misc_teleporttrain(edict_t *self) { }
+extern void spawn_misc_teleporttrain(edict_t *self);
 extern void spawn_monster_army(edict_t *self);
 extern void spawn_monster_boss(edict_t *self) { }
 extern void spawn_monster_demon1(edict_t *self);
