@@ -134,7 +134,7 @@ static void army_missile(edict_t *self) {
 
   switch (self->v.frame) {
   case SHOOT5: army_fire(self); break;
-  case SHOOT7: ai_checkrefire(self); break;
+  case SHOOT7: ai_checkrefire(self, MSTATE_MISSILE); break;
   default: break;
   }
 

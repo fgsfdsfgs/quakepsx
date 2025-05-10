@@ -265,7 +265,7 @@ void ai_back(edict_t *self, const x32 dist);
 void ai_pain(edict_t *self, const x32 dist);
 void ai_painforward(edict_t *self, const x32 dist);
 void ai_charge(edict_t *self, const x32 dist);
-void ai_checkrefire(edict_t *self);
+void ai_checkrefire(edict_t *self, const s16 state);
 void ai_drop_backpack(edict_t *self);
 void ai_foundtarget(edict_t *self);
 void ai_attack_finished(edict_t *self, const x32 dt);

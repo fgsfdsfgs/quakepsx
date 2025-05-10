@@ -578,8 +578,15 @@ void ai_painforward(edict_t *self, const x32 dist) {
 
 }
 
-void ai_checkrefire(edict_t *self) {
-
+void ai_checkrefire(edict_t *self, const s16 state) {
+  if (gs.skill != 3)
+    return;
+  if (self->v.count == 1)
+    return;
+  if (!ai_visible(self, self->v.monster->enemy))
+    return;
+  self->v.count = 1;
+  monster_set_state(self, state);
 }
 
 void ai_drop_backpack(edict_t *self) {
