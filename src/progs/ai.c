@@ -589,10 +589,6 @@ void ai_checkrefire(edict_t *self, const s16 state) {
   monster_set_state(self, state);
 }
 
-void ai_drop_backpack(edict_t *self) {
-
-}
-
 void ai_gib(edict_t *self) {
   Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_PLAYER_GIB, &self->v.origin, SND_MAXVOL, ATTN_NORM);
   fx_throw_head(self, MDLID_GIB1, self->v.health);

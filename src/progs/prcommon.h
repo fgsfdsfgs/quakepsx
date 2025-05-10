@@ -184,8 +184,6 @@ typedef struct monster_fields_s {
   x16 yaw_speed;
   s16 state_num;
   s16 attack_state;
-  s16 ammo_shells;
-  s16 ammo_rockets;
   s16 lefty;
 } monster_fields_t;
 
@@ -234,6 +232,7 @@ void utl_set_movedir(edict_t *self, x16vec3_t *movedir);
 void utl_calc_move(edict_t *self, const x32vec3_t *tdest, const s16 tspeed, think_fn_t func);
 void utl_usetargets(edict_t *self, edict_t *activator);
 void utl_sound(edict_t *self, const s16 chan, const s16 sndid, const u8 vol, const x32 attn);
+void utl_spawn_backpack(edict_t *owner, const u32 items, const s16 ammo_type, const s16 ammo_count);
 
 // combat
 void utl_damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, s16 damage);
@@ -266,7 +265,6 @@ void ai_pain(edict_t *self, const x32 dist);
 void ai_painforward(edict_t *self, const x32 dist);
 void ai_charge(edict_t *self, const x32 dist);
 void ai_checkrefire(edict_t *self, const s16 state);
-void ai_drop_backpack(edict_t *self);
 void ai_foundtarget(edict_t *self);
 void ai_attack_finished(edict_t *self, const x32 dt);
 void ai_gib(edict_t *self);

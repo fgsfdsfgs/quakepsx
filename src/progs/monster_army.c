@@ -195,8 +195,7 @@ static void army_pain_c(edict_t *self) {
 
 static inline void army_finish_die(edict_t *self) {
   self->v.solid = SOLID_NOT;
-  self->v.monster->ammo_shells = 5;
-  ai_drop_backpack(self);
+  utl_spawn_backpack(self, 0, AMMO_SHELLS, 5);
 }
 
 static void army_start_die(edict_t *self, edict_t *killer) {

@@ -385,3 +385,47 @@ void spawn_item_sigil(edict_t *self) {
   XVecSetInt(&self->v.maxs, +16, +16, +32);
   G_SetSize(self, &self->v.mins, &self->v.maxs);
 }
+
+static void backpack_touch(edict_t *self, edict_t *other) {
+  if (other->v.classname != ENT_PLAYER)
+    return;
+
+  // if the backpack has guns in it, give the guns to the player
+  // TODO: message etc
+  other->v.player->stats.items |= self->v.extra_item.type;
+
+  // then give ammo
+  ammo_touch(self, other);
+}
+
+// TODO: need multiple ammo types per backpack for deathmatch, if that's ever going to be a thing
+void utl_spawn_backpack(edict_t *owner, const u32 items, const s16 ammo_type, const s16 ammo_count) {
+  edict_t *self = ED_Alloc();
+  self->v.classname = ENT_ITEM_WEAPON; // time to reuse this trash
+  self->v.movetype = MOVETYPE_TOSS;
+  self->v.solid = SOLID_TRIGGER;
+  self->v.flags = FL_ITEM;
+  self->v.touch = backpack_touch;
+  self->v.owner = owner;
+  self->v.noise = SFXID_WEAPONS_LOCK4;
+  self->v.count = ammo_count;
+  self->v.extra_item.type = items;
+  self->v.extra_item.ammotype = ammo_type;
+
+  G_SetModel(self, MDLID_BACKPACK);
+
+  XVecSetInt(&self->v.mins, -16, -16, 0);
+  XVecSetInt(&self->v.maxs, +16, +16, +56);
+  G_SetSize(self, &self->v.mins, &self->v.maxs);
+
+  self->v.origin = owner->v.origin;
+  self->v.origin.z -= TO_FIX32(24);
+
+  self->v.velocity.x = 200 * xrand32() - TO_FIX32(100);
+  self->v.velocity.y = 200 * xrand32() - TO_FIX32(100);
+  self->v.velocity.z = TO_FIX32(300);
+
+  // remove after 2 minutes
+  self->v.nextthink = gs.time + TO_FIX32(120);
+  self->v.think = utl_remove;
+}
