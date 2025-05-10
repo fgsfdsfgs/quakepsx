@@ -47,7 +47,7 @@ typedef struct link_s {
 #define TEX_SKY       4
 #define TEX_INVISIBLE 8
 #define TEX_ANIMATED  16
-#define TEX_NULL      0x8000
+#define TEX_NULL      0x80
 
 // VRAM layout
 #define VRAM_PIC_XSTART 960

@@ -63,6 +63,7 @@ typedef struct msurface_s msurface_t;
 
 typedef struct mtexture_s {
   struct mtexture_s *anim_next;
+  struct mtexture_s *anim_alt;
   struct msurface_s *texchain;
   s16 width;
   s16 height;

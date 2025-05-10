@@ -575,3 +575,18 @@ void R_DrawBlitSync(const pic_t *pic, int x, const int y) {
   src.y = (pic->tpage & 0x10) * 16 + pic->uv.v;
   MoveImage2(&src, x + fb[fbidx].disp.disp.x, y + fb[fbidx].disp.disp.y);
 }
+
+const mtexture_t *R_TextureAnimation(const mtexture_t *base) {
+  if (rs.cur_entity->v.frame && base->anim_alt)
+    base = base->anim_alt;
+
+  if (!base->anim_total)
+    return base;
+
+  const int rel = (gs.time >> (FIXSHIFT - 3)) % base->anim_total;
+  int count = 0;
+  while (base->anim_min > rel || base->anim_max <= rel)
+    base = base->anim_next;
+
+  return base;
+}

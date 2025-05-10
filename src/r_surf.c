@@ -346,7 +346,8 @@ static inline POLY_GT3 *RenderBrushTriangle(POLY_GT3 *poly, const u16 tpage, sve
 
 static inline void RenderBrushPoly(const msurface_t *fa) {
   const mvert_t *v = gs.worldmodel->verts + fa->firstvert;
-  const u16 tpage = fa->texture->vram_page;
+  const mtexture_t *mtex = R_TextureAnimation(fa->texture);
+  const u16 tpage = mtex->vram_page;
   const int numverts = fa->numverts;
   svert_t *sv = PSX_SCRATCH;
   svert_t *clipzone;
@@ -357,7 +358,8 @@ static inline void RenderBrushPoly(const msurface_t *fa) {
   // that means we're limited to ~50 verts per poly, since we use the scratch to store clipped verts as well
   for (i = 0; i < numverts; ++i, ++v, ++sv) {
     sv->pos = v->pos;
-    sv->tex.word = v->tex.word;
+    sv->tex.u = v->tex.u + mtex->vram_u;
+    sv->tex.v = v->tex.v + mtex->vram_v;
     sv->col.word = LightVert(v->col, fa->styles);
   }
 

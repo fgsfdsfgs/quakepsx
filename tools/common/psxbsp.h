@@ -128,7 +128,12 @@ typedef struct {
   u8vec2_t uv;
   s16vec2_t size;
   u16 tpage;
-  u16 flags;
+  u8 flags;
+  s8 anim_total;
+  s8 anim_min;
+  s8 anim_max;
+  s8 anim_next;
+  s8 anim_alt;
 } xtexinfo_t;
 
 #define XTEX_SPECIAL   1
@@ -136,7 +141,7 @@ typedef struct {
 #define XTEX_SKY       4
 #define XTEX_INVISIBLE 8
 #define XTEX_ANIMATED  16
-#define XTEX_NULL      0x8000
+#define XTEX_NULL      0x80
 
 typedef struct {
   s16 planenum;

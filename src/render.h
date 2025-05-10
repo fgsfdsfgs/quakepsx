@@ -119,6 +119,8 @@ void R_DrawParticles(void);
 void R_RenderView(void);
 void R_Flip(void);
 
+const mtexture_t *R_TextureAnimation(const mtexture_t *base);
+
 void R_InitLightStyles(void);
 void R_UpdateLightStyles(const x32 time);
 void R_SetLightStyle(const int i, const char *map);

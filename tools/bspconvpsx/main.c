@@ -59,6 +59,97 @@ static int tex_sort(const struct texsort *a, const struct texsort *b) {
   }
 }
 
+static inline void do_texture_anims(void) {
+  const int numtex = qbsp.miptex->nummiptex;
+  xtexinfo_t *anims[10];
+  xtexinfo_t *altanims[10];
+  int num, max, altmax;
+  int num_animtex = 0;
+
+  for (int i = 0; i < numtex; ++i) {
+    const qmiptex_t *qtex = qbsp_get_miptex(&qbsp, i);
+    xtexinfo_t *xti = xbsp_texinfos + i;
+
+    if (!qtex || qtex->name[0] != '+')
+      continue;
+    if (xti->anim_next >= 0)
+      continue; // already sequenced
+
+    ++num_animtex;
+
+    memset(anims, 0, sizeof(anims));
+    memset(altanims, 0, sizeof(altanims));
+    max = qtex->name[1];
+    altmax = 0;
+
+    if (max >= 'a' && max <= 'z')
+      max -= 'a' - 'A';
+    if (max >= '0' && max <= '9') {
+      max -= '0';
+      altmax = 0;
+      anims[max] = xti;
+      max++;
+    } else if (max >= 'A' && max <= 'J') {
+      altmax = max - 'A';
+      max = 0;
+      altanims[altmax] = xti;
+      altmax++;
+    } else {
+      panic("bad animating texture %s", qtex->name);
+    }
+
+    for (int j = i + 1; j < numtex; ++j) {
+      const qmiptex_t *qtex2 = qbsp_get_miptex(&qbsp, j);
+      xtexinfo_t *xti2 = xbsp_texinfos + j;
+      if (!qtex2 || qtex2->name[0] != '+')
+        continue;
+      if (strcmp(qtex2->name + 2, qtex->name + 2))
+        continue;
+      num = qtex2->name[1];
+      if (num >= 'a' && num <= 'z')
+        num -= 'a' - 'A';
+      if (num >= '0' && num <= '9') {
+        num -= '0';
+        anims[num] = xti2;
+        if (num + 1 > max)
+          max = num + 1;
+      } else if (num >= 'A' && num <= 'J') {
+        num = num - 'A';
+        altanims[num] = xti2;
+        if (num + 1 > altmax)
+          altmax = num + 1;
+      } else {
+        panic("bad animating texture %s", qtex->name);
+      }
+    }
+
+    // link them all together
+    const int anim_cycle = 2;
+    for (int j = 0; j < max; ++j) {
+      xtexinfo_t *xti2 = anims[j];
+      assert(xti2);
+      xti2->anim_total = max * anim_cycle;
+      xti2->anim_min = j * anim_cycle;
+      xti2->anim_max = (j + 1) * anim_cycle;
+      xti2->anim_next = anims[(j + 1) % max] - xbsp_texinfos;
+      if (altmax)
+        xti2->anim_alt = altanims[0] - xbsp_texinfos;
+    }
+    for (int j = 0; j < altmax; ++j) {
+      xtexinfo_t *xti2 = altanims[j];
+      assert(xti2);
+      xti2->anim_total = altmax * anim_cycle;
+      xti2->anim_min = j * anim_cycle;
+      xti2->anim_max = (j + 1) * anim_cycle;
+      xti2->anim_next = altanims[(j + 1) % altmax] - xbsp_texinfos;
+      if (max)
+        xti2->anim_alt = anims[0] - xbsp_texinfos;
+    }
+  }
+
+  printf("* sequenced %d animated textures\n", num_animtex);
+}
+
 static inline void do_textures(void) {
   const int numtex = qbsp.miptex->nummiptex;
 
@@ -88,10 +179,19 @@ static inline void do_textures(void) {
       if (xbsp_vram_fit(qtex, &xti, &vrx, &vry))
         panic("VRAM atlas can't fit '%s'", qtex->name);
       xbsp_vram_store_miptex(qtex, vrx, vry);
+      // clear animation data
+      xti.anim_alt = -1;
+      xti.anim_next = -1;
+      xti.anim_min = 0;
+      xti.anim_max = 0;
+      xti.anim_total = 0;
     }
     // store texinfo in normal order
     xbsp_texinfos[sorted[i].id] = xti;
   }
+
+  // sequence the animations
+  do_texture_anims();
 
   xbsp_numtexinfos = numtex;
   xbsp_lumps[XLMP_TEXDATA].size = 2 * VRAM_TOTAL_WIDTH * xbsp_vram_height();

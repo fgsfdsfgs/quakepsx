@@ -135,7 +135,11 @@ void Mod_LoadTexinfo(bmodel_t *mod, const int fh) {
     out->vram_page = in.tpage;
     out->vram_u = in.uv.u;
     out->vram_v = in.uv.v;
-    out->anim_total = 0;
+    out->anim_total = in.anim_total;
+    out->anim_min = in.anim_min;
+    out->anim_max = in.anim_max;
+    out->anim_next = in.anim_next >= 0 ? mod->textures + in.anim_next : NULL;
+    out->anim_alt = in.anim_alt >= 0 ? mod->textures + in.anim_alt : NULL;
     out->flags = in.flags;
     out->texchain = NULL;
   }
