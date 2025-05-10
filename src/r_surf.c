@@ -562,13 +562,15 @@ void R_DrawBrushModel(bmodel_t *model) {
   psurf = &model->surfaces[model->firstmodelsurface];
 
   for (int i = 0; i < model->nummodelsurfaces; ++i, ++psurf) {
+    // skip invisible surfaces
+    if (psurf->texture->flags & (TEX_INVISIBLE | TEX_NULL))
+      continue;
     // find which side of the node we are on
     pplane = psurf->plane;
     dot = XVecDotSL(&pplane->normal, &rs.vieworg) - pplane->dist;
-    // draw the polygon right away
+    // draw the polygon right away if it's facing the camera
     if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
       (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON))) {
-      if ((psurf->texture->flags & (TEX_INVISIBLE | TEX_SKY | TEX_NULL)) == 0)
         RenderBrushPoly(psurf);
     }
   }

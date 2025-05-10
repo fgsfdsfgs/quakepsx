@@ -427,6 +427,9 @@ void R_RecursiveWorldNode(mnode_t *node) {
     for (; c; --c, ++surf) {
       if (surf->visframe != rs.frame)
         continue;
+      // skip invisible textures
+      if (surf->texture->flags & (TEX_INVISIBLE | TEX_NULL))
+        continue;
       // don't backface underwater surfaces, because they warp
       if (!(surf->flags & SURF_UNDERWATER) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
         continue;
