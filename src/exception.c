@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <psxapi.h>
@@ -7,7 +8,12 @@
 #include <psxgpu.h>
 
 #include "common.h"
+#include "dbgfont.h"
 #include "exception.h"
+
+#define EX_PRINTF(...) \
+  snprintf(com_vastring, sizeof(com_vastring), __VA_ARGS__); \
+  Dbg_PrintString(com_vastring);
 
 static u32 exception_event;
 
@@ -38,19 +44,20 @@ static u32 GetCause(void) {
 
 static void ExceptionFunc(void) {
   // don't double except
-  static int inexception = false;
+  static volatile int inexception = false;
   if (inexception) {
     printf("DOUBLE FAULT\n");
     while (1);
   }
   inexception = true;
 
-  // get current thread's TCB
+  // get current thread's TCB and make a copy of the relevant data
   const struct ToT *tot = (const struct ToT *)0x100;
   const struct TCB *tcb_list = (const struct TCB *)tot[2].head;
   const u32 status = tcb_list[0].status;
   const u32 cr = GetCause();
-  const u32 *regs = tcb_list[0].reg;
+  u32 regs[40];
+  memcpy(regs, tcb_list[0].reg, sizeof(regs));
 
   // spew to tty
   printf("UH OH ZONE\nSTATUS=%08x\nCR=%08x\nPC=%08x\nRA=%08x\n", status, cr, regs[R_EPC], regs[R_RA]);
@@ -58,49 +65,47 @@ static void ExceptionFunc(void) {
   // setup graphics viewport and clear screen
   DISPENV disp;
   DRAWENV draw;
-  ResetGraph(3);
+  ResetGraph(0);
   SetDispMask(0);
   SetDefDispEnv(&disp, 0, 0, VID_WIDTH, VID_HEIGHT);
   SetDefDrawEnv(&draw, 0, 0, VID_WIDTH, VID_HEIGHT);
-  setRGB0(&draw, 0x40, 0x00, 0x00); draw.isbg = 1;
+  setRGB0(&draw, 0x40, 0x00, 0x00); draw.isbg = 1; draw.dtd = 1;
   PutDispEnv(&disp);
   PutDrawEnv(&draw);
 
-  // load built in font; no guarantee we will have our normal one
-  const int stream = FntOpen(8, 16, VID_WIDTH - 8, VID_HEIGHT - 16, 0, 1024);
+  // init debug printer
+  Dbg_PrintReset(8, 16, 0x40, 0x00, 0x00);
 
   // the most important info
   const char *cause = ExceptionCause(cr);
-  FntPrint(stream, "UH OH ZONE\n\n");
-  FntPrint(stream, "CAUSE:  %s (%08x)\nSTATUS: %08x\n\n", cause, cr, status);
-  FntPrint(stream, "PC=%08x  RA=%08x\n\n", regs[R_EPC],regs[R_RA]);
+  EX_PRINTF("UH OH ZONE\n\n");
+  EX_PRINTF("CAUSE:  %s / %08x\nSTATUS: %08x\n\n", cause, cr, status);
+  EX_PRINTF("PC=%08x  RA=%08x\n\n", regs[R_EPC],regs[R_RA]);
 
-  FntFlush(stream);
+  // set display mask right away so that we can at least see the header
   SetDispMask(1);
 
   // GPR dump
-  FntPrint(stream, "AT=%08x  K0=%08x  K1=%08x\n", regs[R_AT],  regs[R_K0],  regs[R_K1]);
-  FntPrint(stream, "A0=%08x  A1=%08x  A2=%08x\n", regs[R_A0],  regs[R_A1],  regs[R_A2]);
-  FntPrint(stream, "A3=%08x  V0=%08x  V1=%08x\n", regs[R_A3],  regs[R_V0],  regs[R_V1]);
-  FntPrint(stream, "T0=%08x  T1=%08x  T2=%08x\n", regs[R_T0],  regs[R_T1],  regs[R_T2]);
-  FntPrint(stream, "T3=%08x  T4=%08x  T5=%08x\n", regs[R_T3],  regs[R_T4],  regs[R_T5]);
-  FntPrint(stream, "T6=%08x  T7=%08x  T8=%08x\n", regs[R_T6],  regs[R_T7],  regs[R_T8]);
-  FntPrint(stream, "T9=%08x  S0=%08x  S1=%08x\n", regs[R_T9],  regs[R_S0],  regs[R_S1]);
-  FntPrint(stream, "S2=%08x  S3=%08x  S4=%08x\n", regs[R_S2],  regs[R_S3],  regs[R_S4]);
-  FntPrint(stream, "S5=%08x  S6=%08x  S7=%08x\n", regs[R_S5],  regs[R_S6],  regs[R_S7]);
-  FntPrint(stream, "GP=%08x  FP=%08x  SP=%08x\n", regs[R_GP],  regs[R_FP],  regs[R_SP]);
+  EX_PRINTF("AT=%08x  K0=%08x  K1=%08x\n", regs[R_AT],  regs[R_K0],  regs[R_K1]);
+  EX_PRINTF("A0=%08x  A1=%08x  A2=%08x\n", regs[R_A0],  regs[R_A1],  regs[R_A2]);
+  EX_PRINTF("A3=%08x  V0=%08x  V1=%08x\n", regs[R_A3],  regs[R_V0],  regs[R_V1]);
+  EX_PRINTF("T0=%08x  T1=%08x  T2=%08x\n", regs[R_T0],  regs[R_T1],  regs[R_T2]);
+  EX_PRINTF("T3=%08x  T4=%08x  T5=%08x\n", regs[R_T3],  regs[R_T4],  regs[R_T5]);
+  EX_PRINTF("T6=%08x  T7=%08x  T8=%08x\n", regs[R_T6],  regs[R_T7],  regs[R_T8]);
+  EX_PRINTF("T9=%08x  S0=%08x  S1=%08x\n", regs[R_T9],  regs[R_S0],  regs[R_S1]);
+  EX_PRINTF("S2=%08x  S3=%08x  S4=%08x\n", regs[R_S2],  regs[R_S3],  regs[R_S4]);
+  EX_PRINTF("S5=%08x  S6=%08x  S7=%08x\n", regs[R_S5],  regs[R_S6],  regs[R_S7]);
+  EX_PRINTF("GP=%08x  FP=%08x  SP=%08x\n", regs[R_GP],  regs[R_FP],  regs[R_SP]);
 
   // dump stack if possible
-  const u32 sp = ALIGN(regs[R_SP], 16);
-  if (sp > 0x80100000 && sp < 0x80200000) {
-    FntPrint(stream, "\nSTACK\n\n");
-    const u32 *data = (const u32 *)sp;
-    for (u32 i = 0; data < (const u32 *)0x80200000 && i < 6; data += 4, ++i)
-      FntPrint(stream, "%02x %08x %08x %08x %08x\n", (u32)data & 0xFF, data[0], data[1], data[2], data[3]);
+  u32 sp = regs[R_SP] & ~0x0Fu;
+  if (sp > 0x80100000u && sp < 0x80200000u) {
+    EX_PRINTF("\nSTACK FROM %08x\n\n", sp);
+    for (u32 i = 0; sp < 0x80200000u && i < 15; sp += 16, ++i) {
+      const u32 *data = (const u32 *)sp;
+      EX_PRINTF("%02x %08x %08x %08x %08x\n", sp & 0xFF, data[0], data[1], data[2], data[3]);
+    }
   }
-
-  FntFlush(stream);
-  SetDispMask(1);
 
   while (1);
 }
@@ -111,7 +116,8 @@ void Sys_InstallExceptionHandler(void) {
   exception_event = OpenEvent(HwCPU, EvSpTRAP, EvMdINTR, ExceptionFunc);
   EnableEvent(exception_event);
   ExitCriticalSection();
-  printf("ex_install_handler(): opened HwCPU event %08x\n", exception_event);
+
+  printf("Sys_InstallExceptionHandler(): opened HwCPU event %08x\n", exception_event);
 
   /*
   // alternatively:

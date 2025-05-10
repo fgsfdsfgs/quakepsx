@@ -9,6 +9,7 @@
 #include <psxcd.h>
 
 #include "common.h"
+#include "dbgfont.h"
 #include "system.h"
 
 static char sys_errormsg[MAX_ERROR];
@@ -41,17 +42,22 @@ void Sys_Init(void) {
 }
 
 void Sys_Error(const char *error, ...) {
+  // disable ticker
+  VSyncCallback(NULL);
+
+  // print time into the buffer first
+  const x32 xtime = Sys_FixedTime();
+  const int timelen = snprintf(sys_errormsg, sizeof(sys_errormsg), "ERROR (T%d.%04d)\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1));
+  char *out = sys_errormsg + timelen;
+
+  // append the error
   va_list args;
   va_start(args, error);
-  vsnprintf(sys_errormsg, sizeof(sys_errormsg), error, args);
+  vsnprintf(sys_errormsg + timelen, sizeof(sys_errormsg) - timelen, error, args);
   va_end(args);
 
-  VSyncCallback(NULL); // disable ticker
-
-  const x32 xtime = Sys_FixedTime();
-
   // spew to TTY
-  Sys_Printf("ERROR (T%d.%04d): %s\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), sys_errormsg);
+  puts(sys_errormsg);
 
   // setup graphics viewport and clear screen
   SetDispMask(0);
@@ -63,13 +69,11 @@ void Sys_Error(const char *error, ...) {
   PutDispEnv(&disp);
   PutDrawEnv(&draw);
 
-  // load built in font
-  FntLoad(960, 0);
-  FntOpen(0, 8, 320, 224, 0, 100);
+  // init debug printer
+  Dbg_PrintReset(8, 8, 0x40, 0x00, 0x00);
 
   // draw
-  FntPrint(-1, "ERROR (T%d.%04d):\n%s", xtime >> FIXSHIFT, xtime & (FIXSCALE-1), sys_errormsg);
-  FntFlush(-1);
+  Dbg_PrintString(sys_errormsg);
   DrawSync(0);
   VSync(0);
   SetDispMask(1);
