@@ -2,13 +2,6 @@
 
 #define SF_PLAT_LOW_TRIGGER 1
 
-enum plat_state_e {
-  STATE_TOP,
-  STATE_BOTTOM,
-  STATE_UP,
-  STATE_DOWN
-};
-
 static void plat_hit_bottom(edict_t *self) {
   utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT2, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_BOTTOM;

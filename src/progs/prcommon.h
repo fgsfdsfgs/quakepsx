@@ -182,6 +182,15 @@ typedef struct monster_fields_s {
   s16 lefty;
 } monster_fields_t;
 
+// extra data for doors, buttons and plats
+
+enum door_state_e {
+  STATE_TOP,
+  STATE_BOTTOM,
+  STATE_UP,
+  STATE_DOWN
+};
+
 typedef struct door_fields_s {
   x32vec3_t pos1;
   x32vec3_t pos2;

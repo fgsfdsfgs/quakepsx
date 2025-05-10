@@ -12,13 +12,6 @@
 #define SF_SECRET_NO_SHOOT 8  // only opened by trigger
 #define SF_SECRET_YES_SHOOT 16 // shootable even if targeted
 
-enum door_state_e {
-  STATE_TOP,
-  STATE_BOTTOM,
-  STATE_UP,
-  STATE_DOWN
-};
-
 static void door_touch(edict_t *self, edict_t *other);
 static void door_blocked(edict_t *self, edict_t *other);
 static void door_use(edict_t *self, edict_t *other);
@@ -395,7 +388,7 @@ static void secret_use(edict_t *self, edict_t *activator) {
   self->v.health = 1;
 
   // exit if still moving around...
-  if (self->v.origin.x != self->v.oldorigin.x || self->v.origin.y != self->v.oldorigin.y || self->v.origin.z != self->v.oldorigin.z)
+  if (!XVecEq(&self->v.origin, &self->v.door->start))
     return;
 
   self->v.extra_trigger.string = 0; // no more message
