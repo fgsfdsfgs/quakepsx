@@ -338,14 +338,23 @@ void G_LinkEdict(edict_t *ent, qboolean touch_triggers) {
   XVecAdd(&ent->v.origin, &ent->v.mins, &ent->v.absmin);
   XVecAdd(&ent->v.origin, &ent->v.maxs, &ent->v.absmax);
 
-  // because movement is clipped an epsilon away from an actual edge,
-  // we must fully check even when bounding boxes don't quite touch
-  ent->v.absmin.x -= ONE;
-  ent->v.absmin.y -= ONE;
-  ent->v.absmin.z -= ONE;
-  ent->v.absmax.x += ONE;
-  ent->v.absmax.y += ONE;
-  ent->v.absmax.z += ONE;
+  if (ent->v.flags & FL_ITEM) {
+    // to make items easier to pick up and allow them to be grabbed off
+    // of shelves, the abs sizes are expanded
+    ent->v.absmin.x -= TO_FIX32(15);
+    ent->v.absmin.y -= TO_FIX32(15);
+    ent->v.absmax.x += TO_FIX32(15);
+    ent->v.absmax.y += TO_FIX32(15);
+  } else {
+    // because movement is clipped an epsilon away from an actual edge,
+    // we must fully check even when bounding boxes don't quite touch
+    ent->v.absmin.x -= ONE;
+    ent->v.absmin.y -= ONE;
+    ent->v.absmin.z -= ONE;
+    ent->v.absmax.x += ONE;
+    ent->v.absmax.y += ONE;
+    ent->v.absmax.z += ONE;
+  }
 
   // link to PVS leafs
   ent->num_leafs = 0;
