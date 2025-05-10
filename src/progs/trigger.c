@@ -185,6 +185,7 @@ static void spawn_teledeath(edict_t *owner, const x32vec3_t *org) {
   death->v.maxs.y = owner->v.maxs.y + ONE;
   death->v.maxs.z = owner->v.maxs.z + ONE;
   gs.force_retouch = 2;
+  G_SetSize(death, &death->v.mins, &death->v.maxs);
   G_LinkEdict(death, false);
 }
 

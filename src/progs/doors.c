@@ -58,7 +58,7 @@ static edict_t *spawn_door_trigger(edict_t *self, const x32vec3_t *cmins, const 
   G_LinkEdict(t, false);
 }
 
-static void door_init(edict_t *self) {
+void door_init(edict_t *self) {
   const x32 wait = self->v.extra_trigger.wait; // save this because it's the same field as `door`
   self->v.door = Mem_ZeroAlloc(sizeof(*self->v.door));
   self->v.door->linked = gs.edicts;
@@ -489,17 +489,4 @@ void spawn_func_door_secret(edict_t *self) {
   }
 
   self->v.door->start = self->v.origin;
-}
-
-void spawn_func_bossgate(edict_t *self) {
-  self->v.solid = SOLID_BSP;
-  self->v.movetype = MOVETYPE_PUSH;
-}
-
-void spawn_func_episodegate(edict_t *self) {
-  self->v.solid = SOLID_BSP;
-  self->v.movetype = MOVETYPE_PUSH;
-  // TODO
-  self->v.nextthink = gs.time + PR_FRAMETIME;
-  self->v.think = utl_remove;
 }

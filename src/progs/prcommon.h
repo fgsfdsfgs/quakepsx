@@ -258,6 +258,9 @@ void ai_gib(edict_t *self);
 void player_pain(edict_t *self, edict_t *attacker, s16 damage);
 void player_die(edict_t *self, edict_t *killer);
 
+// doors and plats
+void door_init(edict_t *self);
+
 // status bar
 void Sbar_IndicateDamage(const s16 damage);
 
