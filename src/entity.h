@@ -61,6 +61,7 @@
 typedef struct edict_s edict_t;
 typedef struct player_state_s player_state_t;
 typedef struct monster_fields_s monster_fields_t;
+typedef struct door_fields_s door_fields_t;
 
 typedef void (*think_fn_t)(edict_t *self);
 typedef void (*interact_fn_t)(edict_t *self, edict_t *other);
@@ -114,6 +115,7 @@ typedef struct entvars_s {
     void *extra_ptr;
     player_state_t *player;
     monster_fields_t *monster;
+    door_fields_t *door;
     struct {
       u32 type;
       u16 ammotype;

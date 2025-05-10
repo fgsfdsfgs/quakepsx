@@ -319,7 +319,7 @@ static void hurt_on(edict_t *self) {
 static void hurt_touch(edict_t *self, edict_t *other) {
   if (other->v.flags & FL_TAKEDAMAGE) {
     self->v.solid = SOLID_NOT;
-    utl_damage(other, self, self, self->v.count);
+    utl_damage(other, self, self, self->v.dmg);
     self->v.think = hurt_on;
     self->v.nextthink = gs.time + ONE;
   }
@@ -328,19 +328,19 @@ static void hurt_touch(edict_t *self, edict_t *other) {
 void spawn_trigger_hurt(edict_t *self) {
   trigger_init(self);
   self->v.touch = hurt_touch;
-  if (!self->v.count)
-    self->v.count = 5; // dmg
+  if (!self->v.dmg)
+    self->v.dmg = 5;
 }
 
 static void push_touch(edict_t *self, edict_t *other) {
   if (other->v.classname == ENT_GRENADE) {
-    other->v.velocity.x = self->v.count * 10 * self->v.avelocity.x;
-    other->v.velocity.y = self->v.count * 10 * self->v.avelocity.y;
-    other->v.velocity.z = self->v.count * 10 * self->v.avelocity.z;
+    other->v.velocity.x = self->v.speed * 10 * self->v.avelocity.x;
+    other->v.velocity.y = self->v.speed * 10 * self->v.avelocity.y;
+    other->v.velocity.z = self->v.speed * 10 * self->v.avelocity.z;
   } else if (other->v.health > 0) {
-    other->v.velocity.x = self->v.count * 10 * self->v.avelocity.x;
-    other->v.velocity.y = self->v.count * 10 * self->v.avelocity.y;
-    other->v.velocity.z = self->v.count * 10 * self->v.avelocity.z;
+    other->v.velocity.x = self->v.speed * 10 * self->v.avelocity.x;
+    other->v.velocity.y = self->v.speed * 10 * self->v.avelocity.y;
+    other->v.velocity.z = self->v.speed * 10 * self->v.avelocity.z;
     if (other->v.classname == ENT_PLAYER) {
       // TODO: fly sound
     }
@@ -352,8 +352,8 @@ static void push_touch(edict_t *self, edict_t *other) {
 void spawn_trigger_push(edict_t *self) {
   trigger_init(self);
   self->v.touch = push_touch;
-  if (!self->v.count)
-    self->v.count = 1000; // speed
+  if (!self->v.speed)
+    self->v.speed = 1000;
 }
 
 static void monsterjump_touch(edict_t *self, edict_t *other) {
@@ -361,8 +361,8 @@ static void monsterjump_touch(edict_t *self, edict_t *other) {
     return;
 
   // set XY even if not on ground, so the jump will clear lips
-  other->v.velocity.x = self->v.avelocity.x * self->v.count;
-  other->v.velocity.y = self->v.avelocity.y * self->v.count;
+  other->v.velocity.x = self->v.avelocity.x * self->v.speed;
+  other->v.velocity.y = self->v.avelocity.y * self->v.speed;
 
   if (!(other->v.flags & FL_ONGROUND))
     return;
@@ -373,8 +373,8 @@ static void monsterjump_touch(edict_t *self, edict_t *other) {
 }
 
 void spawn_trigger_monsterjump(edict_t *self) {
-  if (!self->v.count)
-    self->v.count = 200; // speed
+  if (!self->v.speed)
+    self->v.speed = 200;
 
   if (!self->v.velocity.z)
     self->v.velocity.z = TO_FIX32(200); // height

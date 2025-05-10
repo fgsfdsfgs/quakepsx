@@ -58,7 +58,7 @@ void utl_set_movedir(edict_t *self, x16vec3_t *movedir) {
       movedir->y = 0;
       movedir->z = ONE;
       return;
-    } else if (self->v.angles.z == -2) {
+    } else if (self->v.angles.y == -2) {
       // down
       movedir->x = 0;
       movedir->y = 0;
@@ -71,6 +71,48 @@ void utl_set_movedir(edict_t *self, x16vec3_t *movedir) {
   *movedir = pr.v_forward;
 
   XVecZero(&self->v.angles);
+}
+
+static void calc_move_done(edict_t *self) {
+  self->v.origin = self->v.door->dest;
+  XVecZero(&self->v.velocity);
+  G_LinkEdict(self, false);
+
+  self->v.nextthink = -1;
+  if (self->v.door->reached)
+    self->v.door->reached(self);
+}
+
+void utl_calc_move(edict_t *self, const x32vec3_t *tdest, const s16 tspeed, think_fn_t func) {
+  self->v.door->reached = func;
+  self->v.door->dest = *tdest;
+  self->v.think = calc_move_done;
+
+  if (tdest->x == self->v.origin.x && tdest->y == self->v.origin.y && tdest->z == self->v.origin.z) {
+    XVecZero(&self->v.velocity);
+    self->v.nextthink = self->v.ltime + PR_FRAMETIME;
+    return;
+  }
+
+  // divide delta length by speed to get time to reach dest
+  x32vec3_t vdestdelta;
+  XVecSub(tdest, &self->v.origin, &vdestdelta);
+  const s32 len = XVecLengthIntL(&vdestdelta);
+  const s32 traveltime = xdiv32(len, tspeed);
+  if (traveltime < PR_FRAMETIME) {
+    XVecZero(&self->v.velocity);
+    self->v.nextthink = self->v.ltime + PR_FRAMETIME;
+    return;
+  }
+
+  // set nextthink to trigger a think when dest is reached
+  self->v.nextthink = self->v.ltime + traveltime;
+
+  // scale the destdelta vector by the time spent traveling to get velocity
+  const x32 recip = xdiv32(ONE, traveltime);
+  self->v.velocity.x = xmul32(recip, vdestdelta.x);
+  self->v.velocity.y = xmul32(recip, vdestdelta.y);
+  self->v.velocity.z = xmul32(recip, vdestdelta.z);
 }
 
 static void delay_think(edict_t *self) {

@@ -10,11 +10,6 @@ void spawn_func_button(edict_t *self) {
   self->v.movetype = MOVETYPE_PUSH;
 }
 
-void spawn_func_door(edict_t *self) {
-  self->v.solid = SOLID_BSP;
-  self->v.movetype = MOVETYPE_PUSH;
-}
-
 void spawn_func_door_secret(edict_t *self) {
   self->v.solid = SOLID_BSP;
   self->v.movetype = MOVETYPE_PUSH;

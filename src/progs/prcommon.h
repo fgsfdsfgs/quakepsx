@@ -182,6 +182,18 @@ typedef struct monster_fields_s {
   s16 lefty;
 } monster_fields_t;
 
+typedef struct door_fields_s {
+  x32vec3_t pos1;
+  x32vec3_t pos2;
+  x32vec3_t dest;
+  edict_t *linked;
+  edict_t *field;
+  think_fn_t reached;
+  x32 touch_finished;
+  x32 wait;
+  s16 state;
+} door_fields_t;
+
 // common thinkers
 void null_think(edict_t *self);
 void null_touch(edict_t *self, edict_t *other);
@@ -202,6 +214,7 @@ void utl_vectoangles(const x16vec3_t *dir);
 void utl_remove(edict_t *self);
 void utl_remove_delayed(edict_t *self);
 void utl_set_movedir(edict_t *self, x16vec3_t *movedir);
+void utl_calc_move(edict_t *self, const x32vec3_t *tdest, const s16 tspeed, think_fn_t func);
 void utl_usetargets(edict_t *self, edict_t *activator);
 void utl_sound(edict_t *self, const s16 chan, const s16 sndid, const u8 vol, const x32 attn);
 
