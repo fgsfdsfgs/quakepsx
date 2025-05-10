@@ -57,7 +57,7 @@ void Sys_Error(const char *error, ...) {
   va_end(args);
 
   // spew to TTY
-  puts(sys_errormsg);
+  printf("%s\n", sys_errormsg);
 
   // setup graphics viewport and clear screen
   SetDispMask(0);
