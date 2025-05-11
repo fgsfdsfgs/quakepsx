@@ -31,13 +31,28 @@ void spawn_ambient_swamp2(edict_t *self) {
   spawn_ambient(self, SFXID_AMBIENCE_SWAMP1, SND_MAXVOL >> 1);
 }
 
+static void explobox_explode(edict_t *self, edict_t *killer) {
+  self->v.flags &= ~(FL_TAKEDAMAGE | FL_AUTOAIM);
+  utl_sound(self, CHAN_VOICE, SFXID_WEAPONS_R_EXP3, SND_MAXVOL, ATTN_NORM);
+  utl_radius_damage(self, self, 160, self);
+  self->v.origin.z += TO_FIX32(32);
+  utl_become_explosion(self);
+}
+
 void spawn_misc_explobox(edict_t *self) {
   G_SetModel(self, MDLID_B_EXPLOB);
   self->v.mins = ((amodel_t *)self->v.model)->mins;
   self->v.maxs = ((amodel_t *)self->v.model)->maxs;
   G_SetSize(self, &self->v.mins, &self->v.maxs);
+
   self->v.solid = SOLID_BBOX;
   self->v.movetype = MOVETYPE_NONE;
+  self->v.health = 20;
+  self->v.th_die = explobox_explode;
+  self->v.flags |= FL_TAKEDAMAGE | FL_AUTOAIM;
+
+  self->v.origin.z += TO_FIX32(2);
+  G_DropToFloor(self);
 }
 
 void spawn_misc_explobox2(edict_t *self) {
@@ -45,8 +60,15 @@ void spawn_misc_explobox2(edict_t *self) {
   self->v.mins = ((amodel_t *)self->v.model)->mins;
   self->v.maxs = ((amodel_t *)self->v.model)->maxs;
   G_SetSize(self, &self->v.mins, &self->v.maxs);
+
   self->v.solid = SOLID_BBOX;
   self->v.movetype = MOVETYPE_NONE;
+  self->v.health = 20;
+  self->v.th_die = explobox_explode;
+  self->v.flags |= FL_TAKEDAMAGE | FL_AUTOAIM;
+
+  self->v.origin.z += TO_FIX32(2);
+  G_DropToFloor(self);
 }
 
 static void light_use(edict_t *self, edict_t *activator) {
