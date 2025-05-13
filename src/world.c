@@ -209,7 +209,7 @@ hull_t *G_HullForEntity(const edict_t *ent, const x32vec3_t *mins, const x32vec3
   return hull;
 }
 
-void G_FindTouchedLeafs(edict_t *ent, mnode_t *node) {
+void G_FindTouchedLeafs(edict_t *ent, const mnode_t *node) {
   mplane_t *splitplane;
   mleaf_t *leaf;
   int sides;
@@ -239,7 +239,7 @@ void G_FindTouchedLeafs(edict_t *ent, mnode_t *node) {
     G_FindTouchedLeafs(ent, node->children[1]);
 }
 
-areanode_t *G_CreateAreaNode (int depth, x32vec3_t *mins, x32vec3_t *maxs) {
+areanode_t *G_CreateAreaNode(const int depth, const x32vec3_t *mins, const x32vec3_t *maxs) {
   areanode_t *anode;
   x32vec3_t size;
   x32vec3_t mins1, maxs1, mins2, maxs2;
@@ -283,7 +283,7 @@ void G_ClearWorld(void) {
   G_CreateAreaNode(0, &gs.worldmodel->mins, &gs.worldmodel->maxs);
 }
 
-void G_TouchLinks(edict_t *ent, areanode_t *node) {
+void G_TouchLinks(edict_t *ent, const areanode_t *node) {
   link_t *l, *next;
   edict_t *touch;
 
@@ -322,7 +322,7 @@ void G_UnlinkEdict(edict_t *ent) {
   ent->area.prev = ent->area.next = NULL;
 }
 
-void G_LinkEdict(edict_t *ent, qboolean touch_triggers) {
+void G_LinkEdict(edict_t *ent, const qboolean touch_triggers) {
   areanode_t *node;
 
   if (ent->area.prev)
@@ -400,7 +400,7 @@ void G_MoveBounds(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t
   }
 }
 
-edict_t *G_FindInRadius(const x32vec3_t *origin, s32 radius) {
+edict_t *G_FindInRadius(const x32vec3_t *origin, const s32 radius) {
   edict_t *chain = gs.edicts;
 
   const s32 sqrradius = radius * radius;
