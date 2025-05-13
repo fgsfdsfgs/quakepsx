@@ -226,7 +226,13 @@ const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec
   moveclip_t *clip = &movevars->clip;
   int i;
 
-  memset(clip, 0, sizeof(moveclip_t));
+  clip->trace.inopen = false;
+  clip->trace.inwater = false;
+  clip->trace.ent = NULL;
+
+  clip->tmptrace.inopen = false;
+  clip->tmptrace.inwater = false;
+  clip->tmptrace.ent = NULL;
 
   // clip to world
   ClipMoveToEntity(gs.edicts, start, mins, maxs, end, &clip->trace);
