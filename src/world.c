@@ -40,7 +40,7 @@ void G_InitBoxHull(void) {
   }
 }
 
-int G_HullPointContents(hull_t *hull, int num, const x32vec3_t *p) {
+int G_HullPointContents(const hull_t *hull, int num, const x32vec3_t *p) {
   x32 d;
   xbspclipnode_t *node;
   mplane_t *plane;
@@ -80,7 +80,7 @@ int G_TruePointContents(const x32vec3_t *p) {
 
 #define DIST_EPSILON 128
 
-qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t *p1, x32vec3_t *p2, trace_t *trace) {
+qboolean G_RecursiveHullCheck(const hull_t *hull, const int num, const x32 p1f, const x32 p2f, const x32vec3_t *p1, const x32vec3_t *p2, trace_t *trace) {
   xbspclipnode_t *node;
   mplane_t *plane;
   x32 t1, t2;
@@ -166,7 +166,7 @@ qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t
   return false;
 }
 
-hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs) {
+hull_t *G_HullForBox(const x32vec3_t *mins, const x32vec3_t *maxs) {
   box_planes[0].dist = maxs->d[0];
   box_planes[1].dist = mins->d[0];
   box_planes[2].dist = maxs->d[1];
@@ -176,7 +176,7 @@ hull_t *G_HullForBox(x32vec3_t *mins, x32vec3_t *maxs) {
   return &box_hull;
 }
 
-hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *offset) {
+hull_t *G_HullForEntity(const edict_t *ent, const x32vec3_t *mins, const x32vec3_t *maxs, x32vec3_t *offset) {
   bmodel_t *bmodel;
   x32vec3_t size;
   x32vec3_t hullmins, hullmaxs;

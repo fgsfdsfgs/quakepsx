@@ -15,7 +15,7 @@ movevars_t *const movevars = PSX_SCRATCH;
 #define STOP_EPSILON 256
 #define MAX_PUSHED 64
 
-static int ClipVelocity(x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce) {
+static int ClipVelocity(const x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce) {
   x32 backoff;
   x32 change;
   int i, blocked;
@@ -50,7 +50,7 @@ static inline void AddGravity(edict_t *ent) {
   ent->v.velocity.z -= xmul32(gs.frametime, G_GRAVITY);
 }
 
-static void ClipMoveToEntity(edict_t *ent, x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, trace_t *trace) {
+static void ClipMoveToEntity(edict_t *ent, const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, trace_t *trace) {
   x32vec3_t offset;
   x32vec3_t start_l, end_l;
   hull_t *hull;
@@ -222,7 +222,7 @@ void G_ClipToLinks(areanode_t *node, moveclip_t *clip) {
     G_ClipToLinks(node->children[1], clip);
 }
 
-const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict) {
+const trace_t *G_Move(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, const int type, const edict_t *passedict) {
   moveclip_t *clip = &movevars->clip;
   int i;
 
@@ -263,7 +263,7 @@ const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec
   return &clip->trace;
 }
 
-edict_t *G_TestEntityPosition(edict_t *ent) {
+edict_t *G_TestEntityPosition(const edict_t *ent) {
   const trace_t *trace;
   trace = G_Move(&ent->v.origin, &ent->v.mins, &ent->v.maxs, &ent->v.origin, 0, ent);
   if (trace->startsolid)

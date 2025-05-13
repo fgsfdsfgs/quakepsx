@@ -35,13 +35,13 @@ extern areanode_t g_areanodes[AREA_NODES];
 extern int g_numareanodes;
 
 void G_InitBoxHull(void);
-hull_t *G_HullForEntity(edict_t *ent, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *offset);
+hull_t *G_HullForEntity(const edict_t *ent, const x32vec3_t *mins, const x32vec3_t *maxs, x32vec3_t *offset);
 
-int G_HullPointContents(hull_t *hull, int num, const x32vec3_t *p);
+int G_HullPointContents(const hull_t *hull, int num, const x32vec3_t *p);
 int G_PointContents(const x32vec3_t *p);
 int G_TruePointContents(const x32vec3_t *p);
 
-qboolean G_RecursiveHullCheck(hull_t *hull, int num, x32 p1f, x32 p2f, x32vec3_t *p1, x32vec3_t *p2, trace_t *trace);
+qboolean G_RecursiveHullCheck(const hull_t *hull, const int num, const x32 p1f, const x32 p2f, const x32vec3_t *p1, const x32vec3_t *p2, trace_t *trace);
 
 void G_ClearWorld();
 void G_UnlinkEdict(edict_t *ent);

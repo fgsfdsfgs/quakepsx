@@ -27,13 +27,13 @@
 #define G_STEPSIZE TO_FIX32(18)
 
 typedef struct {
-  x32vec3_t boxmins, boxmaxs; // enclose the test object along entire move
-  x32vec3_t *mins, *maxs;     // size of the moving object
-  x32vec3_t mins2, maxs2;     // size when clipping against mosnters
-  x32vec3_t *start, *end;
+  x32vec3_t boxmins, boxmaxs;   // enclose the test object along entire move
+  const x32vec3_t *mins, *maxs; // size of the moving object
+  x32vec3_t mins2, maxs2;       // size when clipping against mosnters
+  const x32vec3_t *start, *end;
   trace_t trace, tmptrace;
   int type;
-  edict_t *passedict;
+  const edict_t *passedict;
 } moveclip_t;
 
 typedef struct {
@@ -53,8 +53,8 @@ typedef struct {
 // this resides in the scratch and is used by G_Move and G_PlayerMove
 extern movevars_t *const movevars;
 
-edict_t *G_TestEntityPosition(edict_t *ent);
-const trace_t *G_Move(x32vec3_t *start, x32vec3_t *mins, x32vec3_t *maxs, x32vec3_t *end, int type, edict_t *passedict);
+edict_t *G_TestEntityPosition(const edict_t *ent);
+const trace_t *G_Move(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, const int type, const edict_t *passedict);
 
 int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace);
 void G_WalkMove(edict_t *ent);
