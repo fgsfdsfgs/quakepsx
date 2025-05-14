@@ -13,6 +13,7 @@ add_compile_options(-Wuninitialized)
 
 if(INSTRUMENT_FUNCTIONS)
   add_compile_options(-finstrument-functions)
+  add_definitions(-DINSTRUMENT_FUNCTIONS)
 elseif(ENABLE_LTO)
   add_compile_options(-flto)
   add_link_options(-flto)
