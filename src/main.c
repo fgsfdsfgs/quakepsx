@@ -7,6 +7,7 @@
 #include "progs.h"
 #include "move.h"
 #include "sound.h"
+#include "profile.h"
 
 static x32vec3_t sndorg;
 
@@ -86,6 +87,8 @@ int main(int argc, char **argv) {
       gs.frametime = ONE / 10;
     }
 
+    Prf_StartFrame();
+
     IN_Update();
     TestInput(gs.frametime);
     G_Update(gs.frametime);
@@ -93,6 +96,8 @@ int main(int argc, char **argv) {
     R_UpdateLightStyles(gs.time);
     R_RenderView();
     R_Flip();
+
+    Prf_EndFrame();
   }
 
   return 0;

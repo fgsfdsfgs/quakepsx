@@ -2,12 +2,21 @@ cmake_minimum_required(VERSION 3.21)
 
 project(quakepsx LANGUAGES C ASM)
 
+option(INSTRUMENT_FUNCTIONS "Compile with -finstrument-functions and enable Redux profiler" OFF)
+option(ENABLE_LTO "Compile with -flto" ON)
+
 file(GLOB _sources src/*.c src/progs/*.c src/*.s)
 
 include_directories(src)
 
-add_compile_options(-flto -Wuninitialized)
-add_link_options(-flto)
+add_compile_options(-Wuninitialized)
+
+if(INSTRUMENT_FUNCTIONS)
+  add_compile_options(-finstrument-functions)
+elseif(ENABLE_LTO)
+  add_compile_options(-flto)
+  add_link_options(-flto)
+endif()
 
 get_target_property(OLD_OPTS psn00bsdk INTERFACE_COMPILE_OPTIONS)
 string(REPLACE "-O2" "-O3" NEW_OPTS "${OLD_OPTS}")
