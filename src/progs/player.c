@@ -162,7 +162,7 @@ void spawn_player(edict_t *self) {
   self->v.nextthink = 1;
   self->v.health = PLAYER_HEALTH;
   self->v.max_health = self->v.health;
-  self->v.flags |= FL_TAKEDAMAGE | FL_NOTARGET;
+  self->v.flags |= FL_TAKEDAMAGE;
   self->v.th_die = player_die;
 
   plr->viewofs.z = self->v.viewheight;
