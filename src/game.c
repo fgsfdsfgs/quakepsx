@@ -55,6 +55,7 @@ void G_ParseMapEnts(bmodel_t *mdl) {
     ent->v.target = mapent->target;
     ent->v.killtarget = mapent->killtarget;
     ent->v.targetname = mapent->targetname;
+    ent->v.delay = mapent->delay;
     ent->v.extra_trigger.wait = mapent->wait;
     ent->v.extra_trigger.string = mapent->string;
     if (mapent->height)
