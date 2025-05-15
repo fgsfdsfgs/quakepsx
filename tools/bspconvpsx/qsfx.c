@@ -37,8 +37,8 @@ const char *qsfxmap_name_for_id(const int id) {
   return qsfxmap[id];
 }
 
-qsfx_t *qsfx_add(const char *name, u8 *start, const size_t size) {
-  const int id = qsfxmap_id_for_name(name);
+qsfx_t *qsfx_add(const int in_id, const char *name, u8 *start, const size_t size) {
+  const int id = in_id ? in_id : qsfxmap_id_for_name(name);
   if (id <= 0) {
     fprintf(stderr, "qsfx_add(): unknown sfx '%s'\n", name);
     return NULL;

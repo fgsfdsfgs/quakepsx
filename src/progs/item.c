@@ -346,7 +346,7 @@ void spawn_item_spikes(edict_t *self) {
 }
 
 void spawn_item_key1(edict_t *self) {
-  spawn_item(self, MDLID_M_S_KEY, IT_KEY1, 0, SFXID_MISC_MEDKEY);
+  spawn_item(self, MDLID_W_S_KEY, IT_KEY1, 0, SFXID_MISC_MEDKEY);
   self->v.touch = key_touch;
   XVecSetInt(&self->v.mins, -16, -16, -24);
   XVecSetInt(&self->v.maxs, +16, +16, +32);
@@ -354,7 +354,7 @@ void spawn_item_key1(edict_t *self) {
 }
 
 void spawn_item_key2(edict_t *self) {
-  spawn_item(self, MDLID_M_G_KEY, IT_KEY2, 0, SFXID_MISC_MEDKEY);
+  spawn_item(self, MDLID_W_G_KEY, IT_KEY2, 0, SFXID_MISC_MEDKEY);
   self->v.touch = key_touch;
   XVecSetInt(&self->v.mins, -16, -16, -24);
   XVecSetInt(&self->v.maxs, +16, +16, +32);

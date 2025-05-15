@@ -25,7 +25,7 @@ int qmdlmap_init(const char *mapfile);
 int qmdlmap_id_for_name(const char *name);
 const char *qmdlmap_name_for_id(const int id);
 
-qmdl_t *qmdl_add(const char *name, u8 *start, const size_t size);
+qmdl_t *qmdl_add(const int id, const char *name, u8 *start, const size_t size);
 qmdl_t *qmdl_find(const char *name);
 void qmdl_sort(qmdl_t *mdl);
 

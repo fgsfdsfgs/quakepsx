@@ -68,20 +68,32 @@ int qentmap_link(const char *resfile) {
       }
       if (!strcmp(key, "mdl")) {
         assert(entclass->num_mdlnums < MAX_ENT_MDLS);
-        id = qmdlmap_id_for_name(val);
-        if (id <= 0) {
-          fprintf(stderr, "model '%s' not in mdlmap\n", val);
-          continue;
+        const int idx = entclass->num_mdlnums++;
+        for (int i = 0; i < MAX_ALIASES; ++i) {
+          id = qmdlmap_id_for_name(val);
+          if (id <= 0) {
+            fprintf(stderr, "model '%s' not in mdlmap\n", val);
+            break;
+          }
+          entclass->mdlnums[idx][i] = id;
+          val = strtok(NULL, " \t\r\n");
+          if (!val || !val[0])
+            break;
         }
-        entclass->mdlnums[entclass->num_mdlnums++] = id;
       } else if (!strcmp(key, "sfx")) {
         assert(entclass->num_sfxnums < MAX_ENT_SFX);
-        id = qsfxmap_id_for_name(val);
-        if (id <= 0) {
-          fprintf(stderr, "sfx '%s' not in sfxmap\n", val);
-          continue;
+        const int idx = entclass->num_sfxnums++;
+        for (int i = 0; i < MAX_ALIASES; ++i) {
+          id = qsfxmap_id_for_name(val);
+          if (id <= 0) {
+            fprintf(stderr, "sound '%s' not in sfxmap\n", val);
+            break;
+          }
+          entclass->sfxnums[idx][i] = id;
+          val = strtok(NULL, " \t\r\n");
+          if (!val || !val[0])
+            break;
         }
-        entclass->sfxnums[entclass->num_sfxnums++] = id;
       }
     }
   }

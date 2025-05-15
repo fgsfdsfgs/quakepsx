@@ -49,13 +49,13 @@ qmdl_t *qmdl_find(const char *name) {
   return NULL;
 }
 
-qmdl_t *qmdl_add(const char *name, u8 *start, const size_t size) {
+qmdl_t *qmdl_add(const int id, const char *name, u8 *start, const size_t size) {
   assert(num_qmdls < MAX_QMDLS);
 
   qmdl_t *mdl = &qmdls[num_qmdls++];
   strncpy(mdl->name, name, sizeof(mdl->name) - 1);
   qmdl_init(mdl, start, size);
-  mdl->id = qmdlmap_id_for_name(name);
+  mdl->id = id ? id : qmdlmap_id_for_name(name);
 
   // pre-sort viewmodels (TODO: add a better way to detect them)
   if (strstr(name, "/v_"))

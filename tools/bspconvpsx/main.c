@@ -25,6 +25,9 @@ static const char *inname;
 static const char *outname;
 static const char *vramexp;
 
+static int qbsp_worldtype = 0;
+static int qbsp_cdtrack = 0;
+
 static void cleanup(void) {
   if (qbsp.start) free(qbsp.start);
   if (qbsp.palette) free(qbsp.palette);
@@ -376,10 +379,19 @@ static void do_entities(void) {
 
   qent_t *qent = qents;
   xmapent_t *xent = xbsp_entities;
+  const char *tmpstr;
+  qvec3_t tmpvec;
+  float tmpfloat;
+  int tmpint;
 
   // 0 - worldspawn
   assert(!strcmp(qent->classname, "worldspawn"));
   xent->classname = 0;
+  // remember these two, we'll use them later
+  if (qent_get_int(qent, "sounds", &tmpint))
+    qbsp_cdtrack = tmpint;
+  if (qent_get_int(qent, "worldtype", &tmpint))
+    qbsp_worldtype = tmpint;
   ++xent; ++qent;
   ++xbsp_numentities;
 
@@ -388,19 +400,15 @@ static void do_entities(void) {
   ++xbsp_numentities;
 
   // the rest
-  const char *tmpstr;
-  qvec3_t tmpvec;
-  float tmpfloat;
-  int tmpint;
   for (int i = 1; i < num_qents; ++i, ++qent) {
     // filter some entities that we don't need
     if (!strcmp(qent->classname, "info_player_deathmatch") ||
         !strcmp(qent->classname, "info_player_coop") ||
-        !strcmp(qent->classname, "info_player_start2"))
+        !strcmp(qent->classname, "info_null"))
       continue;
 
     // don't care about lights that don't get triggered
-    if (!strcmp(qent->classname, "light") && !qent_get_string(qent, "targetname"))
+    if (!strncmp(qent->classname, "light", 5) && !qent_get_string(qent, "targetname"))
       continue;
 
     // if this is a player start, fill in entity 1; otherwise alloc a new one
@@ -502,20 +510,26 @@ static void do_entities(void) {
     xbsp_numentities, xbsp_lumps[XLMP_ENTITIES].size, xbsp_lumps[XLMP_STRINGS].size);
 }
 
-static void load_entmodel(const int id, const char *mdlname) {
+static void load_entmodel(const int id, int override_id) {
   if (xbsp_entmodel_find(id))
     return;
 
-  printf("* loading model %s\n", mdlname);
+  if (!override_id)
+    override_id = id;
+
+  const char *mdlname = qmdlmap_name_for_id(override_id);
+
+  printf("* loading model %s (id %02x)\n", mdlname, override_id);
 
   size_t mdlsize = 0;
   u8 *mdl = lmp_read(moddir, mdlname, &mdlsize);
   if (strstr(mdlname, ".bsp")) {
     static qbsp_t tmpqbsp;
     qbsp_init(&tmpqbsp, mdl, mdlsize);
-    xbsp_entmodel_add_from_qbsp(&tmpqbsp, id);
+    xaliashdr_t *xmdl = xbsp_entmodel_add_from_qbsp(&tmpqbsp, id);
+    xmdl->id = id;
   } else {
-    qmdl_t *qmdl = qmdl_add(mdlname, mdl, mdlsize);
+    qmdl_t *qmdl = qmdl_add(id, mdlname, mdl, mdlsize);
     xbsp_entmodel_add_from_qmdl(qmdl);
   }
 }
@@ -525,14 +539,18 @@ static void do_entmodels(void) {
 
   for (int i = 0; i < num_qents; ++i) {
     // add any models tied to the classname
-    for (int j = 0; j < MAX_ENT_MDLS && qents[i].info->mdlnums[j]; ++j)
-      load_entmodel(qents[i].info->mdlnums[j], qmdlmap_name_for_id(qents[i].info->mdlnums[j]));
+    for (int j = 0; j < MAX_ENT_MDLS && qents[i].info->mdlnums[j][0]; ++j) {
+      // override actual model with worldtype alternative, if there is one
+      const int main_id = qents[i].info->mdlnums[j][0];
+      const int override_id = qents[i].info->mdlnums[j][qbsp_worldtype];
+      load_entmodel(main_id, override_id);
+    }
     // also add any extra models
     const char *model = qent_get_string(&qents[i], "model");
     if (model && model[0] != '*' && model[0]) {
       const int id = qmdlmap_id_for_name(model);
       if (id > 0)
-        load_entmodel(id, model);
+        load_entmodel(id, id);
       else
         fprintf(stderr, "* unknown model '%s' in entity %d's model field\n", model, i);
     }
@@ -543,18 +561,23 @@ static void do_entmodels(void) {
   printf("loaded %d entity models, mdl lump size = %u\n", num_qmdls, xbsp_lumps[XLMP_MDLDATA].size);
 }
 
-static void load_sound(const int id, const char *sfxname) {
+static void load_sound(const int id, int override_id) {
   if (qsfx_find(id))
     return;
 
-  printf("* loading sound %s\n", sfxname);
+  if (!override_id)
+    override_id = id;
+
+  const char *sfxname = qsfxmap_name_for_id(override_id);
+
+  printf("* loading sound %s (id %02x)\n", sfxname, override_id);
 
   size_t wavsize = 0;
   u8 *wavdata = lmp_read(moddir, sfxname, &wavsize);
   if (!wavdata)
     return;
 
-  qsfx_t *sfx = qsfx_add(sfxname, wavdata, wavsize);
+  qsfx_t *sfx = qsfx_add(id, sfxname, wavdata, wavsize);
   free(wavdata);
   if (!sfx)
     return;
@@ -567,8 +590,12 @@ static void do_sounds(void) {
 
   for (int i = 0; i < num_qents; ++i) {
     // add any sounds tied to the classname
-    for (int j = 0; j < MAX_ENT_SFX && qents[i].info->sfxnums[j]; ++j)
-      load_sound(qents[i].info->sfxnums[j], qsfxmap_name_for_id(qents[i].info->sfxnums[j]));
+    for (int j = 0; j < MAX_ENT_SFX && qents[i].info->sfxnums[j][0]; ++j) {
+      // override actual sound with worldtype alternative, if there is one
+      const int main_id = qents[i].info->sfxnums[j][0];
+      const int override_id = qents[i].info->sfxnums[j][qbsp_worldtype];
+      load_sound(main_id, override_id);
+    }
   }
 
   xbsp_lumps[XLMP_SNDDATA].size = sizeof(xsndlump_t) + sizeof(xmapsnd_t) * xbsp_numsounds + xbsp_spuptr;

@@ -4,6 +4,7 @@
 #include "../common/idbsp.h"
 #include "../common/psxbsp.h"
 
+#define MAX_ALIASES 3
 #define MAX_ENT_MDLS 32
 #define MAX_ENT_SFX 32
 #define MAX_ENT_CLASSES 0x80
@@ -22,10 +23,10 @@ typedef struct {
   int classnum;
 
   int num_mdlnums;
-  int mdlnums[MAX_ENT_MDLS];
+  int mdlnums[MAX_ENT_MDLS][MAX_ALIASES];
 
   int num_sfxnums;
-  int sfxnums[MAX_ENT_SFX];
+  int sfxnums[MAX_ENT_SFX][MAX_ALIASES];
 } qentmap_t;
 
 typedef struct {

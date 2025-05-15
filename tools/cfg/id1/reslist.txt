@@ -1,7 +1,12 @@
 # this is a big list of resources used by each entity class
-# ent - specifies the entity class for all the other directives that follow, until the next ent directive
-# mdl - designates alias models that should be loaded if this class is in the map
-# sfx - designates sound effects that should be loaded if this class is in the map
+# ent <classname>
+#   specifies the entity class for all the other directives that follow, until the next ent directive
+# mdl <name0> [<name1> <name2>]
+#   designates alias models that should be loaded if this class is in the map
+#   if <name1> <name2> are specified, <name1> or <name2> will be loaded in place of <name0> depending on worldtype
+# sfx <name0> [<name1> <name2>]
+#   designates sound effects that should be loaded if this class is in the map
+#   if <name1> <name2> are specified, <name1> or <name2> will be loaded in place of <name0> depending on worldtype
 
 # always precached, since worldspawn is in every map
 ent worldspawn
@@ -117,12 +122,12 @@ ent item_armorInv
   sfx sound/items/armor1.wav
 
 ent item_key1
-  mdl progs/m_s_key.mdl
-  sfx sound/misc/medkey.wav
+  mdl progs/w_s_key.mdl progs/m_s_key.mdl progs/b_s_key.mdl
+  sfx sound/misc/medkey.wav sound/misc/runekey.wav sound/misc/basekey.wav 
 
 ent item_key2
-  mdl progs/m_g_key.mdl
-  sfx sound/misc/medkey.wav
+  mdl progs/w_g_key.mdl progs/m_g_key.mdl progs/b_g_key.mdl
+  sfx sound/misc/medkey.wav sound/misc/runekey.wav sound/misc/basekey.wav 
 
 ent item_sigil
   mdl progs/end1.mdl
@@ -252,22 +257,16 @@ ent monster_boss
 # brush entities
 
 ent func_plat
-  sfx sound/plats/medplat1.wav
-  sfx sound/plats/medplat2.wav
+  sfx sound/plats/medplat1.wav sound/plats/medplat1.wav sound/plats/plat1.wav
+  sfx sound/plats/medplat2.wav sound/plats/medplat2.wav sound/plats/plat2.wav
 
 ent func_door
-  sfx sound/doors/hydro1.wav
-  sfx sound/doors/hydro2.wav
-  sfx sound/doors/doormv1.wav
-  sfx sound/doors/drclos4.wav
-  sfx sound/doors/medtry.wav
-  sfx sound/doors/basetry.wav
+  sfx sound/doors/doormv1.wav sound/doors/stndr1.wav sound/doors/hydro1.wav
+  sfx sound/doors/drclos4.wav sound/doors/stndr2.wav sound/doors/hydro2.wav
+  sfx sound/doors/medtry.wav sound/doors/runetry.wav sound/doors/basetry.wav
 
 ent func_button
-  sfx sound/buttons/airbut1.wav
-  sfx sound/buttons/switch04.wav
-  sfx sound/doors/doormv1.wav
-  sfx sound/doors/drclos4.wav
+  sfx sound/buttons/airbut1.wav sound/buttons/airbut1.wav sound/buttons/switch21.wav
 
 ent func_train
   sfx sound/plats/train1.wav

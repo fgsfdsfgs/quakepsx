@@ -17,7 +17,7 @@
 #include "xbsp.h"
 #include "xmdl.h"
 
-void xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
+xaliashdr_t *xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
   assert(xbsp_numentmodels < MAX_XMAP_ENTMODELS);
   assert(qm->header->numverts < MAX_XMDL_VERTS);
   assert(qm->header->numtris < MAX_XMDL_TRIS);
@@ -107,9 +107,11 @@ void xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
     (u32)(xbsp_entmodeldataptr - origptr),
     dstw, dsth,
     maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
+
+  return xmhdr;
 }
 
-void xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
+xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
   assert(xbsp_numentmodels < MAX_XMAP_ENTMODELS);
 
   // we only support cuboids since all of these models in OG Quake are cuboids
@@ -206,6 +208,8 @@ void xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
     (u32)(xbsp_entmodeldataptr - origptr),
     xti.size.x, xti.size.y,
     maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
+
+  return xmhdr;
 }
 
 xaliashdr_t *xbsp_entmodel_find(const s16 id) {
