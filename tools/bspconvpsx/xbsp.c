@@ -91,8 +91,8 @@ xmapsnd_t *xbsp_spu_fit(qsfx_t *src) {
   snd->frames = src->numframes;
   snd->soundid = src->id;
 
-  printf("* * id: %02x pcmlen: %u, adpcmlen: %u, addr: %05x, time: %d\n",
-    src->id, src->numsamples * 2, outbytes, snd->spuaddr, snd->frames);
+  printf("* * id: %02x, loop: %d, pcmlen: %u, adpcmlen: %u, addr: %05x, time: %d\n",
+    src->id, src->loopstart, src->numsamples * 2, outbytes, snd->spuaddr, snd->frames);
 
   xbsp_spuptr += outbytes;
 

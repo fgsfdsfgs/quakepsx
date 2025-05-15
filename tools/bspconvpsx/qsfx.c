@@ -45,7 +45,7 @@ qsfx_t *qsfx_add(const int in_id, const char *name, u8 *start, const size_t size
   }
 
   drwav wav;
-  if (!drwav_init_memory(&wav, start, size, NULL)) {
+  if (!drwav_init_memory_with_metadata(&wav, start, size, 0, NULL)) {
     fprintf(stderr, "qsfx_add(): could not open wav '%s'\n", name);
     return NULL;
   }
@@ -62,6 +62,26 @@ qsfx_t *qsfx_add(const int in_id, const char *name, u8 *start, const size_t size
   const int srate = wav.sampleRate;
   const double stime = (double)wav.totalPCMFrameCount / (double)srate;
   int numsrcsamples = drwav_read_pcm_frames_s16(&wav, wav.totalPCMFrameCount, srcsamples);
+
+  // find loop point
+  int loop = -1;
+  if (wav.pMetadata && wav.metadataCount) {
+    for (int i = 0; i < wav.metadataCount; ++i) {
+      const drwav_metadata *meta = wav.pMetadata + i;
+      if (meta->type & drwav_metadata_type_cue) {
+        if (!meta->data.cue.cuePointCount || !meta->data.cue.pCuePoints)
+          continue;
+        const drwav_cue_point *cpt = meta->data.cue.pCuePoints;
+        if (cpt->blockStart) {
+          fprintf(stderr, "qsfx_add(): warning: skipping cue points in compressed wav\n");
+          break;
+        }
+        loop = cpt->sampleByteOffset >> (wav.bitsPerSample != 8);
+        break;
+      }
+    }
+  }
+
   drwav_uninit(&wav);
 
   if (numsrcsamples <= 0) {
@@ -72,6 +92,8 @@ qsfx_t *qsfx_add(const int in_id, const char *name, u8 *start, const size_t size
   if (srate == 22050 && numsrcsamples > 1) {
     // downsample to 11025 by throwing out every other sample
     numsrcsamples /= 2;
+    if (loop > 0)
+      loop /= 2;
     drwav_int16 *dst = malloc(numsrcsamples * sizeof(drwav_int16));
     assert(dst);
     for (int i = 0, j = 0; j < numsrcsamples; i += 2, ++j)
@@ -86,7 +108,7 @@ qsfx_t *qsfx_add(const int in_id, const char *name, u8 *start, const size_t size
   sfx->samples = srcsamples;
   sfx->numframes = stime * 60.0;
   sfx->numsamples = numsrcsamples;
-  sfx->looped = (strstr(name, "ambience/") != NULL); // TODO
+  sfx->loopstart = loop;
 
   return sfx;
 }
@@ -107,7 +129,7 @@ int qsfx_convert(qsfx_t *sfx, u8 *outptr, const int maxlen) {
   // 4MB ought to be enough for everybody
   static u8 tmp[4 * 1024 * 1024];
 
-  const int loop_start = sfx->looped ? 0 : -1;
+  const int loop_start = sfx->loopstart;
   const int adpcm_len = psx_audio_spu_encode_simple(sfx->samples, sfx->numsamples, tmp, loop_start);
   if (adpcm_len <= 0) {
     fprintf(stderr, "could not encode sound '%s'\n", qsfxmap[sfx->id]);
