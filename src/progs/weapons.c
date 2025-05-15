@@ -114,42 +114,6 @@ static void sshotgun_attack(edict_t *self) {
   plr->vmodel_think = attack_cycle;
 }
 
-static void spike_touch(edict_t *self, edict_t *other) {
-  if (other == self->v.owner || other->v.solid == SOLID_TRIGGER)
-    return;
-
-  // TODO: sky
-
-  // hit something that bleeds
-  if (other->v.flags & FL_TAKEDAMAGE) {
-    fx_spawn_blood(&self->v.origin, self->v.dmg);
-    utl_damage(other, self, self->v.owner, self->v.dmg);
-  } else {
-    fx_spawn_gunshot(&self->v.origin);
-  }
-
-  utl_remove(self);
-}
-
-static edict_t *launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir) {
-  edict_t *newmis = ED_Alloc();
-  newmis->v.owner = self;
-  newmis->v.movetype = MOVETYPE_FLYMISSILE;
-  newmis->v.solid = SOLID_BBOX;
-  newmis->v.angles = *angles;
-  newmis->v.touch = spike_touch;
-  newmis->v.think = utl_remove;
-  newmis->v.nextthink = gs.time + TO_FIX32(6);
-  newmis->v.origin = *org;
-  newmis->v.velocity.x = (x32)dir->x * 1000;
-  newmis->v.velocity.y = (x32)dir->y * 1000;
-  newmis->v.velocity.z = (x32)dir->z * 1000;
-  newmis->v.dmg = 9;
-  G_SetModel(newmis, MDLID_SPIKE);
-  G_SetSize(newmis, &x32vec3_origin, &x32vec3_origin);
-  G_LinkEdict(newmis, false);
-}
-
 static edict_t *fire_spikes(edict_t *self, const x16vec3_t *angles, const s16 dx) {
   x16vec3_t dir;
   utl_makevectors(angles);
@@ -158,7 +122,7 @@ static edict_t *fire_spikes(edict_t *self, const x16vec3_t *angles, const s16 dx
   org.x = self->v.origin.x + pr.v_right.x * dx;
   org.y = self->v.origin.y + pr.v_right.y * dx;
   org.z = self->v.origin.z + pr.v_right.z * dx + TO_FIX32(16);
-  return launch_spike(self, &org, angles, &dir);
+  return utl_launch_spike(self, &org, angles, &dir, 1000);
 }
 
 static void nailgun_attack_cycle(edict_t *self) {

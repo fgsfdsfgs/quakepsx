@@ -365,3 +365,39 @@ qboolean utl_heal(edict_t *e, const s16 amount, const qboolean ignore_max) {
 
   return true;
 }
+
+static void spike_touch(edict_t *self, edict_t *other) {
+  if (other == self->v.owner || other->v.solid == SOLID_TRIGGER)
+    return;
+
+  // TODO: sky
+
+  // hit something that bleeds
+  if (other->v.flags & FL_TAKEDAMAGE) {
+    fx_spawn_blood(&self->v.origin, self->v.dmg);
+    utl_damage(other, self, self->v.owner, self->v.dmg);
+  } else {
+    fx_spawn_gunshot(&self->v.origin);
+  }
+
+  utl_remove(self);
+}
+
+edict_t *utl_launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir, const s16 speed) {
+  edict_t *newmis = ED_Alloc();
+  newmis->v.owner = self;
+  newmis->v.movetype = MOVETYPE_FLYMISSILE;
+  newmis->v.solid = SOLID_BBOX;
+  newmis->v.angles = *angles;
+  newmis->v.touch = spike_touch;
+  newmis->v.think = utl_remove;
+  newmis->v.nextthink = gs.time + TO_FIX32(6);
+  newmis->v.origin = *org;
+  newmis->v.velocity.x = (x32)dir->x * speed;
+  newmis->v.velocity.y = (x32)dir->y * speed;
+  newmis->v.velocity.z = (x32)dir->z * speed;
+  newmis->v.dmg = 9;
+  G_SetModel(newmis, MDLID_SPIKE);
+  G_SetSize(newmis, &x32vec3_origin, &x32vec3_origin);
+  G_LinkEdict(newmis, false);
+}

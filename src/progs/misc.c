@@ -2,6 +2,9 @@
 
 #define SF_LIGHT_START_OFF 1
 
+#define SF_SHOOTER_SUPERSPIKE 1
+#define SF_SHOOTER_LASER 2
+
 static inline void spawn_ambient(edict_t *self, const s16 sfxid, const s16 vol) {
   Snd_StaticSoundId(sfxid, &self->v.origin, vol, ATTN_STATIC);
 }
@@ -127,4 +130,23 @@ void spawn_light_flame_small_yellow(edict_t *self) {
 
 void spawn_light_torch_small_walltorch(edict_t *self) {
   // TODO
+}
+
+static void spikeshooter_use(edict_t *self, edict_t *activator) {
+  if (self->v.spawnflags & SF_SHOOTER_LASER) {
+    utl_sound(self, CHAN_VOICE, SFXID_ENFORCER_ENFIRE, SND_MAXVOL, ATTN_NORM);
+    // TODO: utl_launch_laser
+  } else {
+    utl_sound(self, CHAN_VOICE, SFXID_WEAPONS_SPIKE2, SND_MAXVOL, ATTN_NORM);
+    edict_t *spike = utl_launch_spike(self, &self->v.origin, &self->v.angles, &self->v.avelocity, 500);
+    if (self->v.spawnflags & SF_SHOOTER_SUPERSPIKE)
+      spike->v.dmg = 18;
+  }
+}
+
+void spawn_trap_spikeshooter(edict_t *self) {
+  self->v.movetype = MOVETYPE_NONE;
+  self->v.use = spikeshooter_use;
+  self->v.solid = SOLID_NOT;
+  utl_set_movedir(self, &self->v.avelocity);
 }

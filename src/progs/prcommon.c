@@ -69,8 +69,6 @@ void utl_set_movedir(edict_t *self, x16vec3_t *movedir) {
 
   utl_makevectors(&self->v.angles);
   *movedir = pr.v_forward;
-
-  XVecZero(&self->v.angles);
 }
 
 static void calc_move_done(edict_t *self) {

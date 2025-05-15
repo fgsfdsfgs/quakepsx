@@ -70,7 +70,7 @@ extern void spawn_monster_tarbaby(edict_t *self) { }
 extern void spawn_monster_wizard(edict_t *self);
 extern void spawn_monster_zombie(edict_t *self);
 extern void spawn_path_corner(edict_t *self) { }
-extern void spawn_trap_spikeshooter(edict_t *self) { }
+extern void spawn_trap_spikeshooter(edict_t *self);
 extern void spawn_trigger_changelevel(edict_t *self);
 extern void spawn_trigger_counter(edict_t *self);
 extern void spawn_trigger_hurt(edict_t *self);
