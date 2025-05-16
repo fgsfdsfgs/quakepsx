@@ -407,8 +407,11 @@ static void do_entities(void) {
         !strcmp(qent->classname, "info_null"))
       continue;
 
-    // don't care about lights that don't get triggered
-    if (!strncmp(qent->classname, "light", 5) && !qent_get_string(qent, "targetname"))
+    // don't care about lights that don't get triggered and have no model
+    if (!strncmp(qent->classname, "light", 5) &&
+        !qent_get_string(qent, "targetname") &&
+        !qent_get_string(qent, "model") &&
+        !qent->info->mdlnums[0][0])
       continue;
 
     // if this is a player start, fill in entity 1; otherwise alloc a new one

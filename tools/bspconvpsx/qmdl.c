@@ -77,9 +77,6 @@ int qmdl_init(qmdl_t *mdl, u8 *start, const size_t size) {
   mdl->skins = calloc(mdl->header->numskins, sizeof(*mdl->skins));
   assert(mdl->skins);
 
-  mdl->frames = calloc(mdl->header->numframes, sizeof(*mdl->frames));
-  assert(mdl->frames);
-
   for (s32 i = 0; i < mdl->header->numskins; ++i) {
     mdl->skins[i].group = *(u32 *)start; start += sizeof(u32);
     mdl->skins[i].data = start; start += mdl->header->skinwidth * mdl->header->skinheight;
@@ -90,10 +87,35 @@ int qmdl_init(qmdl_t *mdl, u8 *start, const size_t size) {
   mdl->tris = (qaliastri_t *)start;
   start += mdl->header->numtris * sizeof(*mdl->tris);
 
+  // check if the first frame is a group; we only support models that either have only simple frames or 1 group frame
+  qtrivertx_t absmin = { 0, 0, 0, 0 };
+  qtrivertx_t absmax = { 0, 0, 0, 0 };
+  int isgroup = 0;
+  if (*(s32 *)start != 0) {
+    // if (mdl->header->numframes != 1)
+    //   panic("model has more than one group frame: %d", mdl->header->numframes);
+    // this is the only group frame; read the group header and override numframes
+    start += sizeof(s32); // skip group frame type
+    mdl->header->numframes = *(s32 *)start; start += sizeof(s32);
+    absmin = *(qtrivertx_t *)start; start += sizeof(qtrivertx_t);
+    absmax = *(qtrivertx_t *)start; start += sizeof(qtrivertx_t);
+    start += sizeof(f32) * mdl->header->numframes; // skip time intervals
+    isgroup = 1;
+  }
+
+  mdl->frames = calloc(mdl->header->numframes, sizeof(*mdl->frames));
+  assert(mdl->frames);
+
   for (s32 i = 0; i < mdl->header->numframes; ++i) {
-    mdl->frames[i].type = *(s32 *)start; start += sizeof(s32);
-    if (mdl->frames[i].type != 0)
-      panic("frame %d: expected type 0, got %d\n", i, mdl->frames[i].type);
+    if (isgroup) {
+      // this frame is part of a group and has no type field
+      mdl->frames[i].type = 0;
+    } else {
+      // hope this is a simple frame
+      mdl->frames[i].type = *(s32 *)start; start += sizeof(s32);
+      if (mdl->frames[i].type != 0)
+        panic("frame %d: expected type 0, got %d\n", i, mdl->frames[i].type);
+    }
     mdl->frames[i].min = *(qtrivertx_t *)start; start += sizeof(qtrivertx_t);
     mdl->frames[i].max = *(qtrivertx_t *)start; start += sizeof(qtrivertx_t);
     memcpy(mdl->frames[i].name, start, sizeof(mdl->frames[i].name));
