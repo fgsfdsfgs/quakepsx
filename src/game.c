@@ -9,6 +9,7 @@
 #include "menu.h"
 #include "screen.h"
 #include "move.h"
+#include "cd.h"
 
 game_state_t gs;
 
@@ -21,6 +22,7 @@ void G_ParseMapEnts(bmodel_t *mdl) {
   gs.edicts[0].v.model = gs.worldmodel;
   gs.edicts[0].v.mins = gs.worldmodel->mins;
   gs.edicts[0].v.maxs = gs.worldmodel->maxs;
+  gs.edicts[0].v.noise = mdl->mapents[0].noise; // CD track
 
   // player 0
   gs.edicts[1].free = false;
@@ -86,6 +88,9 @@ qboolean G_CheckNextMap(void) {
 }
 
 void G_StartMap(const char *path) {
+  // disable CDDA but keep the motor spinning because we need to read
+  CD_SetMode(CDMODE_DATA);
+
   Mem_FreeToMark(MEM_MARK_LO);
 
   Scr_BeginLoading();
@@ -135,6 +140,13 @@ void G_StartMap(const char *path) {
     ent_spawnfuncs[ent->v.classname](ent);
     G_LinkEdict(ent, false);
   }
+
+  // if there is an audio track set for this map, play it
+  // otherwise just stop the drive motor
+  if (gs.edicts[0].v.noise)
+    CD_PlayAudio(gs.edicts[0].v.noise);
+  else
+    CD_Stop();
 
   Scr_EndLoading();
 }

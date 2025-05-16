@@ -24,21 +24,7 @@ void Sys_Wait(int n) {
 void Sys_Init(void) {
   // initialize interrupts n shit
   ResetGraph(3);
-
   Sys_InstallExceptionHandler();
-
-  // see if there was a CD in the drive during init, die if there wasn't
-  if (!CdInit())
-    Sys_Error("bad CD or no CD in drive");
-
-  // look alive
-  CdControl(CdlNop, 0, 0);
-  CdStatus();
-
-  // set hispeed mode
-  u_long cdmode = CdlModeSpeed;
-  CdControlB(CdlSetmode, (u_char *)&cdmode, 0);
-  Sys_Wait(3); // have to do this to not explode the drive apparently
 }
 
 void Sys_Error(const char *error, ...) {

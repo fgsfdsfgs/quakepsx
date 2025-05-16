@@ -90,3 +90,10 @@ void SPU_StartUpload(const u32 dstaddr, const u8 *src, const u32 size) {
   SpuSetTransferStartAddr(dstaddr);
   SpuWrite((u32 *)src, size);
 }
+
+void SPU_EnableCDDA(const qboolean enable) {
+  if (enable)
+    SPU_CTRL |= 1;
+  else
+    SPU_CTRL &= ~1;
+}

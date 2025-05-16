@@ -17,6 +17,7 @@ void SPU_PlaySample(const u32 ch, const u32 addr, const u32 freq);
 void SPU_WaitForTransfer(void);
 void SPU_ClearAllVoices(void);
 void SPU_StartUpload(const u32 dstaddr, const u8 *src, const u32 size);
+void SPU_EnableCDDA(const qboolean enable);
 
 static inline u16 FreqToPitch(const u32 hz) {
   return (hz << 12) / 44100;

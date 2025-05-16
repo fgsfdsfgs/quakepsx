@@ -389,7 +389,7 @@ static void do_entities(void) {
   xent->classname = 0;
   // remember these two, we'll use them later
   if (qent_get_int(qent, "sounds", &tmpint))
-    qbsp_cdtrack = tmpint;
+    xent->noise = qbsp_cdtrack = tmpint;
   if (qent_get_int(qent, "worldtype", &tmpint))
     qbsp_worldtype = tmpint;
   ++xent; ++qent;

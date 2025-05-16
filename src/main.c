@@ -1,5 +1,6 @@
 #include "common.h"
 #include "system.h"
+#include "cd.h"
 #include "render.h"
 #include "input.h"
 #include "game.h"
@@ -62,9 +63,10 @@ static void TestInput(const x16 dt) {
 int main(int argc, char **argv) {
   Mem_Init();
   Sys_Init();
+  IN_Init();
+  CD_Init();
   Snd_Init();
   R_Init();
-  IN_Init();
 
   Mem_SetMark(MEM_MARK_LO);
 
@@ -92,6 +94,7 @@ int main(int argc, char **argv) {
     IN_Update();
     TestInput(gs.frametime);
     G_Update(gs.frametime);
+    CD_Update();
     Snd_Update(&rs.origin, &rs.vright);
     R_UpdateLightStyles(gs.time);
     R_RenderView();
