@@ -4,13 +4,11 @@ project(quakepsx LANGUAGES C ASM)
 
 option(INSTRUMENT_FUNCTIONS "Compile with -finstrument-functions and enable Redux profiler" OFF)
 option(ENABLE_LTO "Compile with -flto" ON)
+option(WITH_CDDA "Build full image with CD Audio tracks (requires said tracks)" OFF)
 
 file(GLOB _sources src/*.c src/progs/*.c src/*.s)
 
 include_directories(src)
-
-option(WITH_CDDA "Build full image with CD Audio tracks (requires said tracks)" OFF)
-option(INSTRUMENT_FUNCTIONS "Enable -finstrument-functions and PCSX-Redux profiler support" OFF)
 
 add_compile_options(-Wuninitialized)
 
