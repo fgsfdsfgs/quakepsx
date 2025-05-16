@@ -9,6 +9,9 @@ file(GLOB _sources src/*.c src/progs/*.c src/*.s)
 
 include_directories(src)
 
+option(WITH_CDDA "Build full image with CD Audio tracks (requires said tracks)" OFF)
+option(INSTRUMENT_FUNCTIONS "Enable -finstrument-functions and PCSX-Redux profiler support" OFF)
+
 add_compile_options(-Wuninitialized)
 
 if(INSTRUMENT_FUNCTIONS)
@@ -19,9 +22,16 @@ elseif(ENABLE_LTO)
   add_link_options(-flto)
 endif()
 
+if(WITH_CDDA)
+  message(STATUS "CD audio enabled.")
+  set(ISO_CONFIG "iso_cdda.xml")
+else()
+  set(ISO_CONFIG "iso.xml")
+endif()
+
 get_target_property(OLD_OPTS psn00bsdk INTERFACE_COMPILE_OPTIONS)
 string(REPLACE "-O2" "-O3" NEW_OPTS "${OLD_OPTS}")
 set_target_properties(psn00bsdk PROPERTIES INTERFACE_COMPILE_OPTIONS "${NEW_OPTS}")
 
 psn00bsdk_add_executable(quakepsx GPREL ${_sources})
-psn00bsdk_add_cd_image(quakepsx_iso quakepsx iso.xml DEPENDS quakepsx)
+psn00bsdk_add_cd_image(quakepsx_iso quakepsx ${ISO_CONFIG} DEPENDS quakepsx)

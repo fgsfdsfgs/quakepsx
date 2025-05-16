@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <iso_project image_name="quakepsx.iso">
+
+  <track type="data">
+    <identifiers
+      system        ="PLAYSTATION"
+      application   ="PLAYSTATION"
+      volume        ="QUAKEPSX"
+      volume_set    ="QUAKEPSX"
+      publisher     ="FGSFDS"
+      data_preparer ="PSN00BSDK ${PSN00BSDK_VERSION}"
+    />
+    <directory_tree>
+      <file name="system.cnf"   type="data" source="${PROJECT_SOURCE_DIR}/system.cnf"/>
+      <file name="quakepsx.exe" type="data" source="quakepsx.exe"/>
+      <dir  name="id1psx" source="${PROJECT_SOURCE_DIR}/id1psx">
+        <file name="gfx.dat" type="data" source="${PROJECT_SOURCE_DIR}/id1psx/gfx.dat"/>
+        <dir name="maps" source="${PROJECT_SOURCE_DIR}/id1psx/maps">
+          <file name="start.psb" type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/start.psb"/>
+          <file name="e1m1.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m1.psb"/>
+          <file name="e1m2.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m2.psb"/>
+          <file name="e1m3.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m3.psb"/>
+          <file name="e1m4.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m4.psb"/>
+          <file name="e1m5.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m5.psb"/>
+          <file name="e1m6.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m6.psb"/>
+          <file name="e1m7.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m7.psb"/>
+          <file name="e1m8.psb"  type="data" source="${PROJECT_SOURCE_DIR}/id1psx/maps/e1m8.psb"/>
+        </dir>
+      </dir>
+      <dummy sectors="1024"/>
+    </directory_tree>
+  </track>
+
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track02.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track03.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track04.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track05.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track06.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track07.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track08.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track09.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track10.wav"/>
+  <track type="audio" source="${PROJECT_SOURCE_DIR}/id1psx/music/track11.wav"/>
+
+  </iso_project>
+</xml>
