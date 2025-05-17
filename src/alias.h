@@ -10,7 +10,7 @@
 
 #define MAX_XMDL_VERTS  512
 #define MAX_XMDL_FRAMES 512
-#define MAX_XMDL_TRIS   512
+#define MAX_XMDL_TRIS   1024
 
 #pragma pack(push, 1)
 

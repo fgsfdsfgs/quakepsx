@@ -12,7 +12,7 @@
 
 #define MAX_XMDL_VERTS  512
 #define MAX_XMDL_FRAMES 512
-#define MAX_XMDL_TRIS   512
+#define MAX_XMDL_TRIS   1024
 
 // real coord = verts[i] * scale + offset
 typedef u8vec3_t xaliasvert_t;
