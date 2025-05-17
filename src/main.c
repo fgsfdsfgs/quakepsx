@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
   // default to normal skill
   gs.skill = 1;
 
-  G_RequestMap("E1M1");
+  G_RequestMap("E1M2");
 
   sndorg = gs.edicts[1].v.origin;
 

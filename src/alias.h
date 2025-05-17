@@ -8,24 +8,23 @@
  * aliasvert_t     frames[hdr.numframes][hdr.numverts];
  */
 
-#define MAX_XMDL_VERTS  256
-#define MAX_XMDL_FRAMES 256
+#define MAX_XMDL_VERTS  1024
+#define MAX_XMDL_FRAMES 1024
 #define MAX_XMDL_TRIS   1024
 
 #pragma pack(push, 1)
 
 typedef struct {
   u8vec2_t uvs[3];
-  u8 verts[3];
-  u8 fnorm;
+  u16 verts[3];
 } atri_t;
 
 typedef struct {
   u8 type;
   u8 flags;
   s16 id;
-  u8 numframes;
-  u8 numverts;
+  u16 numframes;
+  u16 numverts;
   u16 numtris;
   u16 tpage;
   x16vec3_t scale;

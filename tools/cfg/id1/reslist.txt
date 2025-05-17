@@ -250,7 +250,7 @@ ent monster_oldone
   mdl progs/oldone.mdl
 
 ent monster_boss
-  # mdl progs/boss.mdl # this fat fuck has too many vertices
+  mdl progs/boss.mdl
   sfx sound/boss1/sight1.wav
   sfx sound/boss1/pain.wav
   sfx sound/boss1/death.wav

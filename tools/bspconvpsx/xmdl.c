@@ -67,7 +67,7 @@ xaliashdr_t *xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
     xmtri->verts[0] = qm->tris[i].vertex[0];
     xmtri->verts[1] = qm->tris[i].vertex[1];
     xmtri->verts[2] = qm->tris[i].vertex[2];
-    xmtri->normal = 0; // TODO
+    // TODO: normals
     for (int j = 0; j < 3; ++j) {
       const qaliastexcoord_t *qtc = &qm->texcoords[xmtri->verts[j]];
       const f32 u = ((f32)qtc->s + 0.5f) / qm->header->skinwidth;
