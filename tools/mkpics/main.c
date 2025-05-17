@@ -30,7 +30,9 @@ static xpic_t pics[MAX_PICS];
 static char picnames[MAX_PICS][MAX_PIC_NAME] = { "NONE" };
 
 static const char *moddir;
-static const char *dstdir;
+static const char *cfgdir;
+static const char *dstdat;
+static const char *dsthdr;
 
 static inline void load_palette(void) {
   const char *palname = "gfx/palette.lmp";
@@ -206,24 +208,26 @@ static void cleanup(void) {
 }
 
 int main(int argc, const char **argv) {
-  if (argc != 3) {
-    printf("usage: %s <moddir> <outdir>\n", argv[0]);
+  if (argc < 4 || argc > 5) {
+    printf("usage: %s <moddir> <cfgdir> <outdat> [<outhdr>]\n", argv[0]);
     return -1;
   }
 
   moddir = argv[1];
-  dstdir = argv[2];
+  cfgdir = argv[2];
+  dstdat = argv[3];
+  dsthdr = argc > 4 ? argv[4] : NULL;
 
   load_palette();
   load_gfxwad();
 
   atexit(cleanup);
 
-  parse_picmap(strfmt("%s/picmap.txt", dstdir));
+  parse_picmap(strfmt("%s/picmap.txt", cfgdir));
 
   printf("read %d pics\n", num_pics);
 
-  const char *outfile = strfmt("%s/gfx.dat", dstdir);
+  const char *outfile = dstdat;
   printf("saving VRAM bank to %s\n", outfile);
   FILE *f = fopen(outfile, "wb");
   if (!f) panic("could not open %s for writing", outfile);
@@ -233,15 +237,17 @@ int main(int argc, const char **argv) {
   fwrite(vramdata, sizeof(vramdata), 1, f);
   fclose(f);
 
-  outfile = strfmt("%s/picids.h", dstdir);
-  printf("saving pics enum to %s\n", outfile);
-  f = fopen(outfile, "wb");
-  if (!f) panic("could not open %s for writing", outfile);
-  fprintf(f, "#pragma once\n\nenum {\n");
-  for (int i = 0; i < num_pics; ++i)
-    fprintf(f, "  PICID_%s = 0x%02x,\n", pic_name(i), i);
-  fprintf(f, "};\n");
-  fclose(f);
+  if (dsthdr) {
+    outfile = dsthdr;
+    printf("saving pics enum to %s\n", outfile);
+    f = fopen(outfile, "wb");
+    if (!f) panic("could not open %s for writing", outfile);
+    fprintf(f, "#pragma once\n\nenum {\n");
+    for (int i = 0; i < num_pics; ++i)
+      fprintf(f, "  PICID_%s = 0x%02x,\n", pic_name(i), i);
+    fprintf(f, "};\n");
+    fclose(f);
+  }
 
   return 0;
 }
