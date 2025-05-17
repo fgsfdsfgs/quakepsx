@@ -248,6 +248,7 @@ void utl_aim(edict_t *self, x16vec3_t *result);
 qboolean utl_heal(edict_t *e, const s16 amount, const qboolean ignore_max);
 edict_t *utl_launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir, const s16 speed);
 edict_t *utl_launch_grenade(edict_t *self, const x16vec3_t *angles);
+edict_t *utl_launch_rocket(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir, const s16 speed);
 
 // monster initialization
 void monster_set_state(edict_t *self, const s16 state);
@@ -281,6 +282,8 @@ void player_die(edict_t *self, edict_t *killer);
 
 // doors and plats
 void door_init(edict_t *self);
+void door_go_down(edict_t *self);
+void door_go_up(edict_t *self, edict_t *activator);
 
 // status bar
 void Sbar_IndicateDamage(const s16 damage);

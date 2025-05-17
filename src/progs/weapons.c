@@ -223,39 +223,6 @@ static void grenade_attack(edict_t *self) {
   }
 }
 
-static void rocket_touch(edict_t *self, edict_t *other) {
-  if (other == self->v.owner)
-    return;
-
-  if (G_PointContents(&self->v.origin) == CONTENTS_SKY) {
-    utl_remove(self);
-    return;
-  }
-
-  s16 damg = 100 + (rand() % 20);
-
-  if (other->v.health) {
-    if (other->v.classname == ENT_MONSTER_SHAMBLER)
-      damg >>= 1; // shamblers take half damage from explosions
-    utl_damage(other, self, self->v.owner, damg);
-  }
-
-  // don't do radius damage to the other, because all the damage
-  // was done in the impact
-  utl_radius_damage(self, self->v.owner, 120, other);
-
-  x16vec3_t dir;
-  x32 sqrlen;
-  XVecNormLS(&self->v.velocity, &dir, &sqrlen);
-
-  self->v.origin.x -= 8 * dir.x;
-  self->v.origin.y -= 8 * dir.y;
-  self->v.origin.z -= 8 * dir.z;
-
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, SFXID_WEAPONS_R_EXP3, &self->v.origin, SND_MAXVOL, ATTN_NORM);
-  utl_become_explosion(self);
-}
-
 static void rocket_attack(edict_t *self) {
   player_state_t *plr = self->v.player;
 
@@ -273,28 +240,12 @@ static void rocket_attack(edict_t *self) {
   utl_makevectors(&plr->viewangles);
   utl_aim(self, &dir);
 
-  edict_t *missile = ED_Alloc();
-  missile->v.classname = ENT_ROCKET;
-  missile->v.solid = SOLID_BBOX;
-  missile->v.movetype = MOVETYPE_FLYMISSILE;
-  missile->v.owner = self;
-  missile->v.angles = plr->viewangles;
-  missile->v.touch = rocket_touch;
-  missile->v.think = utl_remove;
-  missile->v.nextthink = gs.time + FTOX(5.0);
-  missile->v.effects = EF_ROCKET;
+  x32vec3_t org;
+  org.x = self->v.origin.x + (x32)dir.x * 8;
+  org.y = self->v.origin.y + (x32)dir.y * 8;
+  org.z = self->v.origin.z + (x32)dir.z * 8 + TO_FIX32(16);
 
-  missile->v.origin.x = self->v.origin.x + (x32)dir.x * 8;
-  missile->v.origin.y = self->v.origin.y + (x32)dir.y * 8;
-  missile->v.origin.z = self->v.origin.z + (x32)dir.z * 8 + TO_FIX32(16);
-
-  missile->v.velocity.x = (x32)dir.x * 1000;
-  missile->v.velocity.y = (x32)dir.y * 1000;
-  missile->v.velocity.z = (x32)dir.z * 1000;
-
-  G_SetModel(missile, MDLID_GRENADE);
-  G_SetSize(missile, &x32vec3_origin, &x32vec3_origin);
-  G_LinkEdict(missile, false);
+  utl_launch_rocket(self, &org, &plr->viewangles, &dir, 1000);
 }
 
 static void thunder_attack(edict_t *self) {

@@ -9,7 +9,7 @@ extern void spawn_ambient_drone(edict_t *self);
 extern void spawn_ambient_suck_wind(edict_t *self);
 extern void spawn_ambient_swamp1(edict_t *self);
 extern void spawn_ambient_swamp2(edict_t *self);
-extern void spawn_event_lightning(edict_t *self) { }
+extern void spawn_event_lightning(edict_t *self);
 extern void spawn_func_bossgate(edict_t *self);
 extern void spawn_func_button(edict_t *self);
 extern void spawn_func_door(edict_t *self);
@@ -55,7 +55,7 @@ extern void spawn_misc_explobox2(edict_t *self);
 extern void spawn_misc_fireball(edict_t *self) { }
 extern void spawn_misc_teleporttrain(edict_t *self);
 extern void spawn_monster_army(edict_t *self);
-extern void spawn_monster_boss(edict_t *self) { }
+extern void spawn_monster_boss(edict_t *self);
 extern void spawn_monster_demon1(edict_t *self);
 extern void spawn_monster_dog(edict_t *self);
 extern void spawn_monster_enforcer(edict_t *self) { }

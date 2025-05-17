@@ -17,8 +17,8 @@ static void door_blocked(edict_t *self, edict_t *other);
 static void door_use(edict_t *self, edict_t *other);
 static void door_killed(edict_t *self, edict_t *killer);
 static void door_fire(edict_t *self, edict_t *activator);
-static void door_go_down(edict_t *self);
-static void door_go_up(edict_t *self, edict_t *activator);
+void door_go_down(edict_t *self);
+void door_go_up(edict_t *self, edict_t *activator);
 
 static void door_trigger_touch(edict_t *self, edict_t *other) {
   if (other->v.health <= 0)
@@ -175,7 +175,7 @@ static void door_hit_bottom(edict_t *self) {
   self->v.door->state = STATE_BOTTOM;
 }
 
-static void door_go_down(edict_t *self) {
+void door_go_down(edict_t *self) {
   utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
 
   if (self->v.max_health) {
@@ -187,7 +187,7 @@ static void door_go_down(edict_t *self) {
   utl_calc_move(self, &self->v.door->pos1, self->v.speed, door_hit_bottom);
 }
 
-static void door_go_up(edict_t *self, edict_t *activator) {
+void door_go_up(edict_t *self, edict_t *activator) {
   if (self->v.door->state == STATE_UP)
     return; // already going up
 

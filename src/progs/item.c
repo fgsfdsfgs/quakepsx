@@ -174,7 +174,7 @@ static void key_touch(edict_t *self, edict_t *other) {
   switch (self->v.extra_item.type) {
   case IT_KEY1: pname = "silver key"; break;
   case IT_KEY2: pname = "gold key"; break;
-  default:      pname = "rune!"; break;
+  default:      pname = "rune"; break;
   }
 
   Scr_SetTopMsg(VA("You got the %s!", pname));
