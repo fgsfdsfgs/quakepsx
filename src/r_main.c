@@ -48,7 +48,7 @@ static x16 bobjrotate;
 static x32 bob_t = 0;
 
 // matrix that rotates Z going up and also scales the world a little (thank you quake very cool)
-#define MAP_SCALE TO_FIX32(4)
+#define MAP_SCALE TO_FIX32(3)
 static MATRIX mat_coord = {{
   { 0,          -MAP_SCALE, 0          },
   { 0,          0,          -MAP_SCALE },
