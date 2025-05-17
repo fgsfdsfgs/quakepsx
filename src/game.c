@@ -137,7 +137,8 @@ void G_StartMap(const char *path) {
     // TODO: move this to an appropriate place
     // execute the spawn function
     ent->v.ltime = gs.time;
-    ent_spawnfuncs[ent->v.classname](ent);
+    if (ent_spawnfuncs[ent->v.classname])
+      ent_spawnfuncs[ent->v.classname](ent);
     G_LinkEdict(ent, false);
   }
 
