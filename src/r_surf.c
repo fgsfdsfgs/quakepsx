@@ -33,7 +33,7 @@ typedef struct {
   s32 sz;
 } __attribute__((packed)) svert_t;
 
-static savert_t alias_verts[256];
+static savert_t alias_verts[MAX_XMDL_VERTS];
 
 static inline s16 TestClip(const s16 x, const s16 y) {
   // tests which corners of the screen a point lies outside of

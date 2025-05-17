@@ -8,9 +8,9 @@
  * aliasvert_t     frames[hdr.numframes][hdr.numverts];
  */
 
-#define MAX_XMDL_VERTS  1024
-#define MAX_XMDL_FRAMES 1024
-#define MAX_XMDL_TRIS   1024
+#define MAX_XMDL_VERTS  512
+#define MAX_XMDL_FRAMES 512
+#define MAX_XMDL_TRIS   512
 
 #pragma pack(push, 1)
 
