@@ -141,6 +141,8 @@ enum monsterstate_e {
   MSTATE_PAIN_A,
   MSTATE_PAIN_B,
   MSTATE_PAIN_C,
+  MSTATE_PAIN_D,
+  MSTATE_PAIN_E,
   MSTATE_EXTRA,
   MSTATE_COUNT
 };
@@ -223,7 +225,7 @@ void fx_throw_gib(const x32vec3_t *org, const s16 mdlid, const s16 damage);
 void fx_throw_head(edict_t *self, const s16 mdlid, const s16 damage);
 
 // tracing and other utilities
-const trace_t *utl_traceline(x32vec3_t *v1, x32vec3_t *v2, const qboolean nomonsters, edict_t *ent);
+const trace_t *utl_traceline(const x32vec3_t *v1, const x32vec3_t *v2, const qboolean nomonsters, edict_t *ent);
 void utl_makevectors(const x16vec3_t *angles);
 void utl_vectoangles(const x16vec3_t *dir);
 void utl_remove(edict_t *self);
@@ -240,10 +242,12 @@ void utl_killed(edict_t *self, edict_t *attacker);
 void utl_traceattack(edict_t *self, s16 damage, const x32vec3_t *dir);
 void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x16 spread_x, const x16 spread_y);
 void utl_become_explosion(edict_t *self);
+qboolean utl_can_damage(edict_t *self, edict_t *targ, edict_t *inflictor);
 void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, edict_t *ignore);
 void utl_aim(edict_t *self, x16vec3_t *result);
 qboolean utl_heal(edict_t *e, const s16 amount, const qboolean ignore_max);
 edict_t *utl_launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir, const s16 speed);
+edict_t *utl_launch_grenade(edict_t *self, const x16vec3_t *angles);
 
 // monster initialization
 void monster_set_state(edict_t *self, const s16 state);
@@ -261,6 +265,7 @@ void ai_stand(edict_t *self);
 void ai_face(edict_t *self);
 void ai_walk(edict_t *self, const x32 dist);
 void ai_run(edict_t *self, const x32 dist);
+void ai_forward(edict_t *self, const x32 dist);
 void ai_back(edict_t *self, const x32 dist);
 void ai_pain(edict_t *self, const x32 dist);
 void ai_painforward(edict_t *self, const x32 dist);

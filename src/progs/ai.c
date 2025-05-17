@@ -566,8 +566,12 @@ void ai_charge(edict_t *self, const x32 dist) {
   ai_movetogoal(self, dist);
 }
 
+void ai_forward(edict_t *self, const x32 dist) {
+  ai_walkmove(self, self->v.angles.y, dist);
+}
+
 void ai_back(edict_t *self, const x32 dist) {
-  const x16 reverse = (self->v.monster->ideal_yaw + TO_DEG16(180)) & (ONE - 1);
+  const x16 reverse = (self->v.angles.y + TO_DEG16(180)) & (ONE - 1);
   ai_walkmove(self, reverse, dist);
 }
 

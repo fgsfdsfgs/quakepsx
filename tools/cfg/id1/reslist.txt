@@ -169,6 +169,7 @@ ent monster_dog
 ent monster_ogre
   mdl progs/ogre.mdl
   sfx sound/ogre/ogidle.wav
+  sfx sound/ogre/ogidle2.wav
   sfx sound/ogre/ogwake.wav
   sfx sound/ogre/ogsawatk.wav
   sfx sound/ogre/ogpain1.wav

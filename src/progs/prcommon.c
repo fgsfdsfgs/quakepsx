@@ -11,7 +11,7 @@ void null_touch(edict_t *self, edict_t *other) {
 
 }
 
-const trace_t *utl_traceline(x32vec3_t *v1, x32vec3_t *v2, const qboolean nomonsters, edict_t *ent) {
+const trace_t *utl_traceline(const x32vec3_t *v1, const x32vec3_t *v2, const qboolean nomonsters, edict_t *ent) {
   pr.trace = G_Move(v1, &x32vec3_origin, &x32vec3_origin, v2, nomonsters, ent);
   return pr.trace;
 }

@@ -179,7 +179,7 @@ void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x
   // TODO: particles
 }
 
-static qboolean can_damage(edict_t *self, edict_t *targ, edict_t *inflictor) {
+qboolean utl_can_damage(edict_t *self, edict_t *targ, edict_t *inflictor) {
   x32vec3_t end;
   const trace_t *trace;
 
@@ -254,7 +254,7 @@ void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, 
     if (points < 1)
       continue;
 
-    if (can_damage(attacker, head, inflictor)) {
+    if (utl_can_damage(attacker, head, inflictor)) {
       // shambler takes half damage from all explosions
       if (head->v.classname == ENT_MONSTER_SHAMBLER)
         points >>= 1;
@@ -400,4 +400,49 @@ edict_t *utl_launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *
   G_SetModel(newmis, MDLID_SPIKE);
   G_SetSize(newmis, &x32vec3_origin, &x32vec3_origin);
   G_LinkEdict(newmis, false);
+}
+
+static void grenade_explode(edict_t *self) {
+  utl_sound(self, CHAN_WEAPON, SFXID_WEAPONS_R_EXP3, SND_MAXVOL, ATTN_NORM);
+  utl_radius_damage(self, self->v.owner, self->v.dmg, self);
+  utl_become_explosion(self);
+}
+
+static void grenade_touch(edict_t *self, edict_t *other) {
+  if (other == self->v.owner)
+    return;
+
+  if ((other->v.flags & (FL_AUTOAIM | FL_TAKEDAMAGE)) == (FL_AUTOAIM | FL_TAKEDAMAGE)) {
+    grenade_explode(self);
+    return;
+  }
+
+  utl_sound(self, CHAN_WEAPON, SFXID_WEAPONS_BOUNCE, SND_MAXVOL, ATTN_NORM);
+
+  if (!self->v.velocity.x && !self->v.velocity.y && !self->v.velocity.z) {
+    self->v.avelocity.x = 0;
+    self->v.avelocity.y = 0;
+    self->v.avelocity.z = 0;
+  }
+}
+
+edict_t *utl_launch_grenade(edict_t *self, const x16vec3_t *angles) {
+  edict_t *missile = ED_Alloc();
+  missile->v.classname = ENT_GRENADE;
+  missile->v.solid = SOLID_BBOX;
+  missile->v.movetype = MOVETYPE_BOUNCE;
+  missile->v.owner = self;
+  missile->v.origin = self->v.origin;
+  missile->v.avelocity.x = TO_DEG16(300);
+  missile->v.avelocity.y = TO_DEG16(300);
+  missile->v.avelocity.z = TO_DEG16(300);
+  missile->v.angles = *angles;
+  missile->v.touch = grenade_touch;
+  missile->v.think = grenade_explode;
+  missile->v.nextthink = gs.time + FTOX(2.5);
+  missile->v.effects = EF_ROCKET;
+  G_SetModel(missile, MDLID_GRENADE);
+  G_SetSize(missile, &x32vec3_origin, &x32vec3_origin);
+  G_LinkEdict(missile, false);
+  return missile;
 }

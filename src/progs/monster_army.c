@@ -53,6 +53,8 @@ static const monster_state_t monster_army_states[MSTATE_COUNT] = {
   /* PAIN_A  */ { army_pain_a,  PAIN1,   PAIN6    },
   /* PAIN_B  */ { army_pain_b,  PAINB1,  PAINB14  },
   /* PAIN_C  */ { army_pain_c,  PAINC1,  PAINC13  },
+  /* PAIN_D  */ { NULL,         -1,      -1       },
+  /* PAIN_E  */ { NULL,         -1,      -1       },
   /* EXTRA   */ { NULL,         -1,      -1       },
 };
 

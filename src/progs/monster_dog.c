@@ -47,6 +47,8 @@ static const monster_state_t monster_dog_states[MSTATE_COUNT] = {
   /* PAIN_A  */ { dog_pain_a, PAIN1,   PAIN6    },
   /* PAIN_B  */ { dog_pain_b, PAINB1,  PAINB16  },
   /* PAIN_C  */ { NULL,       -1,      -1       },
+  /* PAIN_D  */ { NULL,       -1,      -1       },
+  /* PAIN_E  */ { NULL,       -1,      -1       },
   /* EXTRA   */ { NULL,       -1,      -1       },
 };
 

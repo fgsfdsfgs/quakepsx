@@ -191,30 +191,6 @@ static void snailgun_attack(edict_t *self) {
   plr->vmodel_think = nailgun_attack_cycle;
 }
 
-static void grenade_explode(edict_t *self) {
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, SFXID_WEAPONS_R_EXP3, &self->v.origin, SND_MAXVOL, ATTN_NORM);
-  utl_become_explosion(self);
-  utl_radius_damage(self, self->v.owner, 120, self);
-}
-
-static void grenade_touch(edict_t *self, edict_t *other) {
-  if (other == self->v.owner)
-    return;
-
-  if ((other->v.flags & (FL_AUTOAIM | FL_TAKEDAMAGE)) == (FL_AUTOAIM | FL_TAKEDAMAGE)) {
-    grenade_explode(self);
-    return;
-  }
-
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, SFXID_WEAPONS_BOUNCE, &self->v.origin, SND_MAXVOL, ATTN_NORM);
-
-  if (!self->v.velocity.x && !self->v.velocity.y && !self->v.velocity.z) {
-    self->v.avelocity.x = 0;
-    self->v.avelocity.y = 0;
-    self->v.avelocity.z = 0;
-  }
-}
-
 static void grenade_attack(edict_t *self) {
   player_state_t *plr = self->v.player;
 
@@ -230,21 +206,8 @@ static void grenade_attack(edict_t *self) {
 
   utl_makevectors(&plr->viewangles);
 
-  edict_t *missile = ED_Alloc();
-  missile->v.classname = ENT_GRENADE;
-  missile->v.solid = SOLID_BBOX;
-  missile->v.movetype = MOVETYPE_BOUNCE;
-  missile->v.owner = self;
-  missile->v.origin = self->v.origin;
-  missile->v.avelocity.x = TO_DEG16(300);
-  missile->v.avelocity.y = TO_DEG16(300);
-  missile->v.avelocity.z = 0;
-  missile->v.angles = plr->viewangles;
-  missile->v.touch = grenade_touch;
-  missile->v.think = grenade_explode;
-  missile->v.nextthink = gs.time + FTOX(2.5);
-  missile->v.effects = EF_ROCKET;
-
+  edict_t *missile = utl_launch_grenade(self, &plr->viewangles);
+  missile->v.dmg = 120;
   if (plr->viewangles.x) {
     const s16 rrnd = XMUL16(10, trace_random());
     const s16 urnd = XMUL16(10, trace_random());
@@ -258,10 +221,6 @@ static void grenade_attack(edict_t *self) {
     missile->v.velocity.y = dir.y * 600;
     missile->v.velocity.z = dir.z * 600 + TO_FIX32(200);
   }
-
-  G_SetModel(missile, MDLID_GRENADE);
-  G_SetSize(missile, &x32vec3_origin, &x32vec3_origin);
-  G_LinkEdict(missile, false);
 }
 
 static void rocket_touch(edict_t *self, edict_t *other) {
