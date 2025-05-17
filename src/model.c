@@ -434,7 +434,7 @@ static void Mod_ParseBrushModel(bmodel_t *mod, const int fh) {
 bmodel_t *Mod_LoadXBSP(const char *name) {
   int fhandle;
   const int fsize = Sys_FileOpenRead(name, &fhandle);
-  if (fsize < 0) Sys_Error("Mod_LoadModel: couldn't open");
+  if (fsize < 0) Sys_Error("Mod_LoadModel: couldn't open:\n%s", name);
 
   bmodel_t *model = Mem_Alloc(sizeof(bmodel_t));
   Mod_ParseBrushModel(model, fhandle);
