@@ -251,9 +251,13 @@ ent monster_oldone
 
 ent monster_boss
   mdl progs/boss.mdl
+  mdl progs/lavaball.mdl
   sfx sound/boss1/sight1.wav
   sfx sound/boss1/pain.wav
   sfx sound/boss1/death.wav
+  sfx sound/boss1/out1.wav
+  sfx sound/boss1/throw.wav
+  sfx sound/misc/power.wav
 
 # brush entities
 

@@ -87,3 +87,9 @@
 56 weapon_rocketlauncher
 57 weapon_supernailgun
 58 weapon_supershotgun
+59 temp_entity
+5a spike
+5b grenade
+5c rocket
+5d delayed_use
+5e viewthing
