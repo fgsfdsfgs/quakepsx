@@ -419,6 +419,16 @@ u16 xbsp_targetname_id(const char *targetname) {
   return xbsp_stringbuffer_add(targetname, xbsp_targetnames, &xbsp_numtargetnames, sizeof(xbsp_targetnames));
 }
 
+void xbsp_targetname_print(void) {
+  const char *t = xbsp_targetnames + 1; // 0 is an empty string
+  const char *end = xbsp_targetnames + sizeof(xbsp_targetnames);
+  printf("targetnames:\n");
+  while (t < end && *t) {
+    printf("* 0x%04x: %s\n", (u16)(t - xbsp_targetnames), t);
+    t += strlen(t) + 1;
+  }
+}
+
 int xbsp_write(const char *fname) {
   FILE *f = fopen(fname, "wb");
   if (!f) return -1;

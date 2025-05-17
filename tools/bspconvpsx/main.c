@@ -24,6 +24,7 @@ static const char *moddir;
 static const char *inname;
 static const char *outname;
 static const char *vramexp;
+static int print_targetnames = 0;
 
 static int qbsp_worldtype = 0;
 static int qbsp_cdtrack = 0;
@@ -630,6 +631,7 @@ int main(int argc, const char **argv) {
   inname = argv[3];
   outname = argv[4];
   vramexp = get_arg(argc, argv, "--export-vram");
+  print_targetnames = get_arg(argc, argv, "--print-targetnames") != NULL;
 
   // read entity and resource definitions
   assert(qmdlmap_init(strfmt("%s/mdlmap.txt", cfgdir)) >= 0);
@@ -665,6 +667,9 @@ int main(int argc, const char **argv) {
 
   if (vramexp && *vramexp)
     xbsp_vram_export(vramexp, qbsp.palette);
+
+  if (print_targetnames)
+    xbsp_targetname_print();
 
   if (xbsp_write(outname) != 0)
     panic("could not write PSX BSP to '%s'", outname);
