@@ -687,10 +687,10 @@ void R_DrawBBox(edict_t *ent) {
   gpu_ptr = (u8 *)line;
 }
 
-static inline TILE *DrawParticle(TILE *tile, const SVECTOR *tv, const u8 color, const s32 sz) {
+static inline TILE *DrawParticle(TILE *tile, const SVECTOR *tv, const u8 color, const s16 sz) {
   // pad is sz
   if (tv->vx >= 0 && tv->vy >= 0 && tv->vx < VID_WIDTH && tv->vy < VID_HEIGHT) {
-    s32 r = PT_SIZE_MIN + ((0x7FFF / sz) >> PT_SIZE_SHIFT);
+    s16 r = PT_SIZE_MIN + ((0x7FFF / sz) >> PT_SIZE_SHIFT);
     if (r > PT_SIZE_MAX) r = PT_SIZE_MAX;
     *(u32 *)&tile->r0 = r_palette[color];
     setTile(tile);

@@ -84,6 +84,39 @@ void R_SpawnParticleExplosion(const x32vec3_t *org) {
     rs.num_particles = i;
 }
 
+void R_SpawnParticleLavaSplash(const x32vec3_t *org) {
+  s16 i, j, n, scale;
+  particle_t *p = rs.particles;
+  const s16vec3_t sorg = {{ org->x >> FIXSHIFT, org->y >> FIXSHIFT, org->z >> FIXSHIFT }};
+
+  n = 0;
+  for (i = -16; i < 16; i += 2) {
+    for (j = -16; j < 16; j += 2) {
+      for (; n < MAX_PARTICLES; ++n, ++p) {
+        if (p->die > 0)
+          continue;
+        p->ramp = 0;
+        p->die = 40 + (rand() & 3);
+        p->color = 224 + (rand() & 7);
+        p->type = PT_GRAV;
+        p->vel.x = i * 8 + (rand() & 7);
+        p->vel.y = j * 8 + (rand() & 7);
+        p->vel.z = 32 + (rand() & 31);
+        p->org.x = sorg.x + p->vel.x;
+        p->org.y = sorg.y + p->vel.y;
+        p->org.z = sorg.z + (rand() & 63);
+        break;
+      }
+      if (n == MAX_PARTICLES)
+        goto _end;
+    }
+  }
+
+_end:
+  if (n > rs.num_particles)
+    rs.num_particles = n;
+}
+
 void R_SpawnParticleTeleport(const x32vec3_t *org) {
   s16 i, j, k, n;
   particle_t *p = rs.particles;
