@@ -51,6 +51,7 @@ void G_MoveBounds(const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t
 
 // NOTE: radius is an integer
 edict_t *G_FindInRadius(const x32vec3_t *origin, const s32 radius);
+edict_t *G_FindByTarget(edict_t *start, const u16 target);
 edict_t *G_FindByTargetname(edict_t *start, const u16 targetname);
 edict_t *G_FindByClassname(edict_t *start, const u8 classname);
 edict_t *G_CheckClient(edict_t *ent);
