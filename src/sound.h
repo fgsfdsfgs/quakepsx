@@ -6,7 +6,7 @@
 // we downsample everything to this
 #define SND_FREQ 11025
 
-#define SND_MAXVOL 255
+#define SND_MAXVOL 250
 
 #define SND_NUM_CH (SPU_NUM_VOICES)
 #define SND_NUM_CH_AMBIENT 11
