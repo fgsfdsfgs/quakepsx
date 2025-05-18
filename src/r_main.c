@@ -504,6 +504,9 @@ static inline void DrawEntity(edict_t *ed) {
     } else {
       r->vz = ed->v.angles.y;
     }
+    rs.entmatrix.t[0] = 0;
+    rs.entmatrix.t[1] = 0;
+    rs.entmatrix.t[2] = 0;
     RotMatrixZY(r, &rs.entmatrix);
     // rotate the offset first
     t->vx = ((amodel_t *)ed->v.model)->offset.x;

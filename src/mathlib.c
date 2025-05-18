@@ -163,9 +163,7 @@ MATRIX *RotMatrixZY(SVECTOR *r, MATRIX *m) {
   tm[0].m[1][0] = 0;     tm[0].m[1][1] = ONE;   tm[0].m[1][2] = 0;
   tm[0].m[2][0] = -s[1]; tm[0].m[2][1] = 0;     tm[0].m[2][2] = c[1];
 
-  PushMatrix();
   MulMatrix0(&tm[1], &tm[0], m);
-  PopMatrix();
 
   return m;
 }
