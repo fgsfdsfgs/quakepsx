@@ -212,6 +212,8 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
         qst[i][0] += qmt->width;
       if (qstmins[1] < 0)
         qst[i][1] += qmt->height;
+      qst[i][0] = (qst[i][0] / (f32)qmt->width) * (qmt->width - 1);
+      qst[i][1] = (qst[i][1] / (f32)qmt->height) * (qmt->height - 1);
     }
 
     // triangle 1
