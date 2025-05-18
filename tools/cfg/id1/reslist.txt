@@ -194,6 +194,7 @@ ent monster_wizard
 
 ent monster_zombie
   mdl progs/zombie.mdl
+  mdl progs/zom_gib.mdl
   sfx sound/zombie/z_idle.wav
   sfx sound/zombie/idle_w2.wav
   sfx sound/zombie/z_shot1.wav
