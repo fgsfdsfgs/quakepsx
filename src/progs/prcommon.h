@@ -124,6 +124,12 @@ typedef struct {
   s16 killed_monsters;
   s16 total_secrets;
   s16 found_secrets;
+
+  // intermission
+  s32 intermission_state;
+  x32 intermission_time;
+  x32 completion_time;
+  const char *nextmap; // points to a string in the strings lump
 } pr_globals_t;
 
 extern pr_globals_t pr;

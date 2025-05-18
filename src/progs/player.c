@@ -1,4 +1,8 @@
+#include <string.h>
+#include "cd.h"
 #include "prcommon.h"
+
+#define IT_ALL_SIGILS (IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL4)
 
 static const u32 powerup_table[] = {
   IT_SUPERHEALTH,
@@ -79,7 +83,47 @@ static void player_tick_powerups(edict_t *self) {
     plr->air_finished = gs.time + TO_FIX32(12);
 }
 
+static void player_exit_intermission(const player_state_t *plr) {
+  pr.intermission_state++;
+  pr.intermission_time = gs.time + ONE;
+
+  // run some text if at the end of an episode
+  if (pr.intermission_state == 2) {
+    if (pr.nextmap && !strcmp(pr.nextmap, "START")) {
+      CD_PlayAudio(2);
+      // TODO: episode win text
+      Scr_SetCenterMsg("gg");
+      return;
+    }
+  } else if (pr.intermission_state == 3) {
+    // TODO: all runes text
+    if ((plr->stats.items & IT_ALL_SIGILS) == IT_ALL_SIGILS) {
+      Scr_SetCenterMsg("You got all the runes!");
+      return;
+    }
+  }
+
+  G_RequestMap(pr.nextmap);
+}
+
+static void player_think_intermission(edict_t *self) {
+  player_state_t *plr = self->v.player;
+
+  self->v.nextthink = gs.time + PR_FRAMETIME;
+
+  if (gs.time < pr.intermission_time)
+    return;
+
+  if (plr->buttons & (BTN_FIRE | BTN_JUMP))
+    player_exit_intermission(plr);
+}
+
 static void player_think(edict_t *self) {
+  if (pr.intermission_state) {
+    player_think_intermission(self);
+    return;
+  }
+
   player_state_t *plr = self->v.player;
 
   if (self->v.health < 1) {

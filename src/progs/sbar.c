@@ -77,8 +77,25 @@ void Sbar_Init(void) {
   pic_runes = Spr_GetPic(PICID_SB_SIGIL1);
 }
 
+void Sbar_DrawIntermission(const player_state_t *p) {
+  const s32 min = (pr.completion_time >> FIXSHIFT) / 60;
+  const s32 sec = (pr.completion_time >> FIXSHIFT) % 60;
+
+  s16 y = VID_CENTER_Y - 24;
+  Scr_DrawText(VID_CENTER_X - 28, y, C_YELLOW, "COMPLETED"); y += 10;
+  Scr_DrawText(VID_CENTER_X - 44, y, C_WHITE, VA("Time:    %02d:%02d", min, sec)); y += 8;
+  Scr_DrawText(VID_CENTER_X - 44, y, C_WHITE, VA("Secrets: %d/%d", pr.found_secrets, pr.total_secrets)); y += 8;
+  Scr_DrawText(VID_CENTER_X - 44, y, C_WHITE, VA("Kills:   %d/%d", pr.killed_monsters, pr.total_monsters)); y += 8;
+}
+
 void Sbar_Draw(const player_state_t *p) {
   const pic_t *pic;
+
+  if (pr.intermission_state == 1) {
+    // draw level completion screen
+    Sbar_DrawIntermission(p);
+    return;
+  }
 
   if (p->ent->v.health < 0)
     return; // we're fucking dead

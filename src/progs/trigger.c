@@ -1,4 +1,5 @@
 #include "prcommon.h"
+#include "cd.h"
 
 // trigger_multiple
 #define SPAWNFLAG_NOTOUCH 1
@@ -390,23 +391,66 @@ void spawn_trigger_monsterjump(edict_t *self) {
   self->v.touch = monsterjump_touch;
 }
 
+static edict_t *changelevel_find_intermission(edict_t *player) {
+  // look for info_intermission first
+  edict_t *spot = G_FindByClassname(gs.edicts, ENT_INFO_INTERMISSION);
+  if (spot)
+    return spot; // TODO: random
+
+  // then look for the start position
+  spot = G_FindByClassname(gs.edicts, ENT_INFO_PLAYER_START);
+  if (spot)
+    return spot;
+
+  return player;
+}
+
 static void changelevel_touch(edict_t *self, edict_t *other) {
   if (other->v.classname != ENT_PLAYER)
     return;
 
+  pr.nextmap = gs.worldmodel->strings + self->v.extra_trigger.string;
+  self->v.extra_trigger.string = 0; // don't spew the map name in centerprint
+
   utl_usetargets(self, other);
 
-  const char *nextmap = gs.worldmodel->strings + self->v.extra_trigger.string;
-
   if (self->v.spawnflags & SPAWNFLAG_NO_INTERMISSION) {
-    G_RequestMap(nextmap);
+    G_RequestMap(pr.nextmap);
     return;
   }
 
   self->v.touch = NULL;
 
-  // TODO: intermission
-  G_RequestMap(nextmap);
+  // enforce a wait time before allowing changelevel
+  pr.intermission_time = gs.time + TO_FIX32(2);
+  pr.intermission_state = 1;
+  pr.completion_time = gs.time;
+
+  CD_PlayAudio(3);
+
+  edict_t *pos = changelevel_find_intermission(other);
+  other->v.viewheight = 0;
+  other->v.angles = pos->v.angles;
+  other->v.player->viewangles = pos->v.angles;
+  other->v.nextthink = gs.time + HALF;
+  other->v.flags &= ~(FL_TAKEDAMAGE | FL_AUTOAIM);
+  other->v.solid = SOLID_NOT;
+  other->v.movetype = MOVETYPE_NONE;
+  other->v.modelnum = 0;
+  XVecZero(&other->v.velocity);
+
+  // HACK: move the camera a bit forward to avoid getting too close to walls
+  utl_makevectors(&other->v.angles);
+  other->v.origin.x = pos->v.origin.x + 8 * pr.v_forward.x;
+  other->v.origin.y = pos->v.origin.y + 8 * pr.v_forward.y;
+  other->v.origin.z = pos->v.origin.z + 8 * pr.v_forward.z;
+
+  other->v.player->vmodel = NULL;
+  other->v.player->vmodel_end_frame = 0;
+  other->v.player->vmodel_frame = 0;
+  Scr_SetCenterMsg("");
+
+  G_LinkEdict(other, false);
 }
 
 void spawn_trigger_changelevel(edict_t *self) {
