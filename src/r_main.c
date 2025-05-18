@@ -466,11 +466,11 @@ static inline void DrawEntity(edict_t *ed) {
   ed->v.flags |= FL_VISIBLE;
 
   // TODO: not sure where to move this
-  if (ed->v.effects & (EF_GIB | EF_ROCKET)) {
+  if (ed->v.effects & (EF_GIB | EF_ROCKET | EF_TRACER)) {
     if (ed->v.velocity.x || ed->v.velocity.y || ed->v.velocity.z)
-      R_SpawnParticleTrail(&ed->v.origin, &ed->v.oldorigin, (ed->v.effects & EF_GIB) ? 2 : 0);
+      R_SpawnParticleTrail(&ed->v.origin, &ed->v.oldorigin, ed->v.effects);
     else
-      ed->v.effects &= ~(EF_GIB | EF_ROCKET);
+      ed->v.effects &= ~(EF_GIB | EF_ROCKET | EF_TRACER);
   }
 
   rs.cur_entity = ed;

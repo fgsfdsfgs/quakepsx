@@ -186,15 +186,21 @@ void R_SpawnParticleTrail(const x32vec3_t *org, const x32vec3_t *oldorg, const u
       p->die = 8;
 
       switch (type) {
-      case 0: // rocket trail
+      case EF_ROCKET: // rocket trail
         p->ramp = rand() & 3;
         p->color = ramp3[p->ramp];
         p->type = PT_FIRE;
         break;
-      case 2: // blood trail
+      case EF_GIB: // blood trail
         p->ramp = 0;
         p->color = 67 + (rand() & 3);
         p->type = PT_GRAV;
+        break;
+      case EF_TRACER: // green trail
+        p->ramp = 0;
+        p->color = 52 + (rand() & 7);
+        p->type = PT_STATIC;
+        break;
       default:
         break;
       }
@@ -276,6 +282,10 @@ void R_UpdateParticles(void) {
     case PT_GRAV:
       p->die -= time2;
       p->vel.z -= grav;
+      break;
+
+    case PT_STATIC:
+      p->die -= time2;
       break;
 
     default:
