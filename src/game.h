@@ -5,7 +5,7 @@
 #include "entity.h"
 
 // progs frame time
-#define PR_FRAMETIME 409 // ~0.1 sec
+#define PR_FRAMETIME 410 // ~0.1 sec
 
 #define MAX_AMMO_TYPES 4
 #define MAX_POWERUPS 5
