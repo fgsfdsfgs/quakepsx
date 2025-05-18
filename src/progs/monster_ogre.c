@@ -38,6 +38,17 @@ enum ogre_frames_e {
   PULL1, PULL2, PULL3, PULL4, PULL5, PULL6, PULL7, PULL8, PULL9, PULL10, PULL11
 };
 
+enum ogre_states_e {
+  MSTATE_SMASH = MSTATE_EXTRA,
+  MSTATE_DIE_A,
+  MSTATE_DIE_B,
+  MSTATE_PAIN_A,
+  MSTATE_PAIN_B,
+  MSTATE_PAIN_C,
+  MSTATE_PAIN_D,
+  MSTATE_PAIN_E,
+};
+
 static void ogre_stand(edict_t *self);
 static void ogre_walk(edict_t *self);
 static void ogre_run(edict_t *self);
@@ -56,12 +67,13 @@ static void ogre_start_die(edict_t *self, edict_t *killer);
 static void ogre_start_pain(edict_t *self, edict_t *attacker, s16 damage);
 static qboolean ogre_check_attack(edict_t *self);
 
-static const monster_state_t monster_ogre_states[MSTATE_COUNT] = {
+static const monster_state_t monster_ogre_states[MSTATE_MAX] = {
   /* STAND   */ { ogre_stand,   STAND1,  STAND9   },
   /* WALK    */ { ogre_walk,    WALK1,   WALK16   },
   /* RUN     */ { ogre_run,     RUN1,    RUN8     },
   /* MISSILE */ { ogre_missile, SHOOT1,  SHOOT6   },
   /* MELEE   */ { ogre_swing,   SWING1,  SWING14  },
+  /* SMASH   */ { ogre_smash,   SMASH1,  SMASH14  },
   /* DIE_A   */ { ogre_die_a,   DEATH1,  DEATH14  },
   /* DIE_B   */ { ogre_die_b,   BDEATH1, BDEATH10 },
   /* PAIN_A  */ { ogre_pain_a,  PAIN1,   PAIN5    },
@@ -69,7 +81,6 @@ static const monster_state_t monster_ogre_states[MSTATE_COUNT] = {
   /* PAIN_C  */ { ogre_pain_c,  PAINC1,  PAINC6   },
   /* PAIN_D  */ { ogre_pain_d,  PAIND1,  PAIND16  },
   /* PAIN_E  */ { ogre_pain_e,  PAINE1,  PAINE15  },
-  /* EXTRA   */ { ogre_smash,   SMASH1,  SMASH14  },
 };
 
 static const monster_class_t monster_ogre_class = {
@@ -131,7 +142,7 @@ static void ogre_run(edict_t *self) {
   if (self->v.monster->state_num == MSTATE_MELEE) {
     // HACK: we started swinging; randomly choose different attack
     if (rand() & 1)
-      monster_set_state(self, MSTATE_EXTRA);
+      monster_set_state(self, MSTATE_SMASH);
   } else {
     monster_loop_state(self, MSTATE_RUN);
   }
@@ -255,7 +266,7 @@ static void ogre_smash(edict_t *self) {
     break;
   }
 
-  monster_end_state(self, MSTATE_EXTRA, MSTATE_RUN);
+  monster_end_state(self, MSTATE_SMASH, MSTATE_RUN);
 }
 
 static void ogre_pain_a(edict_t *self) {

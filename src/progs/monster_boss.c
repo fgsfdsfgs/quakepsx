@@ -30,6 +30,14 @@ enum boss_frames_e {
   SHOCKC9, SHOCKC10
 };
 
+enum boss_states_e {
+  MSTATE_RISE = MSTATE_EXTRA,
+  MSTATE_DIE_A,
+  MSTATE_PAIN_A,
+  MSTATE_PAIN_B,
+  MSTATE_PAIN_C,
+};
+
 static void boss_idle(edict_t *self);
 static void boss_missile(edict_t *self);
 static void boss_rise(edict_t *self);
@@ -38,20 +46,17 @@ static void boss_shock_b(edict_t *self);
 static void boss_shock_c(edict_t *self);
 static void boss_die(edict_t *self);
 
-static const monster_state_t monster_boss_states[MSTATE_COUNT] = {
+static const monster_state_t monster_boss_states[MSTATE_MAX] = {
   /* STAND   */ { boss_idle,    WALK1,   WALK31   },
   /* WALK    */ { NULL,         -1,      -1       },
   /* RUN     */ { NULL,         -1,      -1       },
   /* MISSILE */ { boss_missile, ATTACK1, ATTACK23 },
   /* MELEE   */ { NULL,         -1,      -1       },
+  /* RISE    */ { boss_rise,    RISE1,   RISE17   },
   /* DIE_A   */ { boss_die,     DEATH1,  DEATH9   },
-  /* DIE_B   */ { NULL,         -1,       -1      },
   /* PAIN_A  */ { boss_shock_a, SHOCKA1, SHOCKA10 },
   /* PAIN_B  */ { boss_shock_b, SHOCKB1, SHOCKB6  },
   /* PAIN_C  */ { boss_shock_c, SHOCKC1, SHOCKC10 },
-  /* PAIN_D  */ { NULL,         -1,      -1       },
-  /* PAIN_E  */ { NULL,         -1,      -1       },
-  /* EXTRA   */ { boss_rise,    RISE1,   RISE17   },
 };
 
 static const monster_class_t monster_boss_class = {
@@ -121,7 +126,7 @@ static void boss_rise(edict_t *self) {
     utl_sound(self, CHAN_WEAPON, SFXID_BOSS1_OUT1, SND_MAXVOL, ATTN_NORM);
   else if (self->v.frame == RISE2)
     utl_sound(self, CHAN_VOICE, SFXID_BOSS1_SIGHT1, SND_MAXVOL, ATTN_NORM);
-  monster_end_state(self, MSTATE_EXTRA, MSTATE_MISSILE);
+  monster_end_state(self, MSTATE_RISE, MSTATE_MISSILE);
 }
 
 static void boss_idle(edict_t *self) {
@@ -198,7 +203,7 @@ static void boss_awake(edict_t *self, edict_t *activator) {
 
   R_SpawnParticleLavaSplash(&self->v.origin);
 
-  monster_set_state(self, MSTATE_EXTRA);
+  monster_set_state(self, MSTATE_RISE);
 }
 
 void spawn_monster_boss(edict_t *self) {

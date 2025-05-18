@@ -131,20 +131,15 @@ extern pr_globals_t pr;
 // extra data for monsters
 
 enum monsterstate_e {
+  /* states referenced by shared AI code */
   MSTATE_STAND,
   MSTATE_WALK,
   MSTATE_RUN,
   MSTATE_MISSILE,
   MSTATE_MELEE,
-  MSTATE_DIE_A,
-  MSTATE_DIE_B,
-  MSTATE_PAIN_A,
-  MSTATE_PAIN_B,
-  MSTATE_PAIN_C,
-  MSTATE_PAIN_D,
-  MSTATE_PAIN_E,
+  /* custom states */
   MSTATE_EXTRA,
-  MSTATE_COUNT
+  MSTATE_MAX = 16
 };
 
 enum attackstate_e {

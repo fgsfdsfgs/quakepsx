@@ -28,6 +28,14 @@ enum army_frames_e {
   PROWL_17, PROWL_18, PROWL_19, PROWL_20, PROWL_21, PROWL_22, PROWL_23, PROWL_24
 };
 
+enum army_states_e {
+  MSTATE_DIE_A = MSTATE_EXTRA,
+  MSTATE_DIE_B,
+  MSTATE_PAIN_A,
+  MSTATE_PAIN_B,
+  MSTATE_PAIN_C,
+};
+
 static void army_stand(edict_t *self);
 static void army_walk(edict_t *self);
 static void army_run(edict_t *self);
@@ -42,7 +50,7 @@ static void army_start_die(edict_t *self, edict_t *killer);
 static void army_start_pain(edict_t *self, edict_t *attacker, s16 damage);
 static qboolean army_check_attack(edict_t *self);
 
-static const monster_state_t monster_army_states[MSTATE_COUNT] = {
+static const monster_state_t monster_army_states[MSTATE_MAX] = {
   /* STAND   */ { army_stand,   STAND1,  STAND8   },
   /* WALK    */ { army_walk,    PROWL_1, PROWL_24 },
   /* RUN     */ { army_run,     RUN1,    RUN8     },
@@ -53,9 +61,6 @@ static const monster_state_t monster_army_states[MSTATE_COUNT] = {
   /* PAIN_A  */ { army_pain_a,  PAIN1,   PAIN6    },
   /* PAIN_B  */ { army_pain_b,  PAINB1,  PAINB14  },
   /* PAIN_C  */ { army_pain_c,  PAINC1,  PAINC13  },
-  /* PAIN_D  */ { NULL,         -1,      -1       },
-  /* PAIN_E  */ { NULL,         -1,      -1       },
-  /* EXTRA   */ { NULL,         -1,      -1       },
 };
 
 static const monster_class_t monster_army_class = {

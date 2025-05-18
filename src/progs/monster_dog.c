@@ -22,6 +22,13 @@ enum dog_frames_e {
   WALK1, WALK2, WALK3, WALK4, WALK5, WALK6, WALK7, WALK8
 };
 
+enum dog_states_e {
+  MSTATE_DIE_A = MSTATE_EXTRA,
+  MSTATE_DIE_B,
+  MSTATE_PAIN_A,
+  MSTATE_PAIN_B,
+};
+
 static void dog_stand(edict_t *self);
 static void dog_walk(edict_t *self);
 static void dog_run(edict_t *self);
@@ -36,7 +43,7 @@ static void dog_start_die(edict_t *self, edict_t *killer);
 static void dog_start_pain(edict_t *self, edict_t *attacker, s16 damage);
 static qboolean dog_check_attack(edict_t *self);
 
-static const monster_state_t monster_dog_states[MSTATE_COUNT] = {
+static const monster_state_t monster_dog_states[MSTATE_MAX] = {
   /* STAND   */ { dog_stand,  STAND1,  STAND9   },
   /* WALK    */ { dog_walk,   WALK1,   WALK8    },
   /* RUN     */ { dog_run,    RUN1,    RUN12    },
@@ -46,10 +53,6 @@ static const monster_state_t monster_dog_states[MSTATE_COUNT] = {
   /* DIE_B   */ { dog_die_b,  DEATHB1, DEATHB9  },
   /* PAIN_A  */ { dog_pain_a, PAIN1,   PAIN6    },
   /* PAIN_B  */ { dog_pain_b, PAINB1,  PAINB16  },
-  /* PAIN_C  */ { NULL,       -1,      -1       },
-  /* PAIN_D  */ { NULL,       -1,      -1       },
-  /* PAIN_E  */ { NULL,       -1,      -1       },
-  /* EXTRA   */ { NULL,       -1,      -1       },
 };
 
 static const monster_class_t monster_dog_class = {
