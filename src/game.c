@@ -142,6 +142,9 @@ void G_StartMap(const char *path) {
     G_LinkEdict(ent, false);
   }
 
+  Sys_Printf("after spawn: %d entities, free mem: %u\n",
+    gs.max_edict + 1, Mem_GetFreeSpace());
+
   // if there is an audio track set for this map, play it
   // otherwise just stop the drive motor
   if (gs.edicts[0].v.noise)
