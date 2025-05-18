@@ -213,10 +213,11 @@ void spawn_player(edict_t *self) {
 
   plr->viewofs.z = self->v.viewheight;
   plr->viewangles.y = gs.edicts[1].v.angles.y;
-  plr->stats.items = IT_SHOTGUN | IT_AXE | IT_SUPER_SHOTGUN | IT_NAILGUN | IT_SUPER_NAILGUN | IT_GRENADE_LAUNCHER | IT_ROCKET_LAUNCHER;
+  plr->stats.items = IT_SHOTGUN | IT_AXE | IT_SUPER_SHOTGUN | IT_NAILGUN | IT_SUPER_NAILGUN | IT_GRENADE_LAUNCHER | IT_ROCKET_LAUNCHER | IT_LIGHTNING;
   plr->stats.ammo[AMMO_SHELLS] = 50;
   plr->stats.ammo[AMMO_NAILS] = 200;
   plr->stats.ammo[AMMO_ROCKETS] = 50;
+  plr->stats.ammo[AMMO_CELLS] = 50;
   plr->stats.weaponnum = WEAP_SHOTGUN;
   plr->stats.ammonum = AMMO_SHELLS;
   plr->vmodel = G_FindAliasModel(MDLID_V_SHOT);

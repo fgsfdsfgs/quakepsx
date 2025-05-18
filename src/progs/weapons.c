@@ -248,6 +248,54 @@ static void rocket_attack(edict_t *self) {
   utl_launch_rocket(self, &org, &plr->viewangles, &dir, 1000);
 }
 
+static void thunder_fire(edict_t *self) {
+  player_state_t *plr = self->v.player;
+
+  plr->stats.ammo[AMMO_CELLS]--;
+
+  self->v.effects |= EF_MUZZLEFLASH;
+
+  plr->attack_finished = gs.time + PR_FRAMETIME;
+  plr->punchangle = -TO_DEG16(1);
+
+  x16vec3_t dir;
+  utl_makevectors(&plr->viewangles);
+  utl_aim(self, &dir);
+
+  x32vec3_t dst;
+  dst.x = self->v.origin.x + (x32)dir.x * 1024;
+  dst.y = self->v.origin.y + (x32)dir.y * 1024;
+  dst.z = self->v.origin.z + (x32)dir.z * 1024;
+
+  const trace_t *trace = utl_traceline(&self->v.origin, &dst, false, self);
+  R_SpawnBeam(&self->v.origin, &trace->endpos, 0xFFC0C0, 2, 0);
+}
+
+static void thunder_attack_cycle(edict_t *self) {
+  player_state_t *plr = self->v.player;
+
+  if ((plr->buttons & BTN_FIRE) == 0 || plr->stats.ammo[AMMO_CELLS] <= 0) {
+    plr->vmodel_frame = 0;
+    plr->vmodel_think = NULL;
+    return;
+  }
+
+  if (plr->vmodel_frame == 1)
+    utl_sound(self, CHAN_BODY, SFXID_WEAPONS_LHIT, SND_MAXVOL, ATTN_NORM);
+
+  thunder_fire(self);
+
+  plr->vmodel_frame++;
+  if (plr->vmodel_frame > plr->vmodel_end_frame)
+    plr->vmodel_frame = 1;
+}
+
 static void thunder_attack(edict_t *self) {
-  // TODO
+  player_state_t *plr = self->v.player;
+
+  thunder_fire(self);
+
+  plr->vmodel_frame = 1;
+  plr->vmodel_end_frame = plr->vmodel->numframes - 1;
+  plr->vmodel_think = thunder_attack_cycle;
 }
