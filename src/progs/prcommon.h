@@ -186,10 +186,10 @@ typedef struct monster_fields_s {
   x32 show_hostile;
   x16 ideal_yaw;
   x16 yaw_speed;
-  s16 next_frame;
-  s16 state_num;
-  s16 attack_state;
-  s16 lefty;
+  u8 next_frame;
+  s8 lefty;
+  s8 state_num;
+  s8 attack_state;
 } monster_fields_t;
 
 // extra data for doors, buttons and plats
