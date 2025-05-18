@@ -229,6 +229,7 @@ ent monster_shambler
   sfx sound/shambler/melee1.wav
   sfx sound/shambler/shurt2.wav
   sfx sound/shambler/sdeath.wav
+  sfx sound/shambler/smack.wav
 
 ent monster_shalrath
   mdl progs/shalrath.mdl

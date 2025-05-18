@@ -51,7 +51,7 @@ static const monster_class_t monster_demon_class = {
   .fn_start_pain = demon_start_pain,
   .fn_start_die = demon_start_die,
   .fn_check_attack = demon_check_attack,
-  .sight_sound = SFXID_DOG_DSIGHT
+  .sight_sound = SFXID_DEMON_SIGHT2
 };
 
 static void demon_stand(edict_t *self) {
