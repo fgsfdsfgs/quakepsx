@@ -22,7 +22,7 @@ void utl_makevectors(const x16vec3_t *angles) {
 
 void utl_vectoangles(const x16vec3_t *dir) {
   x16 yaw, pitch;
-  x16 forward;
+  x32 forward;
 
   if (dir->x == 0 && dir->y == 0) {
     yaw = 0;
@@ -33,7 +33,7 @@ void utl_vectoangles(const x16vec3_t *dir) {
   } else {
     yaw = qatan2(dir->y, dir->x);
     forward = SquareRoot12(XMUL16(dir->x, dir->x) + XMUL16(dir->y, dir->y));
-    pitch = qatan2(dir->z, forward);
+    pitch = ONE - qatan2(dir->z, forward);
   }
 
   pr.v_angles.x = pitch;
