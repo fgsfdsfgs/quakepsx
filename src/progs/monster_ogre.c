@@ -92,10 +92,10 @@ static const monster_class_t monster_ogre_class = {
 };
 
 static void ogre_stand(edict_t *self) {
+  monster_looping_state(self, MSTATE_STAND);
   if (self->v.frame == STAND5 && xrand32() < FTOX(0.2))
     utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGIDLE, SND_MAXVOL, ATTN_NORM);
   ai_stand(self);
-  monster_loop_state(self, MSTATE_STAND);
 }
 
 static void ogre_walk(edict_t *self) {
@@ -104,6 +104,8 @@ static void ogre_walk(edict_t *self) {
     3, 2, 2, 2, 2, 5, 3, 2, 3, 1, 2, 3,
     3, 3, 3, 4
   };
+
+  monster_looping_state(self, MSTATE_WALK);
 
   switch (self->v.frame) {
   case WALK3:
@@ -119,11 +121,11 @@ static void ogre_walk(edict_t *self) {
   }
 
   ai_walk(self, TO_FIX32(walktable[self->v.frame - WALK1]));
-
-  monster_loop_state(self, MSTATE_WALK);
 }
 
 static void ogre_run(edict_t *self) {
+  monster_looping_state(self, MSTATE_RUN);
+
   // distance to move each frame
   static const s8 runtable[] = {
     9, 12, 8, 22, 16, 4, 13, 24
@@ -137,14 +139,6 @@ static void ogre_run(edict_t *self) {
   default:
     ai_run(self, TO_FIX32(runtable[self->v.frame - RUN1]));
     break;
-  }
-
-  if (self->v.monster->state_num == MSTATE_MELEE) {
-    // HACK: we started swinging; randomly choose different attack
-    if (rand() & 1)
-      monster_set_state(self, MSTATE_SMASH);
-  } else {
-    monster_loop_state(self, MSTATE_RUN);
   }
 }
 
@@ -168,12 +162,12 @@ static void ogre_grenade(edict_t *self) {
 }
 
 static void ogre_missile(edict_t *self) {
+  monster_finite_state(self, MSTATE_MISSILE, MSTATE_RUN);
+
   ai_face(self);
 
   if (self->v.frame == SHOOT3)
     ogre_grenade(self);
-
-  monster_end_state(self, MSTATE_MISSILE, MSTATE_RUN);
 }
 
 static void ogre_chainsaw(edict_t *self, const x32 side) {
@@ -209,6 +203,16 @@ static void ogre_swing(edict_t *self) {
     0, 200, 0, 0, 0, -200, 0
   };
 
+  // if we're transitioning into the melee state, randomly choose the alt melee
+  if (self->v.monster->next_frame = SWING1) {
+    if (xrand32() >= FTOX(0.5)) {
+      monster_exec_state(self, MSTATE_SMASH);
+      return;
+    }
+  }
+
+  monster_finite_state(self, MSTATE_MELEE, MSTATE_RUN);
+
   switch (self->v.frame) {
   case SWING1:
     ai_charge(self, TO_FIX32(11));
@@ -234,8 +238,6 @@ static void ogre_swing(edict_t *self) {
   case SWING14: ai_charge(self, TO_FIX32(9)); break;
   default: break;
   }
-
-  monster_end_state(self, MSTATE_MELEE, MSTATE_RUN);
 }
 
 static void ogre_smash(edict_t *self) {
@@ -243,6 +245,8 @@ static void ogre_smash(edict_t *self) {
     6, 0, 0, 1, 4, 4, 4, 10, 13, -1, 2,
     0, 4, 12
   };
+
+  monster_finite_state(self, MSTATE_SMASH, MSTATE_RUN);
 
   const s16 dframe = self->v.frame - SMASH1;
   if (chargetable[dframe] >= 0)
@@ -265,40 +269,38 @@ static void ogre_smash(edict_t *self) {
   default:
     break;
   }
-
-  monster_end_state(self, MSTATE_SMASH, MSTATE_RUN);
 }
 
 static void ogre_pain_a(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_A, MSTATE_RUN);
+  monster_finite_state(self, MSTATE_PAIN_A, MSTATE_RUN);
 }
 
 static void ogre_pain_b(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_B, MSTATE_RUN);
+  monster_finite_state(self, MSTATE_PAIN_B, MSTATE_RUN);
 }
 
 static void ogre_pain_c(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_C, MSTATE_RUN);
+  monster_finite_state(self, MSTATE_PAIN_C, MSTATE_RUN);
 }
 
 static void ogre_pain_d(edict_t *self) {
+  monster_finite_state(self, MSTATE_PAIN_D, MSTATE_RUN);
   switch (self->v.frame) {
   case PAIND2: ai_pain(self, TO_FIX32(10)); break;
   case PAIND3: ai_pain(self, TO_FIX32(9)); break;
   case PAIND4: ai_pain(self, TO_FIX32(4)); break;
   default: break;
   }
-  monster_end_state(self, MSTATE_PAIN_D, MSTATE_RUN);
 }
 
 static void ogre_pain_e(edict_t *self) {
+  monster_finite_state(self, MSTATE_PAIN_E, MSTATE_RUN);
   switch (self->v.frame) {
   case PAINE2: ai_pain(self, TO_FIX32(10)); break;
   case PAINE3: ai_pain(self, TO_FIX32(9)); break;
   case PAINE4: ai_pain(self, TO_FIX32(4)); break;
   default: break;
   }
-  monster_end_state(self, MSTATE_PAIN_E, MSTATE_RUN);
 }
 
 static void ogre_finish_die(edict_t *self) {
@@ -307,12 +309,13 @@ static void ogre_finish_die(edict_t *self) {
 }
 
 static void ogre_die_a(edict_t *self) {
+  monster_finite_state(self, MSTATE_DIE_A, -1);
   if (self->v.frame == DEATH3)
     ogre_finish_die(self);
-  monster_end_state(self, MSTATE_DIE_A, -1);
 }
 
 static void ogre_die_b(edict_t *self) {
+  monster_finite_state(self, MSTATE_DIE_B, -1);
   switch (self->v.frame) {
   case BDEATH2: ai_forward(self, TO_FIX32(5)); break;
   case BDEATH3: ogre_finish_die(self); break;
@@ -322,7 +325,6 @@ static void ogre_die_b(edict_t *self) {
   case BDEATH7: ai_forward(self, TO_FIX32(25)); break;
   default: break;
   }
-  monster_end_state(self, MSTATE_DIE_B, -1);
 }
 
 static void ogre_start_die(edict_t *self, edict_t *killer) {
@@ -332,7 +334,7 @@ static void ogre_start_die(edict_t *self, edict_t *killer) {
     return;
   }
   utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGDTH, SND_MAXVOL, ATTN_NORM);
-  monster_set_state(self, (rand() & 1) + MSTATE_DIE_A);
+  monster_exec_state(self, (rand() & 1) + MSTATE_DIE_A);
 }
 
 static void ogre_start_pain(edict_t *self, edict_t *attacker, s16 damage) {
@@ -365,7 +367,7 @@ static void ogre_start_pain(edict_t *self, edict_t *attacker, s16 damage) {
   }
 
   mon->pain_finished = gs.time + pain_duration;
-  monster_set_state(self, pain_state);
+  monster_exec_state(self, pain_state);
 }
 
 static qboolean ogre_check_attack(edict_t *self) {

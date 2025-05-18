@@ -64,7 +64,7 @@ static const monster_class_t monster_boss_class = {
   .fn_start_pain = NULL,
   .fn_start_die = NULL,
   .fn_check_attack = NULL,
-  .sight_sound = SFXID_SOLDIER_SIGHT1
+  .sight_sound = 0
 };
 
 static void boss_face(edict_t *self) {
@@ -118,24 +118,26 @@ static void boss_fire_missile(edict_t *self, const x32vec3_t *p) {
 
   // check for dead enemy
   if (enemy->v.health <= 0)
-    monster_set_state(self, MSTATE_STAND);
+    monster_exec_state(self, MSTATE_STAND);
 }
 
 static void boss_rise(edict_t *self) {
+  monster_finite_state(self, MSTATE_RISE, MSTATE_MISSILE);
   if (self->v.frame == RISE1)
     utl_sound(self, CHAN_WEAPON, SFXID_BOSS1_OUT1, SND_MAXVOL, ATTN_NORM);
   else if (self->v.frame == RISE2)
     utl_sound(self, CHAN_VOICE, SFXID_BOSS1_SIGHT1, SND_MAXVOL, ATTN_NORM);
-  monster_end_state(self, MSTATE_RISE, MSTATE_MISSILE);
 }
 
 static void boss_idle(edict_t *self) {
+  monster_looping_state(self, MSTATE_STAND);
   if (self->v.frame > WALK1)
     boss_face(self);
-  monster_loop_state(self, MSTATE_STAND);
 }
 
 static void boss_missile(edict_t *self) {
+  monster_looping_state(self, MSTATE_MISSILE);
+
   x32vec3_t p;
   switch (self->v.frame) {
   case ATTACK9:
@@ -150,22 +152,23 @@ static void boss_missile(edict_t *self) {
     boss_face(self);
     break;
   }
-  monster_loop_state(self, MSTATE_MISSILE);
 }
 
 static void boss_shock_a(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_A, MSTATE_MISSILE);
+  monster_finite_state(self, MSTATE_PAIN_A, MSTATE_MISSILE);
 }
 
 static void boss_shock_b(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_B, MSTATE_MISSILE);
+  monster_finite_state(self, MSTATE_PAIN_B, MSTATE_MISSILE);
 }
 
 static void boss_shock_c(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_C, MSTATE_DIE_A);
+  monster_finite_state(self, MSTATE_PAIN_C, MSTATE_DIE_A);
 }
 
 static void boss_die(edict_t *self) {
+  monster_finite_state(self, MSTATE_DIE_A, -1);
+
   switch (self->v.frame) {
   case DEATH1:
     utl_sound(self, CHAN_VOICE, SFXID_BOSS1_DEATH, SND_MAXVOL, ATTN_NORM);
@@ -182,7 +185,6 @@ static void boss_die(edict_t *self) {
   default:
     break;
   }
-  monster_end_state(self, MSTATE_DIE_A, -1);
 }
 
 static void boss_awake(edict_t *self, edict_t *activator) {
@@ -203,7 +205,7 @@ static void boss_awake(edict_t *self, edict_t *activator) {
 
   R_SpawnParticleLavaSplash(&self->v.origin);
 
-  monster_set_state(self, MSTATE_RISE);
+  monster_exec_state(self, MSTATE_RISE);
 }
 
 void spawn_monster_boss(edict_t *self) {
@@ -213,8 +215,8 @@ void spawn_monster_boss(edict_t *self) {
   mon->oldenemy = gs.edicts;
   mon->movetarget = gs.edicts;
   mon->goalentity = gs.edicts;
-  mon->state_num = MSTATE_STAND;
-  mon->state = &monster_boss_states[0];
+  mon->state_num = MSTATE_NONE;
+  mon->state = NULL;
 
   self->v.monster = mon;
   self->v.use = boss_awake;
@@ -280,11 +282,11 @@ static void lightning_use(edict_t *self, edict_t *activator) {
     utl_sound(self, CHAN_VOICE, SFXID_BOSS1_PAIN, SND_MAXVOL, ATTN_NORM);
     self->v.health--;
     if (self->v.health >= 2)
-      monster_set_state(self, MSTATE_PAIN_A);
+      monster_exec_state(self, MSTATE_PAIN_A);
     else if (self->v.health == 1)
-      monster_set_state(self, MSTATE_PAIN_B);
+      monster_exec_state(self, MSTATE_PAIN_B);
     else if (self->v.health == 0)
-      monster_set_state(self, MSTATE_PAIN_C);
+      monster_exec_state(self, MSTATE_PAIN_C);
   }
 }
 

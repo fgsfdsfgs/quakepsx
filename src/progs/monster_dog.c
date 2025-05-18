@@ -64,17 +64,17 @@ static const monster_class_t monster_dog_class = {
 };
 
 static void dog_stand(edict_t *self) {
+  monster_looping_state(self, MSTATE_STAND);
   ai_stand(self);
-  monster_loop_state(self, MSTATE_STAND);
 }
 
 static void dog_walk(edict_t *self) {
+  monster_looping_state(self, MSTATE_WALK);
   if (self->v.frame == WALK1) {
     if (xrand32() < FTOX(0.2))
-      Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_DOG_IDLE, &self->v.origin, SND_MAXVOL, ATTN_IDLE);
+      utl_sound(self, CHAN_VOICE, SFXID_DOG_IDLE, SND_MAXVOL, ATTN_IDLE);
   }
   ai_walk(self, TO_FIX32(8));
-  monster_loop_state(self, MSTATE_WALK);
 }
 
 static void dog_run(edict_t *self) {
@@ -83,18 +83,18 @@ static void dog_run(edict_t *self) {
     16, 32, 32, 20, 64, 32, 16, 32, 32, 20, 64, 32
   };
 
+  monster_looping_state(self, MSTATE_RUN);
+
   if (self->v.frame == RUN1) {
     if (xrand32() < FTOX(0.2))
-      Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_DOG_IDLE, &self->v.origin, SND_MAXVOL, ATTN_IDLE);
+      utl_sound(self, CHAN_VOICE, SFXID_DOG_IDLE, SND_MAXVOL, ATTN_IDLE);
   }
 
   ai_run(self, TO_FIX32(runtable[self->v.frame - RUN1]));
-
-  monster_loop_state(self, MSTATE_RUN);
 }
 
 static void dog_bite(edict_t *self) {
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_DOG_DATTACK1, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  utl_sound(self, CHAN_VOICE, SFXID_DOG_DATTACK1, SND_MAXVOL, ATTN_NORM);
 
   edict_t *enemy = self->v.monster->enemy;
   if (!enemy)
@@ -113,11 +113,11 @@ static void dog_bite(edict_t *self) {
 }
 
 static void dog_melee(edict_t *self) {
+  monster_finite_state(self, MSTATE_MELEE, MSTATE_RUN);
   if (self->v.frame == ATTACK4)
     dog_bite(self);
   else
     ai_charge(self, TO_FIX32(10));
-  monster_end_state(self, MSTATE_MELEE, MSTATE_RUN);
 }
 
 static void dog_leap_touch(edict_t *self, edict_t *other) {
@@ -135,17 +135,20 @@ static void dog_leap_touch(edict_t *self, edict_t *other) {
   if (!G_CheckBottom(self)) {
     if (self->v.flags & FL_ONGROUND) {
       // jump randomly to not get hung up
-      self->v.touch = null_touch;
-      monster_set_state(self, MSTATE_MISSILE);
+      self->v.touch = NULL;
+      monster_set_next_state(self, MSTATE_MISSILE);
     }
     return; // not on ground yet
   }
 
-  self->v.touch = null_touch;
-  monster_set_state(self, MSTATE_RUN);
+  self->v.touch = NULL;
+  monster_set_next_state(self, MSTATE_RUN);
 }
 
 static void dog_leap(edict_t *self) {
+  // leap until we actually hit something
+  monster_finite_state(self, MSTATE_MISSILE, -1);
+
   if (self->v.frame == LEAP1) {
     ai_face(self);
   } else if (self->v.frame == LEAP2) {
@@ -157,15 +160,15 @@ static void dog_leap(edict_t *self) {
     self->v.velocity.z += TO_FIX32(200);
     self->v.flags &= ~FL_ONGROUND;
   }
-  // leap until we actually hit something
-  monster_end_state(self, MSTATE_MISSILE, -1);
 }
 
 static void dog_pain_a(edict_t *self) {
-  monster_end_state(self, MSTATE_PAIN_A, MSTATE_RUN);
+  monster_finite_state(self, MSTATE_PAIN_A, MSTATE_RUN);
 }
 
 static void dog_pain_b(edict_t *self) {
+  monster_finite_state(self, MSTATE_PAIN_B, MSTATE_RUN);
+
   switch (self->v.frame) {
   case PAINB3:  ai_pain(self, TO_FIX32(4)); break;
   case PAINB4:  ai_pain(self, TO_FIX32(12)); break;
@@ -175,16 +178,14 @@ static void dog_pain_b(edict_t *self) {
   case PAINB10: ai_pain(self, TO_FIX32(10)); break;
   default: break;
   }
-
-  monster_end_state(self, MSTATE_PAIN_B, MSTATE_RUN);
 }
 
 static void dog_die_a(edict_t *self) {
-  monster_end_state(self, MSTATE_DIE_A, -1);
+  monster_finite_state(self, MSTATE_DIE_A, -1);
 }
 
 static void dog_die_b(edict_t *self) {
-  monster_end_state(self, MSTATE_DIE_B, -1);
+  monster_finite_state(self, MSTATE_DIE_B, -1);
 }
 
 static void dog_start_die(edict_t *self, edict_t *killer) {
@@ -195,14 +196,14 @@ static void dog_start_die(edict_t *self, edict_t *killer) {
   }
 
   // regular death
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_DOG_DDEATH, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  utl_sound(self, CHAN_VOICE, SFXID_DOG_DDEATH, SND_MAXVOL, ATTN_NORM);
   self->v.solid = SOLID_NOT;
-  monster_set_state(self, (xrand32() > HALF) ? MSTATE_DIE_A : MSTATE_DIE_B);
+  monster_exec_state(self, (xrand32() > HALF) ? MSTATE_DIE_A : MSTATE_DIE_B);
 }
 
 static void dog_start_pain(edict_t *self, edict_t *attacker, s16 damage) {
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_DOG_DPAIN1, &self->v.origin, SND_MAXVOL, ATTN_NORM);
-  monster_set_state(self, (xrand32() > HALF) ? MSTATE_PAIN_A : MSTATE_PAIN_B);
+  utl_sound(self, CHAN_VOICE, SFXID_DOG_DPAIN1, SND_MAXVOL, ATTN_NORM);
+  monster_exec_state(self, (xrand32() > HALF) ? MSTATE_PAIN_A : MSTATE_PAIN_B);
 }
 
 static inline qboolean dog_check_melee(edict_t *self) {

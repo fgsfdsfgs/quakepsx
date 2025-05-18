@@ -72,8 +72,8 @@ static const monster_class_t monster_army_class = {
 };
 
 static void army_stand(edict_t *self) {
+  monster_looping_state(self, MSTATE_STAND);
   ai_stand(self);
-  monster_loop_state(self, MSTATE_STAND);
 }
 
 static void army_walk(edict_t *self) {
@@ -83,17 +83,17 @@ static void army_walk(edict_t *self) {
     0, 1, 1, 1, 3, 3, 3, 3, 2, 1, 1, 1
   };
 
+  monster_looping_state(self, MSTATE_WALK);
+
   switch (self->v.frame) {
   case PROWL_1:
-    if (xrand32() < (ONE / 5))
-      Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_SOLDIER_IDLE, &self->v.origin, SND_MAXVOL, ATTN_IDLE);
+    if (xrand32() < FTOX(0.2))
+      utl_sound(self, CHAN_VOICE, SFXID_SOLDIER_IDLE, SND_MAXVOL, ATTN_IDLE);
   /* fallthrough */
   default:
     ai_walk(self, TO_FIX32(walktable[self->v.frame - PROWL_1]));
     break;
   }
-
-  monster_loop_state(self, MSTATE_WALK);
 }
 
 static void army_run(edict_t *self) {
@@ -102,23 +102,23 @@ static void army_run(edict_t *self) {
     11, 15, 10, 10, 8, 15, 10, 8
   };
 
+  monster_looping_state(self, MSTATE_RUN);
+
   switch (self->v.frame) {
   case RUN1:
-    if (xrand32() < (ONE / 5))
-      Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_SOLDIER_IDLE, &self->v.origin, SND_MAXVOL, ATTN_IDLE);
+    if (xrand32() < FTOX(0.2))
+      utl_sound(self, CHAN_VOICE, SFXID_SOLDIER_IDLE, SND_MAXVOL, ATTN_IDLE);
   /* fallthrough */
   default:
     ai_run(self, TO_FIX32(runtable[self->v.frame - RUN1]));
     break;
   }
-
-  monster_loop_state(self, MSTATE_RUN);
 }
 
 static void army_fire(edict_t *self) {
   ai_face(self);
 
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, SFXID_WEAPONS_GUNCOCK, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  utl_sound(self, CHAN_WEAPON, SFXID_WEAPONS_GUNCOCK, SND_MAXVOL, ATTN_NORM);
   self->v.effects |= EF_MUZZLEFLASH;
 
   // fire somewhat behind the player, so a dodging player is harder to hit
@@ -137,6 +137,8 @@ static void army_fire(edict_t *self) {
 }
 
 static void army_missile(edict_t *self) {
+  monster_finite_state(self, MSTATE_MISSILE, MSTATE_RUN);
+
   ai_face(self);
 
   switch (self->v.frame) {
@@ -144,8 +146,6 @@ static void army_missile(edict_t *self) {
   case SHOOT7: ai_checkrefire(self, MSTATE_MISSILE); break;
   default: break;
   }
-
-  monster_end_state(self, MSTATE_MISSILE, MSTATE_RUN);
 }
 
 static void army_start_pain(edict_t *self, edict_t *attacker, s16 damage) {
@@ -157,35 +157,36 @@ static void army_start_pain(edict_t *self, edict_t *attacker, s16 damage) {
   const x32 r = xrand32();
   if (r < FTOX(0.2)) {
     mon->pain_finished = gs.time + FTOX(0.6);
-    monster_set_state(self, MSTATE_PAIN_A);
+    monster_exec_state(self, MSTATE_PAIN_A);
   } else if (r < FTOX(0.6)) {
     mon->pain_finished = gs.time + FTOX(1.1);
-    monster_set_state(self, MSTATE_PAIN_B);
+    monster_exec_state(self, MSTATE_PAIN_B);
   } else {
     mon->pain_finished = gs.time + FTOX(1.1);
-    monster_set_state(self, MSTATE_PAIN_C);
+    monster_exec_state(self, MSTATE_PAIN_C);
   }
 
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_SOLDIER_PAIN2, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  utl_sound(self, CHAN_VOICE, SFXID_SOLDIER_PAIN2, SND_MAXVOL, ATTN_NORM);
 }
 
 static void army_pain_a(edict_t *self) {
+  monster_finite_state(self, MSTATE_PAIN_A, MSTATE_RUN);
   if (self->v.frame == PAIN6)
     ai_pain(self, TO_FIX32(1));
-  monster_end_state(self, MSTATE_PAIN_A, MSTATE_RUN);
 }
 
 static void army_pain_b(edict_t *self) {
+  monster_finite_state(self, MSTATE_PAIN_B, MSTATE_RUN);
   switch (self->v.frame) {
   case PAINB2:  ai_painforward(self, TO_FIX32(13)); break;
   case PAINB3:  ai_painforward(self, TO_FIX32(9)); break;
   case PAINB12: ai_pain(self, TO_FIX32(2)); break;
   default: break;
   }
-  monster_end_state(self, MSTATE_PAIN_B, MSTATE_RUN);
 }
 
 static void army_pain_c(edict_t *self) {
+  monster_finite_state(self, MSTATE_PAIN_C, MSTATE_RUN);
   switch (self->v.frame) {
   case PAINC2:  ai_pain(self, TO_FIX32(1)); break;
   case PAINC5:  ai_painforward(self, TO_FIX32(1)); break;
@@ -197,7 +198,6 @@ static void army_pain_c(edict_t *self) {
   case PAINC12: ai_painforward(self, TO_FIX32(5)); break;
   default: break;
   }
-  monster_end_state(self, MSTATE_PAIN_C, MSTATE_RUN);
 }
 
 static inline void army_finish_die(edict_t *self) {
@@ -213,18 +213,19 @@ static void army_start_die(edict_t *self, edict_t *killer) {
   }
 
   // regular death
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_SOLDIER_DEATH1, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  utl_sound(self, CHAN_VOICE, SFXID_SOLDIER_DEATH1, SND_MAXVOL, ATTN_NORM);
 
-  monster_set_state(self, (xrand32() < HALF) ? MSTATE_DIE_A : MSTATE_DIE_B);
+  monster_exec_state(self, (xrand32() < HALF) ? MSTATE_DIE_A : MSTATE_DIE_B);
 }
 
 static void army_die_a(edict_t *self) {
+  monster_finite_state(self, MSTATE_DIE_A, -1);
   if (self->v.frame == DEATH3)
     army_finish_die(self);
-  monster_end_state(self, MSTATE_DIE_A, -1);
 }
 
 static void army_die_b(edict_t *self) {
+  monster_finite_state(self, MSTATE_DIE_B, -1);
   switch (self->v.frame) {
   case DEATHC2: ai_back(self, TO_FIX32(5)); break;
   case DEATHC3:
@@ -236,7 +237,6 @@ static void army_die_b(edict_t *self) {
   case DEATHC6: ai_back(self, TO_FIX32(4)); break;
   default: break;
   }
-  monster_end_state(self, MSTATE_DIE_B, -1);
 }
 
 static qboolean army_check_attack(edict_t *self) {
@@ -267,7 +267,7 @@ static qboolean army_check_attack(edict_t *self) {
   }
 
   if (xrand32() < chance) {
-    monster_set_state(self, MSTATE_MISSILE);
+    monster_exec_state(self, MSTATE_MISSILE);
     ai_attack_finished(self, ONE + xrand32());
     if (xrand32() < FTOX(0.3))
       mon->lefty = !mon->lefty;

@@ -1,6 +1,6 @@
 #include "prcommon.h"
 
-static inline void monster_init(edict_t *self, const monster_class_t *class) {
+void monster_init(edict_t *self, const monster_class_t *class) {
   // all monsters are created at map init time in OG Quake, so we can alloc extra fields here
   // to avoid bloating edict_t
   monster_fields_t *mon = Mem_ZeroAlloc(sizeof(monster_fields_t));
@@ -9,11 +9,12 @@ static inline void monster_init(edict_t *self, const monster_class_t *class) {
   mon->oldenemy = gs.edicts;
   mon->movetarget = gs.edicts;
   mon->goalentity = gs.edicts;
+  mon->state_num = MSTATE_NONE;
   self->v.solid = SOLID_SLIDEBOX;
   self->v.movetype = MOVETYPE_STEP;
   self->v.monster = mon;
   self->v.th_die = class->fn_start_die;
-  monster_set_state(self, MSTATE_STAND);
+  monster_set_next_state(self, MSTATE_STAND);
   pr.total_monsters += 1;
 }
 
@@ -72,14 +73,14 @@ static inline void monster_start_go(edict_t *self, const x16 default_yawspeed, c
     } else {
       mon->ideal_yaw = VecDeltaToYaw(&mon->goalentity->v.origin, &self->v.origin);
       if (mon->movetarget->v.classname == ENT_PATH_CORNER) {
-        monster_set_state(self, MSTATE_WALK);
+        monster_exec_state(self, MSTATE_WALK);
         return;
       }
     }
   }
 
   mon->pause_time = TO_FIX32(0xFFFF);
-  monster_set_state(self, MSTATE_STAND);
+  monster_exec_state(self, MSTATE_STAND);
 
   // spread think times so they don't all happen at same time
   self->v.nextthink += xrand32() >> 1;
@@ -111,12 +112,12 @@ static void swimmonster_start_go(edict_t *self) {
       Sys_Printf("Monster %d (%02x) can't find target\n", EDICT_NUM(self), self->v.classname);
     } else {
       mon->ideal_yaw = VecDeltaToYaw(&mon->goalentity->v.origin, &self->v.origin);
-      monster_set_state(self, MSTATE_WALK);
+      monster_exec_state(self, MSTATE_WALK);
     }
   } else {
     Sys_Printf("mon %02x state %02x\n", EDICT_NUM(self), MSTATE_STAND);
     mon->pause_time = TO_FIX32(0xFFFF);
-    monster_set_state(self, MSTATE_STAND);
+    monster_exec_state(self, MSTATE_STAND);
   }
 
   // spread think times so they don't all happen at same time
@@ -133,36 +134,60 @@ void monster_death_use(edict_t *self) {
   // TODO: SUB_UseTargets
 }
 
-void monster_set_state(edict_t *self, const s16 state) {
+void monster_exec_state(edict_t *self, const s16 state) {
   monster_fields_t *mon = self->v.extra_ptr;
-  mon->state_num = state;
-  mon->state = &mon->class->state_table[state];
-  self->v.frame = mon->state->first_frame;
-  if (mon->state->think_fn) {
+  const monster_state_t *s = &mon->class->state_table[state];
+  if (s->think_fn) {
+    mon->next_frame = s->first_frame;
+    s->think_fn(self);
+  }
+}
+
+void monster_set_next_state(edict_t *self, const s16 state) {
+  monster_fields_t *mon = self->v.extra_ptr;
+  const monster_state_t *s = &mon->class->state_table[state];
+  if (s->think_fn) {
+    mon->next_frame = s->first_frame;
+    self->v.think = s->think_fn;
+    self->v.nextthink = gs.time + PR_FRAMETIME;
+  }
+}
+
+void monster_looping_state(edict_t *self, const s16 state) {
+  monster_fields_t *mon = self->v.extra_ptr;
+  if (mon->state_num != state) {
+    mon->state_num = state;
+    mon->state = &mon->class->state_table[state];
+    mon->next_frame = mon->state->first_frame;
     self->v.think = mon->state->think_fn;
-    self->v.nextthink = gs.time + PR_FRAMETIME;
   }
+
+  self->v.frame = mon->next_frame;
+
+  if (mon->next_frame >= mon->state->last_frame)
+    mon->next_frame = mon->state->first_frame;
+  else
+    mon->next_frame++;
+
+  self->v.nextthink = gs.time + PR_FRAMETIME;
 }
 
-void monster_loop_state(edict_t *self, const s16 state) {
+void monster_finite_state(edict_t *self, const s16 state, const s16 next_state) {
   monster_fields_t *mon = self->v.extra_ptr;
-  if (mon->state_num == state) {
-    self->v.frame++;
-    if (self->v.frame > mon->state->last_frame)
-      self->v.frame = mon->state->first_frame;
-    self->v.nextthink = gs.time + PR_FRAMETIME;
+  if (mon->state_num != state) {
+    mon->state_num = state;
+    mon->state = &mon->class->state_table[state];
+    mon->next_frame = mon->state->first_frame;
+    self->v.think = mon->state->think_fn;
   }
-}
 
-void monster_end_state(edict_t *self, const s16 state, const s16 next_state) {
-  monster_fields_t *mon = self->v.extra_ptr;
-  if (mon->state_num == state) {
-    if (self->v.frame < mon->state->last_frame) {
-      self->v.frame++;
-      self->v.nextthink = gs.time + PR_FRAMETIME;
-    } else if (next_state >= 0) {
-      monster_set_state(self, next_state);
-    }
+  self->v.frame = mon->next_frame;
+
+  if (mon->next_frame < mon->state->last_frame) {
+    mon->next_frame++;
+    self->v.nextthink = gs.time + PR_FRAMETIME;
+  } else if (next_state >= 0) {
+    monster_set_next_state(self, next_state);
   }
 }
 

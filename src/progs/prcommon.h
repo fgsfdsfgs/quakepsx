@@ -131,8 +131,9 @@ extern pr_globals_t pr;
 // extra data for monsters
 
 enum monsterstate_e {
+  MSTATE_NONE = -1,
   /* states referenced by shared AI code */
-  MSTATE_STAND,
+  MSTATE_STAND = 0,
   MSTATE_WALK,
   MSTATE_RUN,
   MSTATE_MISSILE,
@@ -179,6 +180,7 @@ typedef struct monster_fields_s {
   x32 show_hostile;
   x16 ideal_yaw;
   x16 yaw_speed;
+  s16 next_frame;
   s16 state_num;
   s16 attack_state;
   s16 lefty;
@@ -246,9 +248,11 @@ edict_t *utl_launch_grenade(edict_t *self, const x16vec3_t *angles);
 edict_t *utl_launch_rocket(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir, const s16 speed);
 
 // monster initialization
-void monster_set_state(edict_t *self, const s16 state);
-void monster_loop_state(edict_t *self, const s16 state);
-void monster_end_state(edict_t *self, const s16 state, const s16 next_state);
+void monster_init(edict_t *self, const monster_class_t *class);
+void monster_exec_state(edict_t *self, const s16 state);
+void monster_set_next_state(edict_t *self, const s16 state);
+void monster_looping_state(edict_t *self, const s16 state);
+void monster_finite_state(edict_t *self, const s16 state, const s16 next_state);
 void walkmonster_start(edict_t *self, const monster_class_t *class);
 void flymonster_start(edict_t *self, const monster_class_t *class);
 void swimmonster_start(edict_t *self, const monster_class_t *class);

@@ -274,7 +274,7 @@ void ai_hunt_target(edict_t *self) {
   mon->goalentity = mon->enemy;
   mon->ideal_yaw = VecDeltaToYaw(&mon->goalentity->v.origin, &self->v.origin);
 
-  monster_set_state(self, MSTATE_RUN);
+  monster_set_next_state(self, MSTATE_RUN);
 
   ai_attack_finished(self, ONE); // wait a while before first attack
 }
@@ -330,7 +330,8 @@ void ai_foundtarget(edict_t *self) {
 
   mon->show_hostile = gs.time + ONE; // wake up other monsters
 
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, mon->class->sight_sound, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  if (mon->class->sight_sound)
+    utl_sound(self, CHAN_VOICE, mon->class->sight_sound, SND_MAXVOL, ATTN_NORM);
 
   ai_hunt_target(self);
 }
@@ -413,7 +414,7 @@ static qboolean ai_check_attack_generic(edict_t *self) {
   const qboolean have_melee = (mon->class->state_table[MSTATE_MELEE].think_fn != NULL);
   if (pr.enemy_range == RANGE_MELEE && have_melee) {
     // melee attack
-    monster_set_state(self, MSTATE_MELEE);
+    monster_exec_state(self, MSTATE_MELEE);
     return true;
   }
 
@@ -442,7 +443,7 @@ static qboolean ai_check_attack_generic(edict_t *self) {
   }
 
   if (xrand32() < chance) {
-    monster_set_state(self, MSTATE_MISSILE);
+    monster_exec_state(self, MSTATE_MISSILE);
     ai_attack_finished(self, xrand32() << 1);
     return true;
   }
@@ -471,7 +472,7 @@ void ai_stand(edict_t *self) {
   if (ai_findtarget(self))
     return;
   if (gs.time > self->v.monster->pause_time)
-    monster_set_state(self, MSTATE_WALK);
+    monster_exec_state(self, MSTATE_WALK);
 }
 
 void ai_turn(edict_t *self) {
@@ -513,7 +514,7 @@ static inline void ai_run_attack(edict_t *self) {
   mon->ideal_yaw = pr.enemy_yaw;
   ai_changeyaw(self);
   if (ai_facing_ideal(self)) {
-    monster_set_state(self, mon->attack_state == AS_MISSILE ? MSTATE_MISSILE : MSTATE_MELEE);
+    monster_exec_state(self, mon->attack_state == AS_MISSILE ? MSTATE_MISSILE : MSTATE_MELEE);
     mon->attack_state = AS_STRAIGHT;
   }
 }
@@ -528,7 +529,7 @@ void ai_run(edict_t *self, const x32 dist) {
       mon->enemy = mon->oldenemy;
       ai_hunt_target(self);
     } else {
-      monster_set_state(self, mon->movetarget != gs.edicts ? MSTATE_WALK : MSTATE_STAND);
+      monster_exec_state(self, mon->movetarget != gs.edicts ? MSTATE_WALK : MSTATE_STAND);
       return;
     }
   }
@@ -591,11 +592,11 @@ void ai_checkrefire(edict_t *self, const s16 state) {
   if (!ai_visible(self, self->v.monster->enemy))
     return;
   self->v.count = 1;
-  monster_set_state(self, state);
+  monster_set_next_state(self, state);
 }
 
 void ai_gib(edict_t *self) {
-  Snd_StartSoundId(EDICT_NUM(self), CHAN_VOICE, SFXID_PLAYER_GIB, &self->v.origin, SND_MAXVOL, ATTN_NORM);
+  utl_sound(self, CHAN_VOICE, SFXID_PLAYER_GIB, SND_MAXVOL, ATTN_NORM);
   fx_throw_head(self, MDLID_GIB1, self->v.health);
   fx_throw_gib(&self->v.origin, MDLID_GIB2, self->v.health);
   fx_throw_gib(&self->v.origin, MDLID_GIB3, self->v.health);
