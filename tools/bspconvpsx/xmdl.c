@@ -125,7 +125,7 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
   xmhdr->flags = 0;
   xmhdr->id = id;
   xmhdr->numframes = 1;
-  xmhdr->numtris = 12 - 2; // cuboid, no bottom face
+  xmhdr->numtris = 12; // cuboid, no bottom face
   xmhdr->numverts = 8;
   xmhdr->scale = (x16vec3_t){{ ONE, ONE, ONE }}; // they all fit within 0 - 256
   xmhdr->offset = (s16vec3_t){{ 0 }};
@@ -143,53 +143,100 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
   }
 
   // build skin
-  // TODO: merge the textures into one
-  const qmiptex_t *qmt = qbsp_get_miptex(qm, 0);
+  // stack up to 2 textures vertically
+  int totalw = 0;
+  int totalh = 0;
+  const qmiptex_t *qmtm[2] = { NULL, NULL };
+  for (int i = 0; i < qm->miptex->nummiptex && i < 2; ++i) {
+    qmtm[i] = qbsp_get_miptex(qm, i);
+    if (qmtm[i]->width > totalw)
+      totalw = qmtm[i]->width;
+    totalh += qmtm[i]->height;
+  }
+
+  // fit all textures as one contiguous block...
   xtexinfo_t xti;
-  int vramx = 0, vramy = 0;
+  int vramx = -1, vramy = -1;
   for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
-    if (xbsp_vram_page_fit(&xti, i, qmt->width >> 1, qmt->height, &vramx, &vramy) == 0)
+    if (xbsp_vram_page_fit(&xti, i, totalw >> 1, totalh, &vramx, &vramy) == 0)
       break;
   }
-  xbsp_vram_store_mdltex((u8 *)qmt + qmt->offsets[0], vramx, vramy, qmt->width, qmt->height);
+  if (vramx < 0 || vramy < 0)
+    panic("could not fit textures for model 0x%02x into VRAM", id);
+
+  // ...then upload them one by one
+  for (int i = 0; i < 2 && i < qm->miptex->nummiptex; ++i) {
+    xbsp_vram_store_mdltex((u8 *)qmtm[i] + qmtm[i]->offsets[0], vramx, vramy, qmtm[i]->width, qmtm[i]->height);
+    vramy += qmtm[i]->height;
+  }
+
   xmhdr->tpage = xti.tpage;
 
-  // generate cuboid from extents
+  // copy verts
   xaliasvert_t *vert = (xaliasvert_t *)(xbsp_entmodeldata + xmhdr->framesofs);
-  vert[0] = (u8vec3_t){{ mins[0], mins[1], mins[2] }};
-  vert[1] = (u8vec3_t){{ maxs[0], mins[1], mins[2] }};
-  vert[2] = (u8vec3_t){{ mins[0], maxs[1], mins[2] }};
-  vert[3] = (u8vec3_t){{ maxs[0], maxs[1], mins[2] }};
-  vert[4] = (u8vec3_t){{ maxs[0], mins[1], maxs[2] }};
-  vert[5] = (u8vec3_t){{ mins[0], mins[1], maxs[2] }};
-  vert[6] = (u8vec3_t){{ maxs[0], maxs[1], maxs[2] }};
-  vert[7] = (u8vec3_t){{ mins[0], maxs[1], maxs[2] }};
+  for (int i = 0; i < xmhdr->numverts; ++i) {
+    vert[i].x = qm->verts[i].v[0];
+    vert[i].y = qm->verts[i].v[1];
+    vert[i].z = qm->verts[i].v[2];
+  }
 
-  // generate indices
+  // generate tris from faces
   xaliastri_t *tri = (xaliastri_t *)(xbsp_entmodeldata + xmhdr->trisofs);
-  tri[0].verts[0] = 4; tri[0].verts[1] = 5; tri[0].verts[2] = 6;
-  tri[1].verts[0] = 7; tri[1].verts[1] = 6; tri[1].verts[2] = 5;
-  tri[2].verts[0] = 5; tri[2].verts[1] = 4; tri[2].verts[2] = 0;
-  tri[3].verts[0] = 1; tri[3].verts[1] = 0; tri[3].verts[2] = 4;
-  tri[4].verts[0] = 6; tri[4].verts[1] = 7; tri[4].verts[2] = 3;
-  tri[5].verts[0] = 2; tri[5].verts[1] = 3; tri[5].verts[2] = 7;
-  tri[6].verts[0] = 0; tri[6].verts[1] = 2; tri[6].verts[2] = 5;
-  tri[7].verts[0] = 7; tri[7].verts[1] = 5; tri[7].verts[2] = 2;
-  tri[8].verts[0] = 3; tri[8].verts[1] = 1; tri[8].verts[2] = 6;
-  tri[9].verts[0] = 4; tri[9].verts[1] = 6; tri[9].verts[2] = 1;
+  const qface_t *qf = qm->faces;
+  for (int i = 0; i < qm->numfaces; ++i, ++qf) {
+    const qtexinfo_t *qti = qm->texinfos + qf->texinfo;
+    const qmiptex_t *qmt = qbsp_get_miptex(qm, qti->miptex);
+    const u8 basev = qti->miptex && qmtm[1] ? qmtm[0]->height : 0;
 
-  // generate UVs
-  const u8 uvw = qmt->width - 1;
-  const u8 uvh = qmt->height - 1;
-  const u8 uvx = xti.uv.u;
-  const u8 uvy = xti.uv.v;
-  for (int i = 0; i < 10; i += 2) {
-    tri[i + 0].uvs[0] = (u8vec2_t){{ uvx +   0, uvy +   0 }};
-    tri[i + 0].uvs[1] = (u8vec2_t){{ uvx + uvw, uvy +   0 }};
-    tri[i + 0].uvs[2] = (u8vec2_t){{ uvx +   0, uvy + uvh }};
-    tri[i + 1].uvs[2] = (u8vec2_t){{ uvx + uvw, uvy +   0 }};
-    tri[i + 1].uvs[1] = (u8vec2_t){{ uvx +   0, uvy + uvh }};
-    tri[i + 1].uvs[0] = (u8vec2_t){{ uvx + uvw, uvy + uvh }};
+    // get face verts and UVs
+    assert(qf->numedges == 4);
+    u16 qverts[4];
+    f32 qst[4][2];
+    f32 qstmins[2] = { 1e10f, 1e10f };
+    f32 qstmaxs[2] = { -1e10f, -1e10f };
+    for (int i = 0; i < qf->numedges; ++i) {
+      const int e = qm->surfedges[qf->firstedge + i];
+      if (e >= 0)
+        qverts[i] = qm->edges[e].v[0];
+      else
+        qverts[i] = qm->edges[-e].v[1];
+      for (int j = 0; j < 2; ++j) {
+        qst[i][j] = qdot3(qm->verts[qverts[i]].v, qti->vecs[j]) + qti->vecs[j][3];
+        if (qst[i][j] < qstmins[j]) qstmins[j] = qst[i][j];
+        if (qst[i][j] > qstmaxs[j]) qstmaxs[j] = qst[i][j];
+      }
+    }
+
+    for (int i = 0; i < qf->numedges; ++i) {
+      if (qstmins[0] < 0)
+        qst[i][0] += qmt->width;
+      if (qstmins[1] < 0)
+        qst[i][1] += qmt->height;
+    }
+
+    // triangle 1
+    tri->verts[0] = qverts[0];
+    tri->uvs[0].u = xti.uv.u + qst[0][0];
+    tri->uvs[0].v = xti.uv.v + basev + qst[0][1];
+    tri->verts[1] = qverts[1];
+    tri->uvs[1].u = xti.uv.u + qst[1][0];
+    tri->uvs[1].v = xti.uv.v + basev + qst[1][1];
+    tri->verts[2] = qverts[2];
+    tri->uvs[2].u = xti.uv.u + qst[2][0];
+    tri->uvs[2].v = xti.uv.v + basev + qst[2][1];
+    ++tri;
+
+    // triangle 2
+    tri->verts[0] = qverts[0];
+    tri->uvs[0].u = xti.uv.u + qst[0][0];
+    tri->uvs[0].v = xti.uv.v + basev + qst[0][1];
+    tri->verts[1] = qverts[2];
+    tri->uvs[1].u = xti.uv.u + qst[2][0];
+    tri->uvs[1].v = xti.uv.v + basev + qst[2][1];
+    tri->verts[2] = qverts[3];
+    tri->uvs[2].u = xti.uv.u + qst[3][0];
+    tri->uvs[2].v = xti.uv.v + basev + qst[3][1];
+    ++tri;
   }
 
   xmhdr->tpage = xti.tpage;
