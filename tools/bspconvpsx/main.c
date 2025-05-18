@@ -431,6 +431,9 @@ static void do_entities(void) {
     // angles
     if (qent_get_vector(qent, "angles", tmpvec)) {
       xent->angles = qvec3_to_x16vec3_angles(tmpvec);
+    } else if (qent_get_vector(qent, "mangle", tmpvec)) {
+      // used by info_intermission
+      xent->angles = qvec3_to_x16vec3_angles(tmpvec);
     } else if (qent_get_float(qent, "angle", &tmpfloat)) {
       // -1 and -2 are special angles for up and down
       if (tmpfloat == -1.f || tmpfloat == -2.f)
