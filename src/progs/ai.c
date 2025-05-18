@@ -567,6 +567,59 @@ void ai_charge(edict_t *self, const x32 dist) {
   ai_movetogoal(self, dist);
 }
 
+void ai_charge_side(edict_t *self) {
+  monster_fields_t *mon = self->v.monster;
+
+  // aim to the left of the enemy for a flyby
+  mon->ideal_yaw = VecDeltaToYaw(&mon->enemy->v.origin, &self->v.origin);
+  ai_changeyaw(self);
+
+  utl_makevectors(&self->v.angles);
+
+  x32vec3_t dtemp = {{
+    30 * pr.v_right.x,
+    30 * pr.v_right.y,
+    30 * pr.v_right.z,
+  }};
+  XVecSub(&mon->enemy->v.origin, &dtemp, &dtemp);
+
+  const x16 heading = VecDeltaToYaw(&dtemp, &self->v.origin);
+  ai_walkmove(self, heading, TO_FIX32(20));
+}
+
+void ai_melee(edict_t *self) {
+  edict_t *enemy = self->v.monster->enemy;
+  if (!enemy)
+    return;  // removed before stroke
+
+  x32vec3_t delta;
+  XVecSub(&enemy->v.origin, &self->v.origin, &delta);
+  if (XVecLengthSqrIntL(&delta) > 60 * 60)
+    return;
+
+  const s16 ldmg = xmul32(xrand32() + xrand32() + xrand32(), 3);
+  utl_damage(enemy, self, self, ldmg);
+}
+
+void ai_melee_side(edict_t *self) {
+  edict_t *enemy = self->v.monster->enemy;
+  if (!enemy)
+    return;  // removed before stroke
+
+  ai_charge_side(self);
+
+  x32vec3_t delta;
+  XVecSub(&enemy->v.origin, &self->v.origin, &delta);
+  if (XVecLengthSqrIntL(&delta) > 60 * 60)
+    return;
+
+  if (!utl_can_damage(self, enemy, self))
+    return;
+
+  const s16 ldmg = xmul32(xrand32() + xrand32() + xrand32(), 3);
+  utl_damage(enemy, self, self, ldmg);
+}
+
 void ai_forward(edict_t *self, const x32 dist) {
   ai_walkmove(self, self->v.angles.y, dist);
 }
