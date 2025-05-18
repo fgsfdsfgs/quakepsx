@@ -202,6 +202,18 @@ static void zombie_fire_grenade(edict_t *self, const s16vec3_t *st) {
 }
 
 static void zombie_attk_a(edict_t *self) {
+  if (self->v.monster->next_frame == ATTA1) {
+    // randomly chain into one of the alternate attacks instead
+    const x32 r = xrand32();
+    if (r >= FTOX(0.3) && r < FTOX(0.6)) {
+      monster_exec_state(self, MSTATE_ATTACK_B);
+      return;
+    } else if (r >= FTOX(0.6)) {
+      monster_exec_state(self, MSTATE_ATTACK_C);
+      return;
+    }
+  }
+
   monster_finite_state(self, MSTATE_MISSILE, MSTATE_RUN);
 
   ai_face(self);
