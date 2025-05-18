@@ -259,9 +259,7 @@ static qboolean demon_check_attack(edict_t *self) {
 
 void spawn_monster_demon1(edict_t *self) {
   G_SetModel(self, MDLID_DEMON);
-  self->v.mins = gs.worldmodel->hulls[2].mins;
-  self->v.maxs = gs.worldmodel->hulls[2].maxs;
-  G_SetSize(self, &self->v.mins, &self->v.maxs);
+  G_SetSize(self, &gs.worldmodel->hulls[2].mins, &gs.worldmodel->hulls[2].maxs);
   self->v.health = self->v.max_health = 300;
   walkmonster_start(self, &monster_demon_class);
 }
