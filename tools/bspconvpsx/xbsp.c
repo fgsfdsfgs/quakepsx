@@ -397,7 +397,27 @@ static u16 xbsp_stringbuffer_add(const char *str, char *buf, int *bufnum, const 
 }
 
 u16 xbsp_string_add(const char *str) {
-  return xbsp_stringbuffer_add(str, xbsp_strings, &xbsp_numstrings, sizeof(xbsp_strings));
+  char buf[8192] = { 0 };
+  assert(strlen(str) < sizeof(buf) - 1);
+
+  // map strings in Quake have escape sequences, so we need to unescape them
+  // we only support \n, \r and \t
+  char *dst = buf;
+  for (const char *src = str; *src; ++src) {
+    if (src[0] == '\\' && src[1]) {
+      switch (src[1]) {
+      case 'n': *dst++ = '\n'; ++src; break;
+      case 'r': *dst++ = '\r'; ++src; break;
+      case 't': *dst++ = '\t'; ++src; break;
+      default:  *dst++ = *src; break;
+      }
+    } else {
+      *dst++ = *src;
+    }
+  }
+  *dst = 0;
+
+  return xbsp_stringbuffer_add(buf, xbsp_strings, &xbsp_numstrings, sizeof(xbsp_strings));
 }
 
 u16 xbsp_string_add_upper(const char *str) {
