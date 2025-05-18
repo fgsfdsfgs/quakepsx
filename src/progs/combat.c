@@ -400,6 +400,7 @@ edict_t *utl_launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *
   G_SetModel(newmis, MDLID_SPIKE);
   G_SetSize(newmis, &x32vec3_origin, &x32vec3_origin);
   G_LinkEdict(newmis, false);
+  return newmis;
 }
 
 static void grenade_explode(edict_t *self) {
