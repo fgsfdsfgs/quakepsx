@@ -3,7 +3,7 @@
 #include "common.h"
 #include "render.h"
 
-#define MAX_SCR_LINE 64
+#define MAX_SCR_LINE 128
 #define SCR_LINE_TIME TO_FIX32(2)
 #define SCR_FLASH_TIME (ONE / 3)
 

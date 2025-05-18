@@ -15,7 +15,8 @@ static const pic_t *pic_loading;
 static u16 scr_tpage = 0;
 
 static char scr_centermsg[MAX_SCR_LINE];
-static s32 scr_centermsg_len = 0;
+static s32 scr_centermsg_ofsx = 0;
+static s32 scr_centermsg_ofsy = 0;
 static x32 scr_centermsg_time = 0;
 
 static char scr_msg[MAX_SCR_LINE];
@@ -145,11 +146,8 @@ void Scr_DrawScreen(const int debug_mode) {
     Scr_DrawText(ofsx, ofsy, C_WHITE, scr_msg);
   }
 
-  if (scr_centermsg_time > rs.frametime) {
-    const s16 ofsx = VID_CENTER_X - (FNT_SMALL_W / 2) * scr_centermsg_len;
-    const s16 ofsy = VID_CENTER_Y - (FNT_SMALL_H / 2);
-    Scr_DrawText(ofsx, ofsy, C_WHITE, scr_centermsg);
-  }
+  if (scr_centermsg_time > rs.frametime)
+    Scr_DrawText(scr_centermsg_ofsx, scr_centermsg_ofsy, C_WHITE, scr_centermsg);
 
   Sbar_Draw(plr);
 }
@@ -242,7 +240,12 @@ void Scr_SetCenterMsg(const char *str) {
   strncpy(scr_centermsg, str, MAX_SCR_LINE);
   scr_centermsg[MAX_SCR_LINE - 1] = 0;
   scr_centermsg_time = rs.frametime + SCR_LINE_TIME;
-  scr_centermsg_len = strlen(scr_centermsg);
+
+  char *newline = strchr(scr_centermsg, '\n');
+  const int numchars = newline ? (newline - scr_centermsg) : strlen(scr_centermsg);
+  scr_centermsg_ofsx = VID_CENTER_X - (FNT_SMALL_W / 2) * numchars;
+  scr_centermsg_ofsy = VID_CENTER_Y - (FNT_SMALL_H / 2) * (1 + !!newline);
+
   Sys_Printf("%s\n", str);
 }
 
