@@ -33,6 +33,13 @@ typedef struct {
   s32 sz;
 } __attribute__((packed)) svert_t;
 
+typedef struct {
+  s16vec3_t pos;
+  s16 pad;
+  u8vec4_t col;
+  s32 sz;
+} __attribute__((packed)) sbvert_t;
+
 static savert_t alias_verts[MAX_XMDL_VERTS];
 
 static inline s16 TestClip(const s16 x, const s16 y) {
@@ -723,4 +730,86 @@ void R_DrawParticles(void) {
   }
 
   gpu_ptr = (u8 *)tile;
+}
+
+static inline void DrawBeam(const s16vec3_t *src, const s16vec3_t *dst, const u32 rgb24) {
+  register s32 otz;
+
+  // segment the line into 3:
+  // (src|sv0)--(sv1)--(sv2)--(dst|sv3)
+  // sv0 - sv3 will be drawn as is, then we'll draw a copy of it with sv1 and sv2 randomly offset
+  sbvert_t *sv = PSX_SCRATCH;
+  sv[0].pos.x = src->x;
+  sv[0].pos.y = src->y;
+  sv[0].pos.z = src->z;
+  sv[0].col.word = 0xFFFFFF;
+  sv[3].pos.x = dst->x;
+  sv[3].pos.y = dst->y;
+  sv[3].pos.z = dst->z;
+  sv[3].col.word = 0xFFFFFF;
+  sv[1].pos.x = sv[0].pos.x + (sv[3].pos.x - sv[0].pos.x) / 3;
+  sv[1].pos.y = sv[0].pos.y + (sv[3].pos.y - sv[0].pos.y) / 3;
+  sv[1].pos.z = sv[0].pos.z + (sv[3].pos.z - sv[0].pos.z) / 3;
+  sv[1].col.word = rgb24;
+  sv[2].pos.x = (sv[3].pos.x + sv[1].pos.x) >> 1;
+  sv[2].pos.y = (sv[3].pos.y + sv[1].pos.y) >> 1;
+  sv[2].pos.z = (sv[3].pos.z + sv[1].pos.z) >> 1;
+  sv[2].col.word = rgb24;
+
+  // offset copies
+  sv[5].pos.x = sv[2].pos.x - 8 + (rand() & 15);
+  sv[5].pos.y = sv[2].pos.y - 8 + (rand() & 15);
+  sv[5].pos.z = sv[2].pos.z - 8 + (rand() & 15);
+  sv[5].col.word = rgb24;
+  sv[6].pos.x = sv[1].pos.x - 8 + (rand() & 15);
+  sv[6].pos.y = sv[1].pos.y - 8 + (rand() & 15);
+  sv[6].pos.z = sv[1].pos.z - 8 + (rand() & 15);
+  sv[6].col.word = rgb24;
+
+  // offset the originals a little bit
+  sv[1].pos.x += -2 + (rand() & 3);
+  sv[1].pos.y += -2 + (rand() & 3);
+  sv[1].pos.z += -2 + (rand() & 3);
+  sv[2].pos.x += -2 + (rand() & 3);
+  sv[2].pos.y += -2 + (rand() & 3);
+  sv[2].pos.z += -2 + (rand() & 3);
+
+  gte_ldv3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+  gte_rtpt();
+  gte_stsxy3(&sv[0].pos.x, &sv[1].pos.x, &sv[2].pos.x);
+  gte_stsz3(&sv[0].sz, &sv[1].sz, &sv[2].sz);
+
+  gte_ldv3(&sv[3].pos.x, &sv[5].pos.x, &sv[6].pos.x);
+  gte_rtpt();
+  gte_stsxy3(&sv[3].pos.x, &sv[5].pos.x, &sv[6].pos.x);
+  gte_stsz3(&sv[3].sz, &sv[5].sz, &sv[6].sz);
+
+  sv[4].pos = sv[3].pos;
+  sv[4].col.word = rgb24;
+  sv[4].sz = sv[3].sz;
+  sv[7].pos = sv[0].pos;
+  sv[7].col.word = rgb24;
+  sv[7].sz = sv[0].sz;
+
+  // sort the lines separately because I can't be arsed
+  LINE_F2 *line = (LINE_F2 *)gpu_ptr;
+  for (int i = 0; i < 8 - 1; ++i, ++sv) {
+    otz = (sv[0].sz + sv[1].sz) >> 3;
+    if (otz > 0 && otz < GPU_OTDEPTH) {
+      *(u32 *)&line->r0 = sv[0].col.word;
+      setLineF2(line);
+      setXY2(line, sv[0].pos.x, sv[0].pos.y, sv[1].pos.x, sv[1].pos.y);
+      addPrim(gpu_ot + otz, line);
+      line++;
+    }
+  }
+
+  gpu_ptr = (u8 *)line;
+}
+
+void R_DrawBeams(void) {
+  const beam_t *b = rs.beams;
+  for (int i = 0; i < MAX_BEAMS; ++i, ++b)
+    if (b->die > 0)
+      DrawBeam(&b->src, &b->dst, b->color);
 }

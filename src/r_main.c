@@ -302,6 +302,7 @@ void R_RenderScene(void) {
   R_DrawWorld();
   R_UpdateParticles();
   R_DrawParticles();
+  R_DrawBeams();
 }
 
 void R_NewMap(void) {

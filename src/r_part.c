@@ -10,8 +10,8 @@
 #include "move.h"
 #include "render.h"
 
-#define P_FRAMETIME1 FTOX(0.10)
-#define P_FRAMETIME2 FTOX(0.05)
+#define P_FRAMETIME1 PR_FRAMETIME
+#define P_FRAMETIME2 (PR_FRAMETIME / 2)
 #define P_GRAVITY XMUL16(G_GRAVITY, FTOX(0.05))
 
 static const u8 ramp1[] = { 0x6f, 0x6d, 0x6b, 0x69, 0x67, 0x65, 0x63, 0x61 };
@@ -294,4 +294,27 @@ void R_UpdateParticles(void) {
   }
 
   rs.num_particles = last_active + 1;
+
+  beam_t *b = rs.beams;
+  for (int i = 0; i < MAX_BEAMS; ++i, ++b) {
+    if (b->die > 0)
+      b->die -= time1;
+  }
+}
+
+void R_SpawnBeam(const x32vec3_t *src, const x32vec3_t *dst, const u32 color, const s16 frames, s16 index) {
+  if (index < 0) {
+    if (++rs.last_beam == MAX_BEAMS)
+      rs.last_beam = 1;
+    index = rs.last_beam;
+  }
+  beam_t *b = rs.beams + index;
+  b->die = frames;
+  b->color = color;
+  b->src.x = src->x >> FIXSHIFT;
+  b->src.y = src->y >> FIXSHIFT;
+  b->src.z = src->z >> FIXSHIFT;
+  b->dst.x = dst->x >> FIXSHIFT;
+  b->dst.y = dst->y >> FIXSHIFT;
+  b->dst.z = dst->z >> FIXSHIFT;
 }

@@ -40,6 +40,7 @@
 #define VMODEL_SCALE 3
 
 #define MAX_PARTICLES 512
+#define MAX_BEAMS 4
 
 enum parttype_e {
   PT_STATIC,
@@ -58,8 +59,16 @@ typedef struct {
   s8 die;
 } particle_t;
 
+typedef struct {
+  s16vec3_t src;
+  s16vec3_t dst;
+  u32 color;
+  s16 die;
+} beam_t;
+
 typedef struct render_state_s {
   particle_t particles[MAX_PARTICLES];
+  beam_t beams[MAX_BEAMS];
   RECT clip;
   MATRIX matrix;
   MATRIX entmatrix;
@@ -79,7 +88,8 @@ typedef struct render_state_s {
   u32 frame;
   u32 visframe;
   u32 debug;
-  u32 num_particles;
+  u16 num_particles;
+  u16 last_beam;
 } render_state_t;
 
 extern render_state_t rs;
@@ -116,6 +126,7 @@ void R_DrawBBox(edict_t *ent);
 void R_DrawTextureChains(void);
 void R_DrawBlitSync(const pic_t *pic, int x, const int y);
 void R_DrawParticles(void);
+void R_DrawBeams(void);
 void R_RenderView(void);
 void R_Flip(void);
 
@@ -131,4 +142,6 @@ void R_SpawnParticleExplosion(const x32vec3_t *org);
 void R_SpawnParticleLavaSplash(const x32vec3_t *org);
 void R_SpawnParticleTeleport(const x32vec3_t *org);
 void R_SpawnParticleTrail(const x32vec3_t *org, const x32vec3_t *oldorg, const u8 type);
+void R_SpawnBeam(const x32vec3_t *src, const x32vec3_t *dst, const u32 rgb24, const s16 frames, s16 index);
+
 void R_UpdateParticles(void);
