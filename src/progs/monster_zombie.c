@@ -90,7 +90,7 @@ static const monster_class_t monster_zombie_class = {
   .fn_start_pain = zombie_start_pain,
   .fn_start_die = zombie_start_die,
   .fn_check_attack = NULL,
-  .sight_sound = 0
+  .sight_sound = SFXID_ZOMBIE_Z_IDLE
 };
 
 static void zombie_stand(edict_t *self) {
