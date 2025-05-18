@@ -251,6 +251,16 @@ static void rocket_attack(edict_t *self) {
 static void thunder_fire(edict_t *self) {
   player_state_t *plr = self->v.player;
 
+  // explode if under water
+  if (self->v.waterlevel > 1) {
+    const s16 cells = plr->stats.ammo[AMMO_CELLS];
+    plr->stats.ammo[AMMO_CELLS] = 0;
+    plr->vmodel_frame = 0;
+    plr->vmodel_think = NULL;
+    utl_radius_damage(self, self, 35 * cells, gs.edicts);
+    return;
+  }
+
   plr->stats.ammo[AMMO_CELLS]--;
 
   self->v.effects |= EF_MUZZLEFLASH;
@@ -258,17 +268,30 @@ static void thunder_fire(edict_t *self) {
   plr->attack_finished = gs.time + PR_FRAMETIME;
   plr->punchangle = -TO_DEG16(1);
 
+  const x32vec3_t org = {{
+    self->v.origin.x,
+    self->v.origin.y,
+    self->v.origin.z + TO_FIX32(16),
+  }};
+
   x16vec3_t dir;
   utl_makevectors(&plr->viewangles);
   utl_aim(self, &dir);
 
   x32vec3_t dst;
-  dst.x = self->v.origin.x + (x32)dir.x * 1024;
-  dst.y = self->v.origin.y + (x32)dir.y * 1024;
-  dst.z = self->v.origin.z + (x32)dir.z * 1024;
+  dst.x = org.x + (x32)dir.x * 600;
+  dst.y = org.y + (x32)dir.y * 600;
+  dst.z = org.z + (x32)dir.z * 600;
 
-  const trace_t *trace = utl_traceline(&self->v.origin, &dst, false, self);
-  R_SpawnBeam(&self->v.origin, &trace->endpos, 0xFFC0C0, 2, 0);
+  const trace_t *trace = utl_traceline(&self->v.origin, &dst, true, self);
+
+  dst.x = trace->endpos.x + pr.v_forward.x * 4;
+  dst.y = trace->endpos.y + pr.v_forward.y * 4;
+  dst.z = trace->endpos.z + pr.v_forward.z * 4;
+
+  utl_lightning_damage(self, &org, &dst, self, 30);
+
+  R_SpawnBeam(&self->v.origin, &dst, 0xFFC0C0, 2, 0);
 }
 
 static void thunder_attack_cycle(edict_t *self) {

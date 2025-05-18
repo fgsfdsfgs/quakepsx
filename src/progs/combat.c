@@ -263,6 +263,58 @@ void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, 
   }
 }
 
+void utl_lightning_damage(edict_t *self, const x32vec3_t *p1, const x32vec3_t *p2, edict_t *from, const s16 damage) {
+  x32vec3_t f;
+  XVecSub(p1, p2, &f);
+
+  // NOTE: in the og game there was a bug here: f is normalized first, then the swap is also botched;
+  // however for us it's more convenient to do the normalization at the end anyway, so here it's "fixed"
+  const x32 f_x = f.x;
+  f.x = -f.y;
+  f.y = f_x;
+  f.z = 0;
+
+  x16vec3_t dir;
+  x32 xysqrlen;
+  XVecNormLS(&f, &dir, &xysqrlen);
+
+  f.x = 16 * dir.x;
+  f.y = 16 * dir.y;
+  f.z = 16 * dir.z;
+
+  x32vec3_t starts[3];
+  starts[0] = *p1;
+  XVecAdd(p1, &f, &starts[1]);
+  XVecSub(p1, &f, &starts[2]);
+
+  x32vec3_t ends[3];
+  ends[0] = *p2;
+  XVecAdd(p2, &f, &ends[1]);
+  XVecSub(p2, &f, &ends[2]);
+
+  edict_t *e1 = gs.edicts;
+  edict_t *e2 = gs.edicts;
+  const trace_t *t = utl_traceline(&starts[0], &ends[0], false, self);
+  if (t->ent->v.flags & FL_TAKEDAMAGE) {
+    fx_spawn_blood(&t->endpos, damage);
+    utl_damage(t->ent, from, from, damage);
+  }
+  e1 = t->ent;
+
+  t = utl_traceline(&starts[1], &ends[1], false, self);
+  if (t->ent != e1 && (t->ent->v.flags & FL_TAKEDAMAGE)) {
+    fx_spawn_blood(&t->endpos, damage);
+    utl_damage(t->ent, from, from, damage);
+  }
+  e2 = t->ent;
+
+  t = utl_traceline(&starts[1], &ends[1], false, self);
+  if (t->ent != e1 && t->ent != e2 && (t->ent->v.flags & FL_TAKEDAMAGE)) {
+    fx_spawn_blood(&t->endpos, damage);
+    utl_damage(t->ent, from, from, damage);
+  }
+}
+
 void utl_become_explosion(edict_t *self) {
   self->v.movetype = MOVETYPE_NONE;
   self->v.velocity.x = 0;

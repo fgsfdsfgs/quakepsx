@@ -247,6 +247,7 @@ void utl_firebullets(edict_t *self, int shotcount, const x16vec3_t *dir, const x
 void utl_become_explosion(edict_t *self);
 qboolean utl_can_damage(edict_t *self, edict_t *targ, edict_t *inflictor);
 void utl_radius_damage(edict_t *inflictor, edict_t *attacker, const s16 damage, edict_t *ignore);
+void utl_lightning_damage(edict_t *self, const x32vec3_t *p1, const x32vec3_t *p2, edict_t *from, const s16 damage);
 void utl_aim(edict_t *self, x16vec3_t *result);
 qboolean utl_heal(edict_t *e, const s16 amount, const qboolean ignore_max);
 edict_t *utl_launch_spike(edict_t *self, const x32vec3_t *org, const x16vec3_t *angles, const x16vec3_t *dir, const s16 speed);
