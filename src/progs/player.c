@@ -29,6 +29,8 @@ static void player_fire(edict_t *self) {
   if (plr->stats.ammonum >= 0 && plr->stats.ammo[plr->stats.ammonum] <= 0)
     return;
 
+  plr->show_hostile = gs.time + ONE;
+
   Snd_StartSoundId(EDICT_NUM(self), CHAN_WEAPON, weap_table[plr->stats.weaponnum].noise,
     &self->v.origin, SND_MAXVOL, ATTN_NORM);
 
