@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdlib.h>
+#include "types.h"
 
-typedef int16_t x16; // 1.03.12 fixed point
-typedef int32_t x32; // 1.19.12 fixed point
+typedef s16 x16; // 1.03.12 fixed point
+typedef s32 x32; // 1.19.12 fixed point
 
 #define FIXSHIFT 12
 #define FIXSCALE (1 << 12)

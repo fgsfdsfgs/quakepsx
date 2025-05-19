@@ -1,6 +1,7 @@
 #pragma once
 
-#include "common.h"
+#include "types.h"
+#include "vector.h"
 #include "bspfile.h"
 #include "alias.h"
 

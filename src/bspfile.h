@@ -1,6 +1,7 @@
 #pragma once
 
-#include "common.h"
+#include "types.h"
+#include "vector.h"
 #include "alias.h"
 
 #define PSXBSPVERSION 0x1D585350

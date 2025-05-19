@@ -1,6 +1,7 @@
 #pragma once
 
-#include "common.h"
+#include "types.h"
+#include "vector.h"
 
 /* XMDL STRUCTURE
  * aliashdr_t      hdr;
