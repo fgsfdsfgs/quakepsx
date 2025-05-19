@@ -81,7 +81,7 @@ static void weapon_touch(edict_t *self, edict_t *other) {
   Scr_SetTopMsg(VA("You got the %s!", weap_table[index].name));
 
   if (plr->stats.weaponnum != index)
-    Player_SetWeapon(other, index);
+    player_set_weapon(other, index);
 
   item_touch(self, other);
 }

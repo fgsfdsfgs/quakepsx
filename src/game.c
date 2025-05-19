@@ -8,6 +8,7 @@
 #include "sound.h"
 #include "menu.h"
 #include "screen.h"
+#include "input.h"
 #include "move.h"
 #include "cd.h"
 
@@ -157,10 +158,87 @@ void G_StartMap(const char *path) {
   Scr_EndLoading();
 }
 
+static inline void ToggleFlag(player_state_t *plr, const u16 btn, const u32 flag) {
+  if (IN_ButtonPressed(btn))
+    plr->buttons ^= flag;
+}
+
+static inline void PressFlag(player_state_t *plr, const u16 btn, const u32 flag) {
+  if (IN_ButtonPressed(btn))
+    plr->buttons |= flag;
+  else
+    plr->buttons &= ~flag;
+}
+
+static inline void HoldFlag(player_state_t *plr, const u16 btn, const u32 flag) {
+  if (IN_ButtonHeld(btn))
+    plr->buttons |= flag;
+  else
+    plr->buttons &= ~flag;
+}
+
+static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
+  // pause input inhibits all
+  if (IN_ButtonPressed(PAD_START)) {
+    Menu_Toggle();
+    return;
+  }
+
+  // assume the player is using an analog pad and maybe a mouse for now
+
+  // move inputs
+
+  s32 up = IN_ButtonHeld(PAD_CROSS | PAD_L2) - IN_ButtonHeld(PAD_R3 | PAD_L1);
+  s32 fwd = IN_ButtonHeld(PAD_UP) -  IN_ButtonHeld(PAD_DOWN);
+  s32 side = IN_ButtonHeld(PAD_RIGHT) -  IN_ButtonHeld(PAD_LEFT);
+  if (!fwd && !side) {
+    // if digital inputs are not held, map left stick to digital directions
+    fwd = (in.sticks[0].y < -0x40) - (in.sticks[0].y > 0x40);
+    side = (in.sticks[0].x > 0x40) - (in.sticks[0].x < -0x40);
+  }
+
+  // look inputs: use rstick and mouse
+
+  const x16 pitch = in.sticks[1].y + XMUL16(TO_FIX32(3), in.mouse.y);
+  const x16 yaw = in.sticks[1].x + XMUL16(TO_FIX32(3), in.mouse.x);
+
+  // buttons
+
+  if (IN_ButtonPressed(PAD_R1)) {
+    if (plr->ent->v.movetype == MOVETYPE_WALK)
+      plr->ent->v.movetype = MOVETYPE_NOCLIP;
+    else
+      plr->ent->v.movetype = MOVETYPE_WALK;
+  }
+
+  if (IN_ButtonPressed(PAD_SELECT))
+    rs.debug = !rs.debug;
+
+  if (plr->ent->v.movetype == MOVETYPE_NOCLIP)
+    plr->buttons &= ~BTN_SPEED;
+  else
+    ToggleFlag(plr, PAD_L3, BTN_SPEED);
+  HoldFlag(plr, PAD_R2, BTN_FIRE);
+  HoldFlag(plr, PAD_CROSS, BTN_JUMP);
+  PressFlag(plr, PAD_TRIANGLE, BTN_PREVWEAPON);
+  PressFlag(plr, PAD_CIRCLE, BTN_NEXTWEAPON);
+
+  // transform look/move inputs into direction vectors
+  const int onspeed = (plr->buttons & BTN_SPEED) != 0;
+  plr->move.x = fwd * G_FORWARDSPEED;
+  plr->move.y = side * G_FORWARDSPEED;
+  plr->move.z = up * G_FORWARDSPEED;
+  plr->anglemove.x = XMUL16(TO_FIX32(8), pitch);
+  plr->anglemove.y = XMUL16(TO_FIX32(8), -yaw);
+  plr->movespeed = G_FORWARDSPEED << onspeed;
+}
+
 void G_Update(const x16 dt) {
   x32vec3_t noclipvel;
   player_state_t *plr = &gs.player[0];
   edict_t *ped = plr->ent;
+
+  UpdatePlayerInput(plr, dt);
 
   if (menu_open) {
     Menu_Update();

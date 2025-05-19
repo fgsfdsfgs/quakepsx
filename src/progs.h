@@ -17,5 +17,3 @@ void Sbar_Draw(const player_state_t *p);
 // player
 void Player_PreThink(edict_t *ent);
 void Player_PostThink(edict_t *ent);
-void Player_NextWeapon(edict_t *ent);
-void Player_SetWeapon(edict_t *ent, const s16 num);

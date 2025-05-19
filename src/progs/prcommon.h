@@ -288,6 +288,7 @@ void ai_gib(edict_t *self);
 // player functions
 void player_pain(edict_t *self, edict_t *attacker, s16 damage);
 void player_die(edict_t *self, edict_t *killer);
+void player_set_weapon(edict_t *ent, const s16 num);
 
 // doors and plats
 void door_init(edict_t *self);

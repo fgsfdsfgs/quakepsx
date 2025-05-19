@@ -53,6 +53,7 @@ DECLARE_VEC2_T(s32);
 DECLARE_VEC2_T_WORD(x16, u32);
 DECLARE_VEC2_T_WORD(s16, u32);
 DECLARE_VEC2_T_WORD(u8, u16);
+DECLARE_VEC2_T_WORD(s8, u16);
 
 extern x32vec3_t x32vec3_origin;
 extern x16vec3_t x16vec3_origin;

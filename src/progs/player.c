@@ -194,6 +194,43 @@ void player_die(edict_t *self, edict_t *killer) {
     utl_sound(self, CHAN_VOICE, SFXID_PLAYER_DEATH1, SND_MAXVOL, ATTN_NORM);
 }
 
+void player_set_weapon(edict_t *ent, const s16 num) {
+  player_state_t *plr = ent->v.player;
+
+  if ((plr->stats.items & weap_table[num].item) == 0)
+    return;
+
+  plr->stats.weaponnum = num;
+
+  plr->vmodel = G_FindAliasModel(weap_table[plr->stats.weaponnum].vmdl);
+  plr->vmodel_frame = 0;
+  plr->vmodel_think = NULL;
+
+  plr->stats.ammonum = weap_table[plr->stats.weaponnum].ammo;
+}
+
+void player_next_weapon(edict_t *ent) {
+  player_state_t *plr = ent->v.player;
+
+  s16 next = plr->stats.weaponnum + 1;
+  for (; next < WEAP_COUNT && (plr->stats.items & weap_table[next].item) == 0; ++next);
+  if (next == WEAP_COUNT)
+    next = WEAP_AXE;
+
+  player_set_weapon(ent, next);
+}
+
+void player_prev_weapon(edict_t *ent) {
+  player_state_t *plr = ent->v.player;
+
+  s16 next = plr->stats.weaponnum - 1;
+  if (next < 0)
+    next = WEAP_COUNT - 1;
+  for (; next > WEAP_AXE && (plr->stats.items & weap_table[next].item) == 0; --next);
+
+  player_set_weapon(ent, next);
+}
+
 void spawn_player(edict_t *self) {
   player_state_t *plr = gs.player + EDICT_NUM(self) - 1;
   self->v.player = plr;
@@ -218,11 +255,11 @@ void spawn_player(edict_t *self) {
     // spawning for the first time
     plr->stats.items = IT_SHOTGUN | IT_AXE;
     plr->stats.ammo[AMMO_SHELLS] = 25;
-    Player_SetWeapon(self, WEAP_SHOTGUN);
+    player_set_weapon(self, WEAP_SHOTGUN);
   } else {
     // level transition
     // TODO: a better way to detect this
-    Player_SetWeapon(self, plr->stats.weaponnum);
+    player_set_weapon(self, plr->stats.weaponnum);
     plr->stats.items &= ~(IT_KEY1 | IT_KEY2 | IT_INVISIBILITY | IT_INVULNERABILITY | IT_SUIT | IT_QUAD | IT_SUPERHEALTH);
   }
 
@@ -230,6 +267,8 @@ void spawn_player(edict_t *self) {
 
   G_SetSize(self, &self->v.mins, &self->v.maxs);
 }
+
+// progs <-> engine interface
 
 void Player_PreThink(edict_t *ent) {
   player_state_t *plr = ent->v.player;
@@ -311,34 +350,17 @@ void Player_PostThink(edict_t *ent) {
     }
   }
 
+  // weapon changing
+  if (plr->buttons & BTN_NEXTWEAPON) {
+    player_next_weapon(ent);
+    plr->buttons &= ~BTN_NEXTWEAPON;
+  } else if (plr->buttons & BTN_PREVWEAPON) {
+    player_prev_weapon(ent);
+    plr->buttons &= ~BTN_PREVWEAPON;
+  }
+
   if (plr->flags & PFL_JUMPED)
     utl_sound(ent, CHAN_VOICE, SFXID_PLAYER_PLYRJMP8, SND_MAXVOL, ATTN_NORM);
   else if (!(ent->v.flags & FL_ONGROUND))
     plr->fallspeed = ent->v.velocity.z;
-}
-
-void Player_SetWeapon(edict_t *ent, const s16 num) {
-  player_state_t *plr = ent->v.player;
-
-  if ((plr->stats.items & weap_table[num].item) == 0)
-    return;
-
-  plr->stats.weaponnum = num;
-
-  plr->vmodel = G_FindAliasModel(weap_table[plr->stats.weaponnum].vmdl);
-  plr->vmodel_frame = 0;
-  plr->vmodel_think = NULL;
-
-  plr->stats.ammonum = weap_table[plr->stats.weaponnum].ammo;
-}
-
-void Player_NextWeapon(edict_t *ent) {
-  player_state_t *plr = ent->v.player;
-
-  s16 next = plr->stats.weaponnum + 1;
-  for (; next < WEAP_COUNT && (plr->stats.items & weap_table[next].item) == 0; ++next);
-  if (next == WEAP_COUNT)
-    next = WEAP_AXE;
-
-  Player_SetWeapon(ent, next);
 }

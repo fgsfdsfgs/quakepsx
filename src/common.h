@@ -30,8 +30,11 @@ typedef struct link_s {
 #define MAX_VA_STRING   1024
 
 // buttons
-#define BTN_FIRE 1
-#define BTN_JUMP 2
+#define BTN_FIRE       1
+#define BTN_JUMP       2
+#define BTN_SPEED      4
+#define BTN_NEXTWEAPON 8
+#define BTN_PREVWEAPON 16
 
 // graphics-related
 #define VID_WIDTH      320

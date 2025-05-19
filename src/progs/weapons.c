@@ -93,7 +93,7 @@ static void sshotgun_attack(edict_t *self) {
   player_state_t *plr = self->v.player;
 
   if (plr->stats.ammo[AMMO_SHELLS] == 1) {
-    Player_SetWeapon(self, WEAP_SHOTGUN);
+    player_set_weapon(self, WEAP_SHOTGUN);
     shotgun_attack(self);
     return;
   }
