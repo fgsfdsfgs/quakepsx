@@ -128,7 +128,7 @@ int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, i
     for (int sy = 0; sy <= VRAM_PAGE_HEIGHT - h; sy += yalign) {
       // skip if crossing texpage boundary
       const int vrx = sx - (sx & 0x3C0);
-      if (vrx + w > VRAM_TEXPAGE_WIDTH * 4)
+      if (vrx + w > VRAM_TEXPAGE_WIDTH * 2)
         continue;
       if (rect_fits(pg, sx, sy, w, h)) {
         x = sx;
