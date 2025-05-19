@@ -84,6 +84,7 @@ typedef struct render_state_s {
   mplane_t frustum[4];
   mleaf_t *oldviewleaf;
   mleaf_t *viewleaf;
+  msurface_t *vischain;
   x32 frametime;
   u32 frame;
   u32 visframe;
@@ -123,7 +124,7 @@ void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint);
 void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint);
 void R_DrawBrushModel(bmodel_t *model);
 void R_DrawBBox(edict_t *ent);
-void R_DrawTextureChains(void);
+void R_DrawVisChain(void);
 void R_DrawBlitSync(const pic_t *pic, int x, const int y);
 void R_DrawParticles(void);
 void R_DrawBeams(void);

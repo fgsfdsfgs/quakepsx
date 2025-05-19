@@ -398,21 +398,10 @@ static inline void RenderBrushPoly(const msurface_t *fa) {
   gpu_ptr = (void *)poly;
 }
 
-void R_DrawTextureChains(void) {
-  for (int i = 0; i < gs.worldmodel->numtextures; ++i) {
-    mtexture_t *t = gs.worldmodel->textures + i;
-    if (!t || (t->flags & TEX_INVISIBLE))
-      continue;
-    msurface_t *s = t->texchain;
-    if (!s) continue;
-    if (t->flags & TEX_SKY) {
-      // draw sky
-    } else {
-      for (; s; s = s->texchain)
-        RenderBrushPoly(s);
-    }
-    t->texchain = NULL;
-  }
+void R_DrawVisChain(void) {
+  // TODO: sky, water
+  for (const msurface_t *s = rs.vischain; s; s = s->vischain)
+    RenderBrushPoly(s);
 }
 
 void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {

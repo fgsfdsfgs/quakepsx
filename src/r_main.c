@@ -313,8 +313,7 @@ void R_NewMap(void) {
   rs.visframe = 0;
   rs.frame = 0;
   rs.frametime = 0;
-  for (int i = 0; i < gs.worldmodel->numtextures; i++)
-    gs.worldmodel->textures[i].texchain = NULL;
+  rs.vischain = NULL;
 }
 
 void R_RenderView(void) {
@@ -330,6 +329,8 @@ void R_RenderView(void) {
   rs.viewangles.z = plr->viewangles.z;
 
   rs.frametime = Sys_FixedTime();
+
+  rs.vischain = NULL;
 
   R_RenderScene();
 
@@ -435,9 +436,9 @@ void R_RecursiveWorldNode(mnode_t *node) {
       // don't backface underwater surfaces, because they warp
       if (!(surf->flags & SURF_UNDERWATER) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
         continue;
-      // we always texsort to reduce cache misses
-      surf->texchain = surf->texture->texchain;
-      surf->texture->texchain = surf;
+      // build a bigass list of all the visible world surfaces
+      surf->vischain = rs.vischain;
+      rs.vischain = surf;
     }
   }
 
@@ -555,11 +556,11 @@ void R_DrawWorld(void) {
   rs.cur_entity = &ed;
   rs.cur_texture = NULL;
 
-  // first collect world surfaces into texchains
+  // first collect world surfaces into one big visibility chain
   R_RecursiveWorldNode(gs.worldmodel->nodes);
 
-  // then draw the texchains
-  R_DrawTextureChains();
+  // then draw the visibility chain
+  R_DrawVisChain();
 
   // then draw alias entities and BSP submodels
   R_DrawEntities();

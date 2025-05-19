@@ -65,7 +65,6 @@ typedef struct msurface_s msurface_t;
 typedef struct mtexture_s {
   struct mtexture_s *anim_next;
   struct mtexture_s *anim_alt;
-  struct msurface_s *texchain;
   s16 width;
   s16 height;
   u16 vram_page;
@@ -80,7 +79,7 @@ typedef struct mtexture_s {
 struct msurface_s {
   mplane_t *plane;
   mtexture_t *texture;
-  struct msurface_s *texchain;
+  struct msurface_s *vischain;
   u32 visframe;
   u8 styles[MAX_MAP_LIGHTVALS];
   u16 firstvert;

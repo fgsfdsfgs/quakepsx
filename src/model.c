@@ -141,7 +141,6 @@ void Mod_LoadTexinfo(bmodel_t *mod, const int fh) {
     out->anim_next = in.anim_next >= 0 ? mod->textures + in.anim_next : NULL;
     out->anim_alt = in.anim_alt >= 0 ? mod->textures + in.anim_alt : NULL;
     out->flags = in.flags;
-    out->texchain = NULL;
   }
 }
 
@@ -163,7 +162,7 @@ void Mod_LoadFaces(bmodel_t *mod, const int fh) {
     out->numverts = in.numverts;
     out->styles[0] = in.styles[0];
     out->styles[1] = in.styles[1];
-    out->texchain = NULL;
+    out->vischain = NULL;
     out->visframe = 0;
   }
 }
