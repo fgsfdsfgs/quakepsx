@@ -213,14 +213,19 @@ void spawn_player(edict_t *self) {
 
   plr->viewofs.z = self->v.viewheight;
   plr->viewangles.y = gs.edicts[1].v.angles.y;
-  plr->stats.items = IT_SHOTGUN | IT_AXE | IT_SUPER_SHOTGUN | IT_NAILGUN | IT_SUPER_NAILGUN | IT_GRENADE_LAUNCHER | IT_ROCKET_LAUNCHER | IT_LIGHTNING;
-  plr->stats.ammo[AMMO_SHELLS] = 50;
-  plr->stats.ammo[AMMO_NAILS] = 200;
-  plr->stats.ammo[AMMO_ROCKETS] = 50;
-  plr->stats.ammo[AMMO_CELLS] = 50;
-  plr->stats.weaponnum = WEAP_SHOTGUN;
-  plr->stats.ammonum = AMMO_SHELLS;
-  plr->vmodel = G_FindAliasModel(MDLID_V_SHOT);
+
+  if (plr->stats.items == 0) {
+    // spawning for the first time
+    plr->stats.items = IT_SHOTGUN | IT_AXE;
+    plr->stats.ammo[AMMO_SHELLS] = 25;
+    Player_SetWeapon(self, WEAP_SHOTGUN);
+  } else {
+    // level transition
+    // TODO: a better way to detect this
+    Player_SetWeapon(self, plr->stats.weaponnum);
+    plr->stats.items &= ~(IT_KEY1 | IT_KEY2 | IT_INVISIBILITY | IT_INVULNERABILITY | IT_SUIT | IT_QUAD | IT_SUPERHEALTH);
+  }
+
   plr->air_finished = gs.time + TO_FIX32(12);
 
   G_SetSize(self, &self->v.mins, &self->v.maxs);
@@ -284,6 +289,26 @@ void Player_PostThink(edict_t *ent) {
       utl_sound(ent, CHAN_VOICE, SFXID_PLAYER_GASP1, SND_MAXVOL, ATTN_NORM);
     plr->air_finished = gs.time + TO_FIX32(12);
     ent->v.dmg = 2;
+  }
+
+  // slime/lava damage
+  if (ent->v.waterlevel) {
+    if (ent->v.watertype == CONTENTS_LAVA) {
+      // do damage
+      if (plr->dmg_time < gs.time) {
+        if (plr->power_time[POWER_SUIT] > gs.time)
+          plr->dmg_time = gs.time + ONE;
+        else
+          plr->dmg_time = gs.time + HALF;
+        utl_damage(ent, gs.edicts, gs.edicts, 10 * ent->v.waterlevel);
+      }
+    } else if (ent->v.watertype == CONTENTS_SLIME) {
+      // do damage
+      if (plr->dmg_time < gs.time && plr->power_time[POWER_SUIT] < gs.time) {
+        plr->dmg_time = gs.time + ONE;
+        utl_damage(ent, gs.edicts, gs.edicts, 4 * ent->v.waterlevel);
+      }
+    }
   }
 
   if (plr->flags & PFL_JUMPED)

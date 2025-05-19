@@ -42,6 +42,7 @@ typedef struct player_state_s {
   x32 pain_finished;
   x32 air_finished;
   x32 teleport_time;
+  x32 dmg_time;
   x32 power_time[MAX_POWERUPS];
   x32 power_warn[MAX_POWERUPS];
   u32 buttons;

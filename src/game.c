@@ -95,10 +95,12 @@ void G_StartMap(const char *path) {
 
   Scr_BeginLoading();
 
-  // wipe game state, but preserve skill
+  // wipe game state, but preserve skill and player inventory
+  const stats_t stats = gs.player[0].stats;
   const s16 skill = gs.skill;
   memset(&gs, 0, sizeof(gs));
   gs.skill = skill;
+  gs.player[0].stats = stats;
 
   Snd_NewMap();
 
