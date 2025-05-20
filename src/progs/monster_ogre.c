@@ -204,7 +204,7 @@ static void ogre_swing(edict_t *self) {
   };
 
   // if we're transitioning into the melee state, randomly choose the alt melee
-  if (self->v.monster->next_frame = SWING1) {
+  if (self->v.monster->next_frame == SWING1) {
     if (xrand32() >= FTOX(0.5)) {
       monster_exec_state(self, MSTATE_SMASH);
       return;
