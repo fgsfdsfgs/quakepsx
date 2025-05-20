@@ -121,6 +121,8 @@ static void demon_attack(edict_t *self) {
 
   monster_finite_state(self, MSTATE_MELEE, MSTATE_RUN);
 
+  ai_charge(self, TO_FIX32(disttab[self->v.frame - ATTACKA1]));
+
   switch (self->v.frame) {
   case ATTACKA5:  demon_melee(self, +200); break;
   case ATTACKA11: demon_melee(self, -200); break;
