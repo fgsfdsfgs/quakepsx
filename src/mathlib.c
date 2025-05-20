@@ -92,28 +92,28 @@ int BoxOnPlaneSide(const x32vec3_t *emins, const x32vec3_t *emaxs, const mplane_
     v[1] = *emins;
     break;
   case 1:
-    v[0] = (x32vec3_t){ emins->x, emaxs->y, emaxs->z };
-    v[1] = (x32vec3_t){ emaxs->x, emins->y, emins->z };
+    v[0] = (x32vec3_t){{ emins->x, emaxs->y, emaxs->z }};
+    v[1] = (x32vec3_t){{ emaxs->x, emins->y, emins->z }};
     break;
   case 2:
-    v[0] = (x32vec3_t){ emaxs->x, emins->y, emaxs->z };
-    v[1] = (x32vec3_t){ emins->x, emaxs->y, emins->z };
+    v[0] = (x32vec3_t){{ emaxs->x, emins->y, emaxs->z }};
+    v[1] = (x32vec3_t){{ emins->x, emaxs->y, emins->z }};
     break;
   case 3:
-    v[0] = (x32vec3_t){ emins->x, emins->y, emaxs->z };
-    v[1] = (x32vec3_t){ emaxs->x, emaxs->y, emins->z };
+    v[0] = (x32vec3_t){{ emins->x, emins->y, emaxs->z }};
+    v[1] = (x32vec3_t){{ emaxs->x, emaxs->y, emins->z }};
     break;
   case 4:
-    v[0] = (x32vec3_t){ emaxs->x, emaxs->y, emins->z };
-    v[1] = (x32vec3_t){ emins->x, emins->y, emaxs->z };
+    v[0] = (x32vec3_t){{ emaxs->x, emaxs->y, emins->z }};
+    v[1] = (x32vec3_t){{ emins->x, emins->y, emaxs->z }};
     break;
   case 5:
-    v[0] = (x32vec3_t){ emins->x, emaxs->y, emins->z };
-    v[1] = (x32vec3_t){ emaxs->x, emins->y, emaxs->z };
+    v[0] = (x32vec3_t){{ emins->x, emaxs->y, emins->z }};
+    v[1] = (x32vec3_t){{ emaxs->x, emins->y, emaxs->z }};
     break;
   case 6:
-    v[0] = (x32vec3_t){ emaxs->x, emins->y, emins->z };
-    v[1] = (x32vec3_t){ emins->x, emaxs->y, emaxs->z };
+    v[0] = (x32vec3_t){{ emaxs->x, emins->y, emins->z }};
+    v[1] = (x32vec3_t){{ emins->x, emaxs->y, emaxs->z }};
     break;
   case 7:
     v[0] = *emins;

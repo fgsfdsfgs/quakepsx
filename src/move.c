@@ -731,25 +731,13 @@ static inline void PhysicsNoclip(edict_t *ent) {
 }
 
 static void PhysicsStep(edict_t *ent) {
-  qboolean hitsound;
-
   // freefall if not onground
   if (!(ent->v.flags & (FL_ONGROUND | FL_FLY | FL_SWIM))) {
-    if (ent->v.velocity.d[2] < (G_GRAVITY / -10))
-      hitsound = true;
-    else
-      hitsound = false;
-
     AddGravity(ent);
     // CheckVelocity(ent);
     G_FlyMove(ent, gs.frametime, NULL);
     G_LinkEdict(ent, true);
-
-    if (ent->v.flags & FL_ONGROUND) {
-      // just hit ground
-      // if (hitsound)
-      //   TODO: StartSound(ent, 0, "demon/dland2.wav", 255, 1);
-    }
+    // TODO: ground hit sound?
   }
 
   // regular thinking

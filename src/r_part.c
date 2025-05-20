@@ -83,7 +83,7 @@ void R_SpawnParticleExplosion(const x32vec3_t *org) {
 }
 
 void R_SpawnParticleLavaSplash(const x32vec3_t *org) {
-  s16 i, j, n, scale;
+  s16 i, j, n;
   particle_t *p = rs.particles;
   const s16vec3_t sorg = {{ org->x >> FIXSHIFT, org->y >> FIXSHIFT, org->z >> FIXSHIFT }};
 

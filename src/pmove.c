@@ -116,7 +116,6 @@ static void PM_WaterMove(void) {
   player_state_t *plr = &gs.player[0];
   x32vec3_t *wishvel = &movevars->pm.wishvel;
   x16vec3_t *wishdir = &movevars->pm.wishdir;
-  x16vec3_t dir;
   x32 newspeed, addspeed, accelspeed;
 
   if (!plr->move.x && !plr->move.y && !plr->move.z) {

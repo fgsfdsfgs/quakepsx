@@ -260,7 +260,7 @@ void R_DrawViewModel(const player_state_t *plr) {
   x32vec3_t delta;
   XVecSub(&plr->ent->v.origin, &plr->ent->v.oldorigin, &delta);
 
-  x32vec2_t absspeed = { abs(plr->ent->v.velocity.x), abs(plr->ent->v.velocity.y) };
+  const x32vec2_t absspeed = (x32vec2_t){{ abs(plr->ent->v.velocity.x), abs(plr->ent->v.velocity.y) }};
   bob_t += xmul32((absspeed.x > absspeed.y ? absspeed.x : absspeed.y), gs.frametime) >> (FIXSHIFT - 5);
 
   const x32 bob_x = rsin(bob_t);
@@ -344,8 +344,6 @@ void R_RenderView(void) {
 
 void R_Flip(void) {
   ASSERT(gpu_ptr <= gpu_buf + GPU_BUFSIZE);
-
-  const x32 dt = Sys_FixedTime() - rs.frametime;
 
   DrawSync(0);
   VSync(0);
@@ -489,9 +487,9 @@ static inline void DrawEntity(edict_t *ed) {
   // otherwise just translate by origin, since brush models don't rotate
   if (ed->v.modelnum < 0) {
     rs.entmatrix = (MATRIX){{
-      ONE, 0,   0,
-      0,   ONE, 0,
-      0,   0,   ONE
+      { ONE, 0,   0,  },
+      { 0,   ONE, 0,  },
+      { 0,   0,   ONE }
     }, {
       ed->v.origin.x >> FIXSHIFT,
       ed->v.origin.y >> FIXSHIFT,
@@ -589,7 +587,6 @@ const mtexture_t *R_TextureAnimation(const mtexture_t *base) {
     return base;
 
   const int rel = (gs.time >> (FIXSHIFT - 3)) % base->anim_total;
-  int count = 0;
   while (base->anim_min > rel || base->anim_max <= rel)
     base = base->anim_next;
 

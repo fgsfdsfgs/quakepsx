@@ -238,8 +238,8 @@ void spawn_player(edict_t *self) {
 
   self->v.solid = SOLID_SLIDEBOX;
   self->v.movetype = MOVETYPE_WALK;
-  self->v.mins = (x32vec3_t){ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) };
-  self->v.maxs = (x32vec3_t){ TO_FIX32(16), TO_FIX32(16), TO_FIX32(32) };
+  self->v.mins = (x32vec3_t){{ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) }};
+  self->v.maxs = (x32vec3_t){{ TO_FIX32(+16), TO_FIX32(+16), TO_FIX32(+32) }};
   self->v.viewheight = TO_FIX32(22);
   self->v.think = player_think;
   self->v.nextthink = 1;

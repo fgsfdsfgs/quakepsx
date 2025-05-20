@@ -179,8 +179,6 @@ void Snd_StaticSound(const sfx_t *sfx, const x32vec3_t *origin, s16 vol, x32 att
 }
 
 void Snd_Update(x32vec3_t *lorigin, x16vec3_t *lright) {
-  const s32 frame_now = Sys_Frames();
-
   listener_origin = lorigin;
   listener_right = lright;
 

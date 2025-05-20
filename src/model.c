@@ -192,8 +192,8 @@ void Mod_LoadNodes(bmodel_t *mod, const int fh) {
   for (int i = 0; i < numnodes; ++i, ++out) {
     xbspnode_t in;
     Sys_FileRead(fh, &in, sizeof(in));
-    out->mins = (x32vec3_t){ TO_FIX32(in.mins.x), TO_FIX32(in.mins.y), TO_FIX32(in.mins.z) };
-    out->maxs = (x32vec3_t){ TO_FIX32(in.maxs.x), TO_FIX32(in.maxs.y), TO_FIX32(in.maxs.z) };
+    out->mins = (x32vec3_t){{ TO_FIX32(in.mins.x), TO_FIX32(in.mins.y), TO_FIX32(in.mins.z) }};
+    out->maxs = (x32vec3_t){{ TO_FIX32(in.maxs.x), TO_FIX32(in.maxs.y), TO_FIX32(in.maxs.z) }};
     out->plane = mod->planes + in.planenum;
     out->firstsurf = in.firstface;
     out->numsurf = in.numfaces;
@@ -226,16 +226,16 @@ void Mod_LoadClipnodes(bmodel_t *mod, const int fh) {
   hull->firstclipnode = 0;
   hull->lastclipnode = numclipnodes - 1;
   hull->planes = mod->planes;
-  hull->mins = (x32vec3_t){ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) };
-  hull->maxs = (x32vec3_t){ TO_FIX32(+16), TO_FIX32(+16), TO_FIX32(+32) };
+  hull->mins = (x32vec3_t){{ TO_FIX32(-16), TO_FIX32(-16), TO_FIX32(-24) }};
+  hull->maxs = (x32vec3_t){{ TO_FIX32(+16), TO_FIX32(+16), TO_FIX32(+32) }};
 
   hull = &mod->hulls[2];
   hull->clipnodes = out;
   hull->firstclipnode = 0;
   hull->lastclipnode = numclipnodes - 1;
   hull->planes = mod->planes;
-  hull->mins = (x32vec3_t){ TO_FIX32(-32), TO_FIX32(-32), TO_FIX32(-24) };
-  hull->maxs = (x32vec3_t){ TO_FIX32(+32), TO_FIX32(+32), TO_FIX32(+64) };
+  hull->mins = (x32vec3_t){{ TO_FIX32(-32), TO_FIX32(-32), TO_FIX32(-24) }};
+  hull->maxs = (x32vec3_t){{ TO_FIX32(+32), TO_FIX32(+32), TO_FIX32(+64) }};
 }
 
 void Mod_LoadLeafs(bmodel_t *mod, const int fh) {
@@ -247,8 +247,8 @@ void Mod_LoadLeafs(bmodel_t *mod, const int fh) {
   for (int i = 0; i < numleafs; ++i, ++out) {
     xbspleaf_t in;
     Sys_FileRead(fh, &in, sizeof(in));
-    out->mins = (x32vec3_t){ TO_FIX32(in.mins.x), TO_FIX32(in.mins.y), TO_FIX32(in.mins.z) };
-    out->maxs = (x32vec3_t){ TO_FIX32(in.maxs.x), TO_FIX32(in.maxs.y), TO_FIX32(in.maxs.z) };
+    out->mins = (x32vec3_t){{ TO_FIX32(in.mins.x), TO_FIX32(in.mins.y), TO_FIX32(in.mins.z) }};
+    out->maxs = (x32vec3_t){{ TO_FIX32(in.maxs.x), TO_FIX32(in.maxs.y), TO_FIX32(in.maxs.z) }};
     out->contents = in.contents;
     out->firstmarksurf = mod->marksurfaces + in.firstmarksurface;
     out->nummarksurf = in.nummarksurfaces;

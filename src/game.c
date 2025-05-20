@@ -237,7 +237,6 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
 }
 
 void G_Update(const x16 dt) {
-  x32vec3_t noclipvel;
   player_state_t *plr = &gs.player[0];
   edict_t *ped = plr->ent;
 

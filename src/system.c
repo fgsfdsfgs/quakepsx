@@ -34,7 +34,6 @@ void Sys_Error(const char *error, ...) {
   // print time into the buffer first
   const x32 xtime = Sys_FixedTime();
   const int timelen = snprintf(sys_errormsg, sizeof(sys_errormsg), "ERROR (T%d.%04d)\n", xtime >> FIXSHIFT, xtime & (FIXSCALE-1));
-  char *out = sys_errormsg + timelen;
 
   // append the error
   va_list args;
