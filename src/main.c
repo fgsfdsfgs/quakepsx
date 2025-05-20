@@ -24,15 +24,16 @@ int main(int argc, char **argv) {
 
   x32 then = 0;
   x32 time = Sys_FixedTime();
+  x32 dt;
   while (1) {
     then = time;
     time = Sys_FixedTime();
-    gs.frametime = time - then;
+    dt = time - then;
+    gs.frametime = (dt > 0x7FFF) ? 0x7FFF : dt;
 
-    if (G_CheckNextMap()) {
-      // map changed, reset time
-      gs.frametime = ONE / 10;
-    }
+    // if the map has changed, reset time
+    if (G_CheckNextMap())
+      continue;
 
     Prf_StartFrame();
 
