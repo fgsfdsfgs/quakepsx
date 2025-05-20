@@ -49,6 +49,7 @@ static edict_t *spawn_door_trigger(edict_t *self, const x32vec3_t *cmins, const 
   t->v.maxs.z = cmaxs->z + TO_FIX32(8);
   G_SetSize(t, &t->v.mins, &t->v.maxs);
   G_LinkEdict(t, false);
+  return t;
 }
 
 void door_init(edict_t *self) {
