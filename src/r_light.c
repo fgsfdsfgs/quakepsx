@@ -1,7 +1,6 @@
 #include <string.h>
 
 #include "common.h"
-#include "system.h"
 #include "game.h"
 #include "render.h"
 

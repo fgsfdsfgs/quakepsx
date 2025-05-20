@@ -1,4 +1,5 @@
 #include <psxcd.h>
+
 #include "common.h"
 #include "system.h"
 #include "spu.h"

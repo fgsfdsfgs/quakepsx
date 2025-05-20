@@ -6,6 +6,7 @@
 #include "render.h"
 #include "game.h"
 #include "progs.h"
+#include "system.h"
 #include "screen.h"
 
 static const pic_t *pic_conchars;

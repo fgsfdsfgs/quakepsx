@@ -5,7 +5,6 @@
 #include "world.h"
 #include "entity.h"
 #include "game.h"
-#include "sound.h"
 #include "progs.h"
 #include "move.h"
 

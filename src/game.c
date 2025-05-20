@@ -3,7 +3,7 @@
 #include "world.h"
 #include "render.h"
 #include "entity.h"
-#include "game.h"
+#include "system.h"
 #include "progs.h"
 #include "sound.h"
 #include "menu.h"
@@ -11,6 +11,7 @@
 #include "input.h"
 #include "move.h"
 #include "cd.h"
+#include "game.h"
 
 game_state_t gs;
 

@@ -1,8 +1,6 @@
 #include <string.h>
 #include "common.h"
-#include "model.h"
-#include "memory.h"
-#include "move.h"
+#include "world.h"
 #include "game.h"
 #include "system.h"
 #include "entity.h"

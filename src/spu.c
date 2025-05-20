@@ -1,7 +1,7 @@
-#include "spu.h"
-
-#include <sys/types.h>
 #include <psxspu.h>
+
+#include "types.h"
+#include "spu.h"
 
 // still faster to operate the voices using the registers
 // than to get through libspu's attribute bullshit

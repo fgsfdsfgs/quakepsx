@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "model.h"
 
 #define MAX_ENT_LEAFS 8
 

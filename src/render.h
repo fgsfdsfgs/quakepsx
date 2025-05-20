@@ -8,7 +8,6 @@
 #include "entity.h"
 #include "model.h"
 #include "sprite.h"
-#include "system.h"
 
 // some GTE macro variations that use registers instead of pointers
 #define gte_stotz_m(r0)  __asm__ volatile( "mfc2   %0, $7;"  : "=r"( r0 ) : )

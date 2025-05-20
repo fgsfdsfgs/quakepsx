@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "types.h"
 
 #define SPU_RAM_BASE 0x1100
 #define SPU_RAM_SIZE (0x80000 - SPU_RAM_BASE)

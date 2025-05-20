@@ -1,12 +1,10 @@
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <psxgte.h>
 #include <psxgpu.h>
 #include <inline_c.h>
 
 #include "common.h"
-#include "system.h"
 #include "render.h"
 #include "entity.h"
 #include "game.h"

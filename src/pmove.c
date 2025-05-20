@@ -1,9 +1,7 @@
 #include "common.h"
-#include "world.h"
 #include "entity.h"
 #include "game.h"
 #include "move.h"
-#include "system.h"
 
 #define STOP_EPSILON 41 // ~0.01
 
