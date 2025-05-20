@@ -10,7 +10,7 @@ file(GLOB _sources src/*.c src/progs/*.c src/*.s)
 
 include_directories(src)
 
-add_compile_options(-Wuninitialized)
+add_compile_options(-Wall -Wextra -Wno-strict-aliasing -Wno-unused-parameter -Wno-sign-compare)
 
 if(INSTRUMENT_FUNCTIONS)
   add_compile_options(-finstrument-functions)

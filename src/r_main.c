@@ -53,7 +53,7 @@ static MATRIX mat_coord = {{
   { 0,          -MAP_SCALE, 0          },
   { 0,          0,          -MAP_SCALE },
   { +MAP_SCALE, 0,          0          },
-}};
+}, { 0 }};
 
 static inline void DrawEntity(edict_t *ed);
 
@@ -118,8 +118,8 @@ void R_Init(void) {
   gte_SetBackColor(0xFF, 0xFF, 0xFF);
 
   // scale Z to fit the entire range of our OT
-  const register s16 zsf3 = GPU_OTDEPTH / 3;
-  const register s16 zsf4 = GPU_OTDEPTH / 4;
+  register const s16 zsf3 = GPU_OTDEPTH / 3;
+  register const s16 zsf4 = GPU_OTDEPTH / 4;
   gte_ldzsf3_m(zsf3);
   gte_ldzsf4_m(zsf4);
 
