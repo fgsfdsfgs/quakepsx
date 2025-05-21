@@ -80,11 +80,11 @@ xmapsnd_t *xbsp_spu_fit(qsfx_t *src) {
     panic("xbsp_spu_fit(%d): too many sounds", src->id);
 
   if (xbsp_spuptr + 16 >= SPURAM_SIZE)
-    panic("xbsp_spu_fit(%d): could not fit", src->id);
+    return NULL;
 
   const s32 outbytes = qsfx_convert(src, xbsp_spuram + xbsp_spuptr, SPURAM_SIZE - xbsp_spuptr);
   if (outbytes <= 0)
-    panic("xbsp_spu_fit(%d): could not fit", src->id);
+    return NULL;
 
   xmapsnd_t *snd = &xbsp_sounds[xbsp_numsounds++];
   snd->spuaddr = xbsp_spuptr + SPURAM_BASE;

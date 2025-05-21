@@ -568,7 +568,7 @@ static void do_entmodels(void) {
   printf("loaded %d entity models, mdl lump size = %u\n", num_qmdls, xbsp_lumps[XLMP_MDLDATA].size);
 }
 
-static void load_sound(const int id, int override_id) {
+static void load_sound(const int id, int override_id, const int allow_ambient) {
   if (qsfx_find(id))
     return;
 
@@ -576,6 +576,8 @@ static void load_sound(const int id, int override_id) {
     override_id = id;
 
   const char *sfxname = qsfxmap_name_for_id(override_id);
+  if (!allow_ambient && strstr(sfxname, "ambience"))
+    return; // ambient sounds not allowed
 
   printf("* loading sound %s (id %02x)\n", sfxname, override_id);
 
@@ -589,19 +591,25 @@ static void load_sound(const int id, int override_id) {
   if (!sfx)
     return;
 
-  xbsp_spu_fit(sfx);
+  if (!xbsp_spu_fit(sfx))
+    printf("* ! could not fit in SPU RAM\n");
 }
 
 static void do_sounds(void) {
   printf("adding entity sounds\n");
 
-  for (int i = 0; i < num_qents; ++i) {
-    // add any sounds tied to the classname
-    for (int j = 0; j < MAX_ENT_SFX && qents[i].info->sfxnums[j][0]; ++j) {
-      // override actual sound with worldtype alternative, if there is one
-      const int main_id = qents[i].info->sfxnums[j][0];
-      const int override_id = qents[i].info->sfxnums[j][qbsp_worldtype];
-      load_sound(main_id, override_id);
+  // HACK: can't be arsed to make a sorted list, so do two passes
+  // pass 1: all sounds except ambient
+  // pass 2: ambient
+  for (int ambient = 0; ambient < 2; ++ambient) {
+    for (int i = 0; i < num_qents; ++i) {
+      // add any sounds tied to the classname
+      for (int j = 0; j < MAX_ENT_SFX && qents[i].info->sfxnums[j][0]; ++j) {
+        // override actual sound with worldtype alternative, if there is one
+        const int main_id = qents[i].info->sfxnums[j][0];
+        const int override_id = qents[i].info->sfxnums[j][qbsp_worldtype];
+        load_sound(main_id, override_id, ambient);
+      }
     }
   }
 
