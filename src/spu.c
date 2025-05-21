@@ -67,6 +67,10 @@ void SPU_ClearAllVoices(void) {
     SPU_ClearVoice(i);
 }
 
+void SPU_SetMasterVolume(const s16 v) {
+  SpuSetCommonMasterVolume(v, v);
+}
+
 void SPU_SetVoiceVolume(const u32 v, const s16 lvol, const s16 rvol) {
   SPU_VOICE(v)->vol_left = lvol;
   SPU_VOICE(v)->vol_right = rvol;

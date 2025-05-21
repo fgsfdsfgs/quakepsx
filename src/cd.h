@@ -8,6 +8,9 @@ typedef enum {
   CDMODE_AUDIO
 } cdmode_t;
 
+// 0 - 128
+extern s32 cd_volume;
+
 void CD_Init(void);
 void CD_Update(void);
 
@@ -16,7 +19,7 @@ u32 CD_GetCurrentTrack(void);
 
 qboolean CD_IsPlaybackPaused(void);
 
-// vol is 0 - 255 like for sfx
+// 0 - 128
 void CD_SetAudioVolume(u8 vol);
 
 void CD_PlayAudio(const u32 track);

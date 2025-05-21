@@ -10,7 +10,8 @@
 void SPU_Init(void);
 void SPU_KeyOn(const u32 mask);
 void SPU_KeyOff(const u32 mask);
-void SPU_ClearVoice(const u32 v) ;
+void SPU_ClearVoice(const u32 v);
+void SPU_SetMasterVolume(const s16 v);
 void SPU_SetVoiceVolume(const u32 v, const s16 lvol, const s16 rvol);
 u32 SPU_GetVoiceEndMask(void);
 void SPU_PlaySample(const u32 ch, const u32 addr, const u32 freq);

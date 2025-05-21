@@ -82,6 +82,12 @@ void G_RequestMap(const char *mapname) {
   snprintf(g_nextmap, sizeof(g_nextmap), FS_BASE "\\MAPS\\%s.PSB;1", mapname);
 }
 
+void G_NewGame(void) {
+  gs.skill = 1;
+  memset(gs.player, 0, sizeof(gs.player));
+  G_RequestMap("START");
+}
+
 qboolean G_CheckNextMap(void) {
   if (g_nextmap[0]) {
     G_StartMap(g_nextmap);
@@ -242,7 +248,7 @@ void G_Update(const x16 dt) {
 
   UpdatePlayerInput(plr, dt);
 
-  if (menu_open) {
+  if (Menu_IsOpen()) {
     Menu_Update();
     return;
   }

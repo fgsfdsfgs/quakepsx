@@ -7,6 +7,9 @@
 #include "progs/entclasses.h"
 #include "progs/picids.h"
 
+// HACK: crosshair toggle for the options menu
+extern s32 sbar_xhair;
+
 // global
 void Progs_NewMap(void);
 

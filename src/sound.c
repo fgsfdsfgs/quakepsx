@@ -22,6 +22,8 @@ static struct sndchan {
   x32vec3_t origin;
 } snd_chan[SND_NUM_CH];
 
+s32 snd_volume = 128;
+
 void Snd_Init(void) {
   Sys_Printf("Snd_Init()\n");
   SPU_Init();
@@ -88,30 +90,34 @@ static qboolean Snd_Spatialize(struct sndchan* ch) {
   s32 lvol = 0;
   s32 rvol = 0;
 
-  // anything coming from the view entity will allways be full volume
-  if (ch->entnum == 1) {
-    lvol = ch->vol;
-    rvol = ch->vol;
-  } else {
-    x32vec3_t source_vec;
-    x16vec3_t dir_vec;
-    x32 dist = 0;
-    XVecSub(&ch->origin, listener_origin, &source_vec);
-    XVecNormLS(&source_vec, &dir_vec, &dist); // this returns squared distance
-    // if out of clip distance, don't bother
-    if (dist < SND_CLIPDIST * SND_CLIPDIST) {
-      dist = ONE - SquareRoot0(dist) * ch->attn;
-      const x16 dot = XVecDotSS(listener_right, &dir_vec);
-      const x32 rscale = xmul32(dist, ONE + dot);
-      const x32 lscale = xmul32(dist, ONE - dot);
-      rvol = (rscale <= 0) ? 0 : xmul32(rscale, ch->vol);
-      if (rvol > SND_MAXVOL) rvol = SND_MAXVOL;
-      lvol = (lscale <= 0) ? 0 : xmul32(lscale, ch->vol);
-      if (lvol > SND_MAXVOL) lvol = SND_MAXVOL;
+  if (snd_volume) {
+    if (ch->entnum == 1) {
+      // anything coming from the view entity will always be full volume
+      lvol = ch->vol;
+      rvol = ch->vol;
+    } else {
+      x32vec3_t source_vec;
+      x16vec3_t dir_vec;
+      x32 dist = 0;
+      XVecSub(&ch->origin, listener_origin, &source_vec);
+      XVecNormLS(&source_vec, &dir_vec, &dist); // this returns squared distance
+      // if out of clip distance, don't bother
+      if (dist < SND_CLIPDIST * SND_CLIPDIST) {
+        dist = ONE - SquareRoot0(dist) * ch->attn;
+        const x16 dot = XVecDotSS(listener_right, &dir_vec);
+        const x32 rscale = xmul32(dist, ONE + dot);
+        const x32 lscale = xmul32(dist, ONE - dot);
+        rvol = (rscale <= 0) ? 0 : xmul32(rscale, ch->vol);
+        if (rvol > SND_MAXVOL) rvol = SND_MAXVOL;
+        lvol = (lscale <= 0) ? 0 : xmul32(lscale, ch->vol);
+        if (lvol > SND_MAXVOL) lvol = SND_MAXVOL;
+      }
     }
+    rvol = ((rvol * snd_volume) >> 7) << 6;
+    lvol = ((lvol * snd_volume) >> 7) << 6;
   }
 
-  SPU_SetVoiceVolume(voice, lvol << 6, rvol << 6);
+  SPU_SetVoiceVolume(voice, lvol, rvol);
 
   return (rvol || lvol);
 }
@@ -189,4 +195,10 @@ void Snd_Update(x32vec3_t *lorigin, x16vec3_t *lright) {
     if (!Snd_Spatialize(ch))
       continue;
   }
+}
+
+void Snd_SetVolume(const s32 vol) {
+  snd_volume = vol;
+  // recalculate volumes
+  Snd_Update(listener_origin, listener_right);
 }

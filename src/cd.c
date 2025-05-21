@@ -13,6 +13,8 @@ static struct {
   volatile qboolean endoftrack;
 } cd;
 
+s32 cd_volume = 128;
+
 static void AutoPauseCallback(CdlIntrResult result, u8 *data) {
   if (cd.curtrack && cd.mode == CDMODE_AUDIO) {
     // signal to CD_Update that we need to restart the CD track
@@ -38,7 +40,7 @@ void CD_Init(void) {
 
   // set the CD mixer to the default settings (L -> L, R -> R)
   // the actual volume is set via the Snd_ API
-  const CdlATV atv = { 128, 0, 128, 0 };
+  const CdlATV atv = { cd_volume, 0, cd_volume, 0 };
   CdMix(&atv);
 
   // detect audio tracks, if any
@@ -53,6 +55,12 @@ u32 CD_GetCurrentTrack(void) {
 
 qboolean CD_IsPlaybackPaused(void) {
   return cd.paused;
+}
+
+void CD_SetAudioVolume(u8 vol) {
+  cd_volume = vol;
+  const CdlATV atv = { vol, 0, vol, 0 };
+  CdMix(&atv);
 }
 
 void CD_PlayAudio(const u32 track) {

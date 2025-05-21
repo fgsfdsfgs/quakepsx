@@ -38,6 +38,9 @@ typedef struct {
   u32 spuaddr;
 } sfx_t;
 
+// 0 - 128
+extern s32 snd_volume;
+
 void Snd_Init(void);
 
 void Snd_SetBank(const sfx_t *sfx, const int num_sfx, const u8 *spudata, const u32 spudata_size);
@@ -50,6 +53,8 @@ void Snd_StartSound(const s16 entnum, const s16 entch, const sfx_t *sfx, const x
 void Snd_StaticSound(const sfx_t *sfx, const x32vec3_t *origin, s16 vol, x32 attn);
 
 void Snd_Update(x32vec3_t *lorigin, x16vec3_t *lright);
+
+void Snd_SetVolume(const s32 vol);
 
 static inline void Snd_StartSoundId(const s16 entnum, const s16 entch, const s16 sfxid, const x32vec3_t *origin, s16 vol, x32 attn) {
   Snd_StartSound(entnum, entch, Snd_FindSound(sfxid), origin, vol, attn);

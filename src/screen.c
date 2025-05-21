@@ -152,14 +152,15 @@ void Scr_DrawScreen(const int debug_mode) {
   Sbar_Draw(plr);
 }
 
-void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str) {
+void Scr_DrawTextOffset(const u8 chofs, const s16 x, const s16 y, const u32 rgb, const char *str) {
   SetTPage(pic_conchars->tpage);
 
   s16 tx = x;
   s16 ty = y;
   u8 tu, tv;
   for (const u8 *p = (const u8 *)str; *p; ++p) {
-    switch (*p) {
+    const u8 chr = *p + chofs;
+    switch (chr) {
     case ' ':
       tx += FNT_SMALL_W;
       break;
@@ -168,13 +169,17 @@ void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str) {
       ty += FNT_SMALL_H;
       break;
     default:
-      tu = (((*p) & 0xF) << 3);
-      tv = (((*p) >> 4) << 3);
+      tu = ((chr & 0xF) << 3);
+      tv = ((chr >>  4) << 3);
       DrawPic8(tx, ty, tu, tv, rgb, pic_conchars);
       tx += FNT_SMALL_W;
       break;
     }
   }
+}
+
+void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str) {
+  Scr_DrawTextOffset(0, x, y, rgb, str);
 }
 
 void Scr_DrawDigits(const s16 x, const s16 y, const u32 rgb, const char *str) {

@@ -336,7 +336,7 @@ void R_RenderView(void) {
 
   R_DrawViewModel(plr);
 
-  if (menu_open)
+  if (Menu_IsOpen())
     Menu_Draw();
   else
     Scr_DrawScreen(rs.debug);

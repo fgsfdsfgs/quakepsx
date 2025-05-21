@@ -13,6 +13,7 @@
 #define FNT_BIG_H 24
 
 #define C_WHITE 0x00808080u
+#define C_GREY 0x00404040u
 #define C_RED 0x00000080u
 #define C_DKRED 0x00000030u
 #define C_YELLOW 0x00008080u
@@ -23,6 +24,7 @@ void Scr_Init(void);
 void Scr_DrawScreen(const int debug_mode);
 
 void Scr_DrawText(const s16 x, const s16 y, const u32 rgb, const char *str);
+void Scr_DrawTextOffset(const u8 chofs, const s16 x, const s16 y, const u32 rgb, const char *str);
 void Scr_DrawDigits(const s16 x, const s16 y, const u32 rgb, const char *str);
 void Scr_DrawPic(const s16 x, const s16 y, const u32 rgb, const pic_t *pic);
 void Scr_DrawRect(const s16 x, const s16 y, const s16 w, const s16 h, const u32 rgb, const u8 blend);
