@@ -8,7 +8,7 @@
 
 #define RAM_END 0x80200000
 
-#define MEM_ALIGNMENT 8
+#define MEM_ALIGNMENT 4
 #define MEM_MAX_ALLOCS 256
 
 static u8 *mem_base;
