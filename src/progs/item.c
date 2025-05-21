@@ -250,6 +250,7 @@ static void spawn_powerup(edict_t *self, const s16 model, const u32 type, const 
 void spawn_item_armor1(edict_t *self) {
   spawn_item(self, MDLID_ARMOR, IT_ARMOR1, 100, SFXID_ITEMS_ARMOR1);
   self->v.touch = armor_touch;
+  self->v.skin = 0;
   XVecSetInt(&self->v.mins, -16, -16, +0);
   XVecSetInt(&self->v.maxs, +16, +16, +56);
   G_SetSize(self, &self->v.mins, &self->v.maxs);
@@ -258,6 +259,7 @@ void spawn_item_armor1(edict_t *self) {
 void spawn_item_armor2(edict_t *self) {
   spawn_item(self, MDLID_ARMOR, IT_ARMOR2, 150, SFXID_ITEMS_ARMOR1);
   self->v.touch = armor_touch;
+  self->v.skin = 1;
   XVecSetInt(&self->v.mins, -16, -16, +0);
   XVecSetInt(&self->v.maxs, +16, +16, +56);
   G_SetSize(self, &self->v.mins, &self->v.maxs);
@@ -266,6 +268,7 @@ void spawn_item_armor2(edict_t *self) {
 void spawn_item_armorInv(edict_t *self) {
   spawn_item(self, MDLID_ARMOR, IT_ARMOR3, 200, SFXID_ITEMS_ARMOR1);
   self->v.touch = armor_touch;
+  self->v.skin = 2;
   XVecSetInt(&self->v.mins, -16, -16, +0);
   XVecSetInt(&self->v.maxs, +16, +16, +56);
   G_SetSize(self, &self->v.mins, &self->v.maxs);

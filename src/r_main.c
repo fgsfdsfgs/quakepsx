@@ -532,7 +532,7 @@ static inline void DrawEntity(edict_t *ed) {
     R_DrawBrushModel(ed->v.model);
   } else {
     R_LightEntity(ed);
-    R_DrawAliasModel(ed->v.model, ed->v.frame, (ed->v.light << 16) | (ed->v.light << 8) | (ed->v.light));
+    R_DrawAliasModel(ed->v.model, ed->v.frame, ed->v.skin, (ed->v.light << 16) | (ed->v.light << 8) | (ed->v.light));
   }
 }
 

@@ -76,6 +76,8 @@ typedef struct entvars_s {
   u8 noise;
   u8 light;
   u8 effects;
+  u8 frame;
+  u8 skin;
   s16 count;
   s16 dmg;
   s16 speed;
@@ -85,7 +87,6 @@ typedef struct entvars_s {
   u16 flags;
   u16 spawnflags;
   s16 modelnum;
-  s16 frame;
   s16 health;
   s16 max_health;
   x32 nextthink;

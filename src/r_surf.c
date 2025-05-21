@@ -402,9 +402,10 @@ void R_DrawVisChain(void) {
     RenderBrushPoly(s);
 }
 
-void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {
+void R_DrawAliasModel(const amodel_t *model, const int frame, const int skin, const u32 tint) {
   register int otz;
-  const u16 tpage = model->tpage;
+  const u16 tpage = model->skins[skin].tpage;
+  const u8vec2_t baseuv = model->skins[skin].base;
   const int numverts = model->numverts;
   const int numtris = model->numtris;
   const u8vec3_t *averts = model->frames + (frame * numverts);
@@ -465,12 +466,12 @@ void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {
     *(u32 *)&poly->x0 = *(u32 *)&sv0->pos.x;
     *(u32 *)&poly->x1 = *(u32 *)&sv1->pos.x;
     *(u32 *)&poly->x2 = *(u32 *)&sv2->pos.x;
-    poly->u0 = tri->uvs[0].u;
-    poly->v0 = tri->uvs[0].v;
-    poly->u1 = tri->uvs[1].u;
-    poly->v1 = tri->uvs[1].v;
-    poly->u2 = tri->uvs[2].u;
-    poly->v2 = tri->uvs[2].v;
+    poly->u0 = baseuv.u + tri->uvs[0].u;
+    poly->v0 = baseuv.v + tri->uvs[0].v;
+    poly->u1 = baseuv.u + tri->uvs[1].u;
+    poly->v1 = baseuv.v + tri->uvs[1].v;
+    poly->u2 = baseuv.u + tri->uvs[2].u;
+    poly->v2 = baseuv.v + tri->uvs[2].v;
     *(u32 *)&poly->r0 = tint;
 
     poly = EmitAliasTriangle(poly, tpage, otz, sv0, sv1, sv2);
@@ -479,9 +480,10 @@ void R_DrawAliasModel(amodel_t *model, int frame, const u32 tint) {
   gpu_ptr = (u8 *)poly;
 }
 
-void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint) {
+void R_DrawAliasViewModel(const amodel_t *model, const int frame, const u32 tint) {
   register int otz;
-  const u16 tpage = model->tpage;
+  const u16 tpage = model->skins[0].tpage;
+  const u8vec2_t baseuv = model->skins[0].base;
   const int numverts = model->numverts;
   const int numtris = model->numtris;
   const u8vec3_t *averts = model->frames + (frame * numverts);
@@ -536,12 +538,12 @@ void R_DrawAliasViewModel(amodel_t *model, int frame, const u32 tint) {
     *(u32 *)&poly->x0 = *(u32 *)&sv0->pos.x;
     *(u32 *)&poly->x1 = *(u32 *)&sv1->pos.x;
     *(u32 *)&poly->x2 = *(u32 *)&sv2->pos.x;
-    poly->u0 = tri->uvs[0].u;
-    poly->v0 = tri->uvs[0].v;
-    poly->u1 = tri->uvs[1].u;
-    poly->v1 = tri->uvs[1].v;
-    poly->u2 = tri->uvs[2].u;
-    poly->v2 = tri->uvs[2].v;
+    poly->u0 = baseuv.u + tri->uvs[0].u;
+    poly->v0 = baseuv.v + tri->uvs[0].v;
+    poly->u1 = baseuv.u + tri->uvs[1].u;
+    poly->v1 = baseuv.v + tri->uvs[1].v;
+    poly->u2 = baseuv.u + tri->uvs[2].u;
+    poly->v2 = baseuv.v + tri->uvs[2].v;
     *(u32 *)&poly->r0 = tint;
     setPolyFT3(poly);
     poly->tpage = tpage;

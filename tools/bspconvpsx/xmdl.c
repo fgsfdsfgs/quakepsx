@@ -17,6 +17,36 @@
 #include "xbsp.h"
 #include "xmdl.h"
 
+static void entmodel_handle_skin(xaliashdr_t *hdr, const qmdl_t *qm, const int n) {
+  // scale the texture down 2x because the skins are fucking massive
+  static u8 dst[256 * 256];
+  const u32 srcw = qm->header->skinwidth;
+  const u32 srch = qm->header->skinheight;
+  const u32 dstw = srcw >> 1;
+  const u32 dsth = srch >> 1;
+  const u8 *src = qm->skins[n].data;
+  assert(dstw <= 256);
+  assert(dsth <= 256);
+  for (u32 y = 0; y < dsth; ++y) {
+    for (u32 x = 0; x < dstw; ++x)
+      dst[y * dstw + x] = src[(y << 1) * srcw + (x << 1)];
+  }
+
+  xtexinfo_t xti;
+  int vramx = -1, vramy = -1;
+  for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
+    if (xbsp_vram_page_fit(&xti, i, dstw >> 1, dsth, &vramx, &vramy) == 0)
+      break;
+  }
+  if (vramx < 0 || vramy < 0)
+    panic("could not fit skin %d for model %s (%02x)", qm->name, qm->id);
+
+  xbsp_vram_store_mdltex(dst, vramx, vramy, dstw, dsth);
+
+  hdr->skins[n].tpage = xti.tpage;
+  hdr->skins[n].base = xti.uv;
+}
+
 xaliashdr_t *xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
   assert(xbsp_numentmodels < MAX_XMAP_ENTMODELS);
   assert(qm->header->numverts < MAX_XMDL_VERTS);
@@ -39,28 +69,14 @@ xaliashdr_t *xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
   xmhdr->trisofs = baseofs;
   xmhdr->framesofs = xmhdr->trisofs + sizeof(xaliastri_t) * xmhdr->numtris;
 
-  // scale the texture down 2x because the skins are fucking massive
-  static u8 dst[256 * 256];
-  const u32 srcw = qm->header->skinwidth;
-  const u32 srch = qm->header->skinheight;
-  const u32 dstw = srcw >> 1;
-  const u32 dsth = srch >> 1;
-  const u8 *src = qm->skins[0].data;
-  assert(dstw <= 256);
-  assert(dsth <= 256);
-  for (u32 y = 0; y < dsth; ++y) {
-    for (u32 x = 0; x < dstw; ++x)
-      dst[y * dstw + x] = src[(y << 1) * srcw + (x << 1)];
+  xmhdr->numskins = 0;
+  for (int i = 0; i < qm->header->numskins && i < MAX_XMDL_SKINS; ++i) {
+    entmodel_handle_skin(xmhdr, qm, i);
+    xmhdr->numskins++;
   }
 
-  xtexinfo_t xti;
-  int vramx = 0, vramy = 0;
-  for (int i = 0; i < VRAM_NUM_PAGES; ++i) {
-    if (xbsp_vram_page_fit(&xti, i, dstw >> 1, dsth, &vramx, &vramy) == 0)
-      break;
-  }
-  xbsp_vram_store_mdltex(dst, vramx, vramy, dstw, dsth);
-  xmhdr->tpage = xti.tpage;
+  const u32 dstw = qm->header->skinwidth >> 1;
+  const u32 dsth = qm->header->skinheight >> 1;
 
   xaliastri_t *xmtri = (xaliastri_t *)(xbsp_entmodeldata + xmhdr->trisofs);
   for (int i = 0; i < xmhdr->numtris; ++i, ++xmtri) {
@@ -74,11 +90,11 @@ xaliashdr_t *xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
       const f32 v = ((f32)qtc->t + 0.5f) / qm->header->skinheight;
       f32 u2 = (f32)qtc->s + (f32)qm->header->skinwidth * 0.5f;
       u2 = ((f32)u2 + 0.5f) / qm->header->skinwidth;
-      xmtri->uvs[j].v = xti.uv.v + (s16)(v * dsth);
+      xmtri->uvs[j].v = (v * dsth);
       if (qtc->onseam && !qm->tris[i].front)
-        xmtri->uvs[j].u = xti.uv.u + (s16)(u2 * dstw);
+        xmtri->uvs[j].u = (u2 * dstw);
       else
-        xmtri->uvs[j].u = xti.uv.u + (s16)(u * dstw);
+        xmtri->uvs[j].u = (u * dstw);
     }
   }
 
@@ -101,11 +117,11 @@ xaliashdr_t *xbsp_entmodel_add_from_qmdl(qmdl_t *qm) {
 
   xbsp_entmodeldataptr = (u8 *)xmvert;
 
-  printf("* * id: %02x verts: %u, tris: %u, frames: %u size: %u skin: %ux%u extents: (%f, %f, %f)\n",
+  printf("* * id: %02x verts: %u, tris: %u, frames: %u size: %u skins: %d x %ux%u extents: (%f, %f, %f)\n",
     xmhdr->id,
     xmhdr->numverts, xmhdr->numtris, xmhdr->numframes,
     (u32)(xbsp_entmodeldataptr - origptr),
-    dstw, dsth,
+    xmhdr->numskins, dstw, dsth,
     maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 
   return xmhdr;
@@ -127,6 +143,7 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
   xmhdr->numframes = 1;
   xmhdr->numtris = 12; // cuboid, no bottom face
   xmhdr->numverts = 8;
+  xmhdr->numskins = 1;
   xmhdr->scale = (x16vec3_t){{ ONE, ONE, ONE }}; // they all fit within 0 - 256
   xmhdr->offset = (s16vec3_t){{ 0 }};
   xmhdr->trisofs = baseofs;
@@ -164,13 +181,14 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
   if (vramx < 0 || vramy < 0)
     panic("could not fit textures for model 0x%02x into VRAM", id);
 
+  xmhdr->skins[0].tpage = xti.tpage;
+  xmhdr->skins[0].base = xti.uv;
+
   // ...then upload them one by one
   for (int i = 0; i < 2 && i < qm->miptex->nummiptex; ++i) {
     xbsp_vram_store_mdltex((u8 *)qmtm[i] + qmtm[i]->offsets[0], vramx, vramy, qmtm[i]->width, qmtm[i]->height);
     vramy += qmtm[i]->height;
   }
-
-  xmhdr->tpage = xti.tpage;
 
   // copy verts
   xaliasvert_t *vert = (xaliasvert_t *)(xbsp_entmodeldata + xmhdr->framesofs);
@@ -218,30 +236,29 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
 
     // triangle 1
     tri->verts[0] = qverts[0];
-    tri->uvs[0].u = xti.uv.u + qst[0][0];
-    tri->uvs[0].v = xti.uv.v + basev + qst[0][1];
+    tri->uvs[0].u = qst[0][0];
+    tri->uvs[0].v = basev + qst[0][1];
     tri->verts[1] = qverts[1];
-    tri->uvs[1].u = xti.uv.u + qst[1][0];
-    tri->uvs[1].v = xti.uv.v + basev + qst[1][1];
+    tri->uvs[1].u = qst[1][0];
+    tri->uvs[1].v = basev + qst[1][1];
     tri->verts[2] = qverts[2];
-    tri->uvs[2].u = xti.uv.u + qst[2][0];
-    tri->uvs[2].v = xti.uv.v + basev + qst[2][1];
+    tri->uvs[2].u = qst[2][0];
+    tri->uvs[2].v = basev + qst[2][1];
     ++tri;
 
     // triangle 2
     tri->verts[0] = qverts[0];
-    tri->uvs[0].u = xti.uv.u + qst[0][0];
-    tri->uvs[0].v = xti.uv.v + basev + qst[0][1];
+    tri->uvs[0].u = qst[0][0];
+    tri->uvs[0].v = basev + qst[0][1];
     tri->verts[1] = qverts[2];
-    tri->uvs[1].u = xti.uv.u + qst[2][0];
-    tri->uvs[1].v = xti.uv.v + basev + qst[2][1];
+    tri->uvs[1].u = qst[2][0];
+    tri->uvs[1].v = basev + qst[2][1];
     tri->verts[2] = qverts[3];
-    tri->uvs[2].u = xti.uv.u + qst[3][0];
-    tri->uvs[2].v = xti.uv.v + basev + qst[3][1];
+    tri->uvs[2].u = qst[3][0];
+    tri->uvs[2].v = basev + qst[3][1];
     ++tri;
   }
 
-  xmhdr->tpage = xti.tpage;
   xmhdr->mins.x = mins[0] << FIXSHIFT;
   xmhdr->mins.y = mins[1] << FIXSHIFT;
   xmhdr->mins.z = mins[2] << FIXSHIFT;
@@ -251,11 +268,11 @@ xaliashdr_t *xbsp_entmodel_add_from_qbsp(qbsp_t *qm, s16 id) {
 
   xbsp_entmodeldataptr = (u8 *)(vert + 8);
 
-  printf("* * id: %02x verts: %u, tris: %u, frames: %u size: %u skin: %ux%u extents: (%d, %d, %d)\n",
+  printf("* * id: %02x verts: %u, tris: %u, frames: %u size: %u skins: %d x %ux%u extents: (%d, %d, %d)\n",
     xmhdr->id,
     xmhdr->numverts, xmhdr->numtris, xmhdr->numframes,
     (u32)(xbsp_entmodeldataptr - origptr),
-    xti.size.x, xti.size.y,
+    xmhdr->numskins, xti.size.x, xti.size.y,
     maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
 
   return xmhdr;
