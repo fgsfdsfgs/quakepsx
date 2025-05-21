@@ -22,14 +22,9 @@ int main(int argc, char **argv) {
 
   G_RequestMap("START");
 
-  x32 then = 0;
-  x32 time = Sys_FixedTime();
-  x32 dt;
   while (1) {
-    then = time;
-    time = Sys_FixedTime();
-    dt = time - then;
-    gs.frametime = (dt > 0x7FFF) ? 0x7FFF : dt;
+    Sys_UpdateTime();
+    gs.frametime = Sys_FixedDeltaTime();
 
     // if the map has changed, reset time
     if (G_CheckNextMap())

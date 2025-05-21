@@ -12,19 +12,34 @@
 #include "dbgfont.h"
 #include "system.h"
 
+struct counter_s {
+  u16 value;
+  u16 pad0;
+  u16 mode;
+  u16 pad3;
+  u16 target;
+  u16 pad2[3];
+};
+
+#define COUNTERS ((volatile struct counter_s *)0xBF801100)
+
+#define TICKS_PER_SECOND 15625 // hblanks
+
 static char sys_errormsg[MAX_ERROR];
 
-#define TICKS_PER_SECOND 60 // NTSC on NTSC console
-
-void Sys_Wait(int n) {
-  while (n--) VSync(0);
-}
+x32 sys_time = 0;
+x16 sys_delta_time = 0;
+u32 sys_last_counter = 0;
 
 // initialize low level utilities
 void Sys_Init(void) {
   // initialize interrupts n shit
   ResetGraph(3);
   Sys_InstallExceptionHandler();
+
+  // setup the hblank counter
+  COUNTERS[1].mode = (1 << 8); // source = hblank
+  COUNTERS[1].value = 0;
 }
 
 void Sys_Error(const char *error, ...) {
@@ -66,9 +81,32 @@ void Sys_Error(const char *error, ...) {
   while (1) VSync(0);
 }
 
-x32 Sys_FixedTime(void) {
-  // number of vblanks -> seconds
-  return (VSync(-1) << FIXSHIFT) / TICKS_PER_SECOND;
+void Sys_UpdateTime(void) {
+  const u32 counter = COUNTERS[1].value;
+
+  // check for wraparound
+  u32 ticks = counter;
+  if (ticks < sys_last_counter)
+    ticks += 0x10000;
+
+  // clamp delta ticks in case we wrapped around several times
+  s32 delta = ticks - sys_last_counter;
+  if (delta < 0)
+    delta = 0;
+  else if (delta > 0x1FFFF)
+    delta = 0x1FFFF;
+
+  // this shouldn't overflow
+  const x32 dt = ((u32)delta << FIXSHIFT) / TICKS_PER_SECOND;
+
+  // clamp delta time to x16 range
+  sys_delta_time = (dt > 0x7FFF) ? 0x7FFF : dt;
+  sys_time += dt;
+  sys_last_counter = counter;
+}
+
+void Sys_Wait(int n) {
+  while (n--) VSync(0);
 }
 
 s32 Sys_Frames(void) {
