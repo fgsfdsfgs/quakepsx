@@ -3,25 +3,29 @@
 #define SF_PLAT_LOW_TRIGGER 1
 
 static void plat_hit_bottom(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT2, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT2, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_BOTTOM;
 }
 
 static void plat_go_down(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT1, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT1, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_DOWN;
   utl_calc_move(self, &self->v.door->pos2, self->v.speed, plat_hit_bottom);
 }
 
 static void plat_hit_top(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT2, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT2, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_TOP;
   self->v.think = plat_go_down;
   self->v.nextthink = self->v.ltime + TO_FIX32(2);
 }
 
 static void plat_go_up(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT1, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_PLATS_MEDPLAT1, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_UP;
   utl_calc_move(self, &self->v.door->pos1, self->v.speed, plat_hit_top);
 }
@@ -130,7 +134,8 @@ static void train_next(edict_t *self);
 static void train_wait(edict_t *self) {
   if (self->v.door->wait) {
     self->v.nextthink = self->v.ltime + self->v.door->wait;
-    utl_sound(self, CHAN_VOICE, SFXID_PLATS_TRAIN2, SND_MAXVOL, ATTN_NORM);
+    if (self->v.noise)
+      utl_sound(self, CHAN_VOICE, SFXID_PLATS_TRAIN2, SND_MAXVOL, ATTN_NORM);
   } else {
     self->v.nextthink = self->v.ltime + PR_FRAMETIME;
   }
@@ -149,7 +154,8 @@ static void train_next(edict_t *self) {
   else
     self->v.door->wait = 0;
 
-  utl_sound(self, CHAN_VOICE, SFXID_PLATS_TRAIN1, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_PLATS_TRAIN1, SND_MAXVOL, ATTN_NORM);
 
   x32vec3_t dest;
   XVecSub(&targ->v.origin, &self->v.mins, &dest);

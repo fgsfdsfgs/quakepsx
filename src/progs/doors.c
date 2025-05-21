@@ -163,7 +163,8 @@ static void door_fire(edict_t *self, edict_t *activator) {
 }
 
 static void door_hit_top(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_TOP;
   if (self->v.spawnflags & SF_TOGGLE)
     return; // don't come down automatically
@@ -172,12 +173,14 @@ static void door_hit_top(edict_t *self) {
 }
 
 static void door_hit_bottom(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_DOORS_DRCLOS4, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_BOTTOM;
 }
 
 void door_go_down(edict_t *self) {
-  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
 
   if (self->v.max_health) {
     self->v.flags |= FL_TAKEDAMAGE;
@@ -198,7 +201,8 @@ void door_go_up(edict_t *self, edict_t *activator) {
      return;
   }
 
-  utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
+  if (self->v.noise)
+    utl_sound(self, CHAN_VOICE, SFXID_DOORS_DOORMV1, SND_MAXVOL, ATTN_NORM);
   self->v.door->state = STATE_UP;
   utl_calc_move(self, &self->v.door->pos2, self->v.speed, door_hit_top);
   utl_usetargets(self, activator);
@@ -467,6 +471,9 @@ void spawn_func_door_secret(edict_t *self) {
   self->v.touch = secret_touch;
   self->v.blocked = secret_blocked;
   self->v.use = secret_use;
+
+  if (!self->v.noise)
+    self->v.noise = 3;
 
   if (!self->v.extra_trigger.wait)
     self->v.extra_trigger.wait = TO_FIX32(5); // this will get moved to v.door->wait

@@ -119,7 +119,8 @@ void spawn_trigger_relay(edict_t *self) {
 void spawn_trigger_secret(edict_t *self) {
   pr.total_secrets++;
   self->v.extra_trigger.wait = -1;
-  self->v.noise = 1;
+  if (!self->v.noise)
+    self->v.noise = 1;
   spawn_trigger_multiple(self);
 }
 
