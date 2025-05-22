@@ -63,11 +63,13 @@ static void player_tick_powerups(edict_t *self) {
       if (plr->power_warn[i] == 1) {
         Scr_SetTopMsg(powerup_warnings[i]);
         Scr_SetBlend(C_YELLOW, SCR_FLASH_TIME);
-        // TODO: sound
+        // TODO: proper sfx
+        utl_sound(self, CHAN_BODY, SFXID_MISC_TALK, SND_MAXVOL, ATTN_NORM);
         plr->power_warn[i] = gs.time + ONE;
       } else if (plr->power_warn[i] < gs.time) {
         Scr_SetBlend(C_YELLOW, SCR_FLASH_TIME);
-        // TODO: sound
+        // TODO: proper sfx
+        utl_sound(self, CHAN_BODY, SFXID_MISC_TALK, SND_MAXVOL, ATTN_NORM);
         plr->power_warn[i] = gs.time + ONE;
       }
 
@@ -321,7 +323,7 @@ void Player_PostThink(edict_t *ent) {
   } else if (!newwater && plr->fallspeed < -TO_FIX32(300) && (ent->v.flags & FL_ONGROUND)) {
     if (plr->fallspeed < -TO_FIX32(650)) {
       utl_damage(ent, gs.edicts, gs.edicts, 5);
-      utl_sound(ent, CHAN_BODY, SFXID_PLAYER_LAND2, SND_MAXVOL, ATTN_NORM);
+      utl_sound(ent, CHAN_VOICE, SFXID_PLAYER_LAND2, SND_MAXVOL, ATTN_NORM);
     } else {
       utl_sound(ent, CHAN_BODY, SFXID_PLAYER_LAND, SND_MAXVOL, ATTN_NORM);
     }

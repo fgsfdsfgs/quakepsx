@@ -145,6 +145,6 @@ void Sbar_Draw(const player_state_t *p) {
 }
 
 void Sbar_IndicateDamage(const s16 damage) {
-  face_pain_time = rs.frametime + TO_FIX32(1);
+  face_pain_time = rs.frametime + HALF;
   Scr_SetBlend(C_RED, SCR_FLASH_TIME);
 }
