@@ -296,6 +296,7 @@ void door_go_down(edict_t *self);
 void door_go_up(edict_t *self, edict_t *activator);
 
 // status bar
+extern s32 sbar_xhair;
 void Sbar_IndicateDamage(const s16 damage);
 
 // combat random

@@ -4,11 +4,12 @@
 
 #include "common.h"
 #include "game.h"
+#include "menu.h"
 #include "progs/entclasses.h"
 #include "progs/picids.h"
 
-// HACK: crosshair toggle for the options menu
-extern s32 sbar_xhair;
+// progs' main menu
+extern menu_t menu_main;
 
 // global
 void Progs_NewMap(void);
