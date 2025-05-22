@@ -12,6 +12,21 @@
 #include "dbgfont.h"
 #include "system.h"
 
+#define TICKS_PER_SECOND 15625 // hblanks
+
+#define SECSIZE 2048
+#define BUFSECS 4
+#define BUFSIZE (BUFSECS * SECSIZE)
+#define MAX_FHANDLES 1
+
+typedef struct cd_file_s {
+  CdlFILE cdf;
+  s32 secstart, secend, seccur;
+  s32 fp, bufp;
+  s32 bufleft;
+  u8 buf[BUFSIZE];
+} cd_file_t;
+
 struct counter_s {
   u16 value;
   u16 pad0;
@@ -23,9 +38,10 @@ struct counter_s {
 
 #define COUNTERS ((volatile struct counter_s *)0xBF801100)
 
-#define TICKS_PER_SECOND 15625 // hblanks
-
 static char sys_errormsg[MAX_ERROR];
+
+static cd_file_t *fhandle;
+static s32 num_fhandles = 0;
 
 x32 sys_time = 0;
 x16 sys_delta_time = 0;
@@ -40,6 +56,9 @@ void Sys_Init(void) {
   // setup the hblank counter
   COUNTERS[1].mode = (1 << 8); // source = hblank
   COUNTERS[1].value = 0;
+
+  // use ~half of the libc heap for our single file handle
+  fhandle = malloc(sizeof(*fhandle));
 }
 
 void Sys_Error(const char *error, ...) {
@@ -113,28 +132,8 @@ s32 Sys_Frames(void) {
   return VSync(-1);
 }
 
-// TEMPORARY CD FILE READING API WITH BUFFERS AND SHIT
-// copied straight from d2d-psx and converted to only use one static handle
-
-#define SECSIZE 2048
-#define BUFSECS 4
-#define BUFSIZE (BUFSECS * SECSIZE)
-#define MAX_FHANDLES 1
-
-typedef struct cd_file_s {
-  CdlFILE cdf;
-  s32 secstart, secend, seccur;
-  s32 fp, bufp;
-  s32 bufleft;
-  u8 buf[BUFSIZE];
-} cd_file_t;
-
-// lmao 1handle
-static cd_file_t fhandle;
-static s32 num_fhandles = 0;
-
 int Sys_FileOpenRead(const char *fname, int *outhandle) {
-  cd_file_t *f = num_fhandles ? NULL : &fhandle;
+  cd_file_t *f = num_fhandles ? NULL : fhandle;
 
   if (f == NULL) {
     Sys_Error("Sys_FileOpenRead(%s): too many file handles\n", fname);
@@ -187,7 +186,7 @@ int Sys_FileRead(int handle, void *dest, int size) {
   if (handle <= 0 || !dest) return -1;
   if (!size) return 0;
 
-  cd_file_t *f = &fhandle;
+  cd_file_t *f = fhandle;
   u8 *ptr = dest;
   s32 rx = 0;
   s32 fleft, rdbuf;
@@ -227,7 +226,7 @@ int Sys_FileRead(int handle, void *dest, int size) {
 void Sys_FileSeek(int handle, int ofs) {
   if (handle <= 0) return;
 
-  cd_file_t *f = &fhandle;
+  cd_file_t *f = fhandle;
 
   if (f->fp == ofs) return;
 
