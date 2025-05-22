@@ -72,6 +72,7 @@ typedef struct game_state_s {
 extern game_state_t gs;
 
 void G_NewGame(void);
+void G_RestartMap(void);
 void G_RequestMap(const char *mapname);
 qboolean G_CheckNextMap(void);
 void G_StartMap(const char *path);

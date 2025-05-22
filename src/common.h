@@ -35,6 +35,7 @@ typedef struct link_s {
 #define BTN_SPEED      4
 #define BTN_NEXTWEAPON 8
 #define BTN_PREVWEAPON 16
+#define BTN_RESTART    32 // when dead
 
 // graphics-related
 #define VID_WIDTH      320

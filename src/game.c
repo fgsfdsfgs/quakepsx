@@ -16,6 +16,7 @@
 game_state_t gs;
 
 static char g_nextmap[MAX_OSPATH];
+static char g_map[MAX_OSPATH];
 
 void G_ParseMapEnts(bmodel_t *mdl) {
   // worldspawn
@@ -79,13 +80,22 @@ void G_ParseMapEnts(bmodel_t *mdl) {
 }
 
 void G_RequestMap(const char *mapname) {
-  snprintf(g_nextmap, sizeof(g_nextmap), FS_BASE "\\MAPS\\%s.PSB;1", mapname);
+  if (mapname[0] == '\\') // full path
+    snprintf(g_nextmap, sizeof(g_nextmap), "%s", mapname);
+  else // map name
+    snprintf(g_nextmap, sizeof(g_nextmap), FS_BASE "\\MAPS\\%s.PSB;1", mapname);
 }
 
 void G_NewGame(void) {
   gs.skill = 1;
   memset(gs.player, 0, sizeof(gs.player));
   G_RequestMap("START");
+}
+
+void G_RestartMap(void) {
+  // reset player state to default
+  memset(gs.player, 0, sizeof(gs.player));
+  G_RequestMap(g_map);
 }
 
 qboolean G_CheckNextMap(void) {
@@ -164,6 +174,8 @@ void G_StartMap(const char *path) {
   else
     CD_Stop();
 
+  memcpy(g_map, g_nextmap, sizeof(g_map));
+
   Scr_EndLoading();
 }
 
@@ -235,6 +247,10 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
   HoldFlag(plr, PAD_CROSS, BTN_JUMP);
   PressFlag(plr, PAD_TRIANGLE, BTN_PREVWEAPON);
   PressFlag(plr, PAD_CIRCLE, BTN_NEXTWEAPON);
+
+  // if dead, check for any action button to restart level
+  if (plr->ent->v.health <= 0)
+    PressFlag(plr, PAD_L2 | PAD_R2 | PAD_CROSS, BTN_RESTART);
 
   // transform look/move inputs into direction vectors
   const int onspeed = (plr->buttons & BTN_SPEED) != 0;

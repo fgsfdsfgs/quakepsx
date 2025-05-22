@@ -305,6 +305,10 @@ void Player_PostThink(edict_t *ent) {
   if (ent->v.health <= 0) {
     plr->fallspeed = 0;
     plr->flags = 0;
+    if (plr->buttons & BTN_RESTART) {
+      plr->buttons &= ~BTN_RESTART;
+      G_RestartMap();
+    }
     return;
   }
 
