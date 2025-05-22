@@ -99,6 +99,9 @@ void spawn_func_plat(edict_t *self) {
   self->v.blocked = plat_crush;
   self->v.use = plat_trigger_use;
 
+  if (!self->v.noise)
+    self->v.noise = 2;
+
   if (!self->v.speed)
     self->v.speed = 150;
 
