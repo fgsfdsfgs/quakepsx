@@ -61,6 +61,7 @@ typedef struct game_state_s {
   s16 max_edict;
   s16 force_retouch;
   s16 skill;
+  s16 gravity;
   qboolean paused;
   bmodel_t *worldmodel;
   bmodel_t **bmodels;
@@ -70,6 +71,8 @@ typedef struct game_state_s {
 } game_state_t;
 
 extern game_state_t gs;
+
+extern char g_map[MAX_OSPATH];
 
 void G_NewGame(void);
 void G_RestartMap(void);

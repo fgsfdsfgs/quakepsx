@@ -15,8 +15,8 @@
 
 game_state_t gs;
 
+char g_map[MAX_OSPATH];
 static char g_nextmap[MAX_OSPATH];
-static char g_map[MAX_OSPATH];
 
 void G_ParseMapEnts(bmodel_t *mdl) {
   // worldspawn
@@ -131,6 +131,8 @@ void G_StartMap(const char *path) {
   gs.bmodels = gs.worldmodel->bmodelptrs;
   gs.amodels = gs.worldmodel->amodels;
 
+  gs.gravity = G_GRAVITY;
+
   // clear area nodes
   G_ClearWorld();
 
@@ -147,6 +149,8 @@ void G_StartMap(const char *path) {
     gs.edicts[1].v.origin.z >> FIXSHIFT);
 
   Sys_Printf("skill is %d\n", gs.skill);
+
+  memcpy(g_map, g_nextmap, sizeof(g_map));
 
   R_NewMap();
 
@@ -173,8 +177,6 @@ void G_StartMap(const char *path) {
     CD_PlayAudio(gs.edicts[0].v.noise);
   else
     CD_Stop();
-
-  memcpy(g_map, g_nextmap, sizeof(g_map));
 
   Scr_EndLoading();
 }

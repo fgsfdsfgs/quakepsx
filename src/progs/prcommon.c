@@ -173,4 +173,8 @@ void utl_sound(edict_t *self, const s16 chan, const s16 sndid, const u8 vol, con
 // called on map change
 void Progs_NewMap(void) {
   memset(&pr, 0, sizeof(pr));
+
+  // HACK: same way as this is done in the og progs
+  if (strstr(g_map, "E1M8"))
+    gs.gravity = 100;
 }

@@ -10,7 +10,7 @@
 
 #define P_FRAMETIME1 PR_FRAMETIME
 #define P_FRAMETIME2 (PR_FRAMETIME / 2)
-#define P_GRAVITY XMUL16(G_GRAVITY, FTOX(0.05))
+#define P_GRAVITY (G_GRAVITY / 20)
 
 static const u8 ramp1[] = { 0x6f, 0x6d, 0x6b, 0x69, 0x67, 0x65, 0x63, 0x61 };
 static const u8 ramp2[] = { 0x6f, 0x6e, 0x6d, 0x6c, 0x6b, 0x6a, 0x68, 0x66 };
@@ -229,7 +229,7 @@ void R_UpdateParticles(void) {
   }
 
   const x16 frametime = gs.frametime;
-  const s16 grav = XMUL16(P_GRAVITY >> FIXSHIFT, frametime);
+  const s16 grav = XMUL16(P_GRAVITY, frametime);
   const s16 dvel = XMUL16(4, frametime);
 
   particle_t *p = rs.particles;

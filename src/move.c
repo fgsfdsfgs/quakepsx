@@ -46,7 +46,7 @@ static inline void Impact(edict_t *e1, edict_t *e2) {
 
 static inline void AddGravity(edict_t *ent) {
   // TODO: ent gravity
-  ent->v.velocity.z -= xmul32(gs.frametime, G_GRAVITY);
+  ent->v.velocity.z -= gs.frametime * gs.gravity;
 }
 
 static void ClipMoveToEntity(edict_t *ent, const x32vec3_t *start, const x32vec3_t *mins, const x32vec3_t *maxs, const x32vec3_t *end, trace_t *trace) {
