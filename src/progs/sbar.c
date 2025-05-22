@@ -10,8 +10,11 @@
 #define PAD_SIZE 4
 #define LEFT_X (PAD_SIZE)
 #define RIGHT_X (VID_WIDTH - PAD_SIZE)
-#define BOTTOM_ROW_Y (VID_HEIGHT - 1 * (PAD_SIZE + ICON_H))
-#define TOP_ROW_Y (VID_HEIGHT - 2 * (PAD_SIZE + ICON_H))
+#define ROW_HEIGHT (PAD_SIZE + ICON_H)
+#define BOTTOM_ROW_Y (VID_HEIGHT - 1 * ROW_HEIGHT)
+#define TOP_ROW_Y (VID_HEIGHT - 2 * ROW_HEIGHT)
+#define POWER_SIZE 16
+#define POWER_ROW_Y (TOP_ROW_Y - PAD_SIZE - POWER_SIZE)
 
 static const pic_t *pic_faces = NULL;
 static const pic_t *pic_faces_pain = NULL;
@@ -20,6 +23,7 @@ static const pic_t *pic_armor = NULL;
 static const pic_t *pic_ammo = NULL;
 static const pic_t *pic_keys = NULL;
 static const pic_t *pic_runes = NULL;
+static const pic_t *pic_powers = NULL;
 
 static x32 face_pain_time = 0;
 
@@ -75,6 +79,7 @@ void Sbar_Init(void) {
   pic_ammo = Spr_GetPic(PICID_SB_SHELLS);
   pic_keys = Spr_GetPic(PICID_SB_KEY1);
   pic_runes = Spr_GetPic(PICID_SB_SIGIL1);
+  pic_powers = Spr_GetPic(PICID_SBA1_INVIS);
 }
 
 void Sbar_DrawIntermission(const player_state_t *p) {
@@ -123,6 +128,16 @@ void Sbar_Draw(const player_state_t *p) {
   }
   if (p->stats.items & IT_KEY2) {
     Scr_DrawPic(x, BOTTOM_ROW_Y - PAD_SIZE - KEY_H, C_WHITE, pic_keys + 1); x -= KEY_W;
+  }
+
+  // powerups
+  s16 y = POWER_ROW_Y;
+  for (int i = POWER_INVIS; i <= POWER_QUAD; ++i) {
+    if (p->power_time[i] > gs.time) {
+      Scr_DrawPic(LEFT_X, y, C_WHITE, pic_powers + i - 1);
+      Scr_DrawTextOffset(128, LEFT_X + POWER_SIZE + 2, y + 4, C_WHITE, VA("%d", (p->power_time[i] - gs.time) >> FIXSHIFT));
+      y -= POWER_SIZE;
+    }
   }
 
   if (sbar_xhair)

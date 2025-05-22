@@ -122,9 +122,9 @@ static void armor_touch(edict_t *self, edict_t *other) {
 
   x16 armortype;
   switch (self->v.classname) {
-  default: armortype = FTOX(0.3); break;
-  case ENT_ITEM_ARMOR2: armortype = FTOX(0.6); break;
-  case ENT_ITEM_ARMORINV: armortype = FTOX(0.8); break;
+  default: armortype = ARMOR_TYPE1; break;
+  case ENT_ITEM_ARMOR2: armortype = ARMOR_TYPE2; break;
+  case ENT_ITEM_ARMORINV: armortype = ARMOR_TYPE3; break;
   }
 
   if (XMUL16(plr->stats.armor, plr->stats.armortype) >= XMUL16(armortype, self->v.count))

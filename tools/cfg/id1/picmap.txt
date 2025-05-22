@@ -42,27 +42,31 @@ pic face_inv2   1012 176
 pic gfx/qplaque.lmp 960 256
 
 # items
-pic sb_armor1 976  256
-pic sb_armor2 988  256
-pic sb_armor3 1000 256
-pic sb_shells 1012 256
-pic sb_nails  976  280
-pic sb_rocket 988  280
-pic sb_cells  1000 280
-pic sb_key1   976  304
-pic sb_key2   984  304
-pic sb_sigil1 992  304
-pic sb_sigil2 996  304
-pic sb_sigil3 1000 304
-pic sb_sigil4 1004 304
+pic sb_armor1  976  256
+pic sb_armor2  988  256
+pic sb_armor3  1000 256
+pic sb_shells  1012 256
+pic sb_nails   976  280
+pic sb_rocket  988  280
+pic sb_cells   1000 280
+pic sb_key1    976  304
+pic sb_key2    984  304
+pic sb_sigil1  992  304
+pic sb_sigil2  996  304
+pic sb_sigil3  1000 304
+pic sb_sigil4  1004 304
+pic sba1_invis 1008 304
+pic sba1_invul 1016 304
+pic sba1_suit  976  320
+pic sba1_quad  984  320
 
 # spinny quake icon
-pic gfx/menudot1.lmp 976  320
-pic gfx/menudot2.lmp 984  320
-pic gfx/menudot3.lmp 992  320
-pic gfx/menudot4.lmp 1000 320
-pic gfx/menudot5.lmp 1008 320
-pic gfx/menudot6.lmp 1016 320
+pic gfx/menudot1.lmp 976  352
+pic gfx/menudot2.lmp 984  352
+pic gfx/menudot3.lmp 992  352
+pic gfx/menudot4.lmp 1000 352
+pic gfx/menudot5.lmp 1008 352
+pic gfx/menudot6.lmp 1016 352
 
 # PAUSED
 pic gfx/pause.lmp 960 400

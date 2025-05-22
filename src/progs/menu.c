@@ -154,7 +154,7 @@ static void Menu_ActivateCheat(menuoption_t *self) {
 
   case 4: /* full armor */
     plr->stats.armor = 150;
-    plr->stats.armortype = FTOX(0.8);
+    plr->stats.armortype = ARMOR_TYPE3;
     plr->stats.items |= IT_ARMOR3;
     break;
 

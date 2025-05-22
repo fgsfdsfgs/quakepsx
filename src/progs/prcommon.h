@@ -36,6 +36,11 @@
 #define POWER_SUIT       3
 #define POWER_QUAD       4
 
+// armor
+#define ARMOR_TYPE1 FTOX(0.3)
+#define ARMOR_TYPE2 FTOX(0.6)
+#define ARMOR_TYPE3 FTOX(0.8)
+
 // items
 #define IT_SHOTGUN          1u
 #define IT_SUPER_SHOTGUN    2u
