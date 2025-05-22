@@ -132,7 +132,7 @@ static void ogre_run(edict_t *self) {
   };
 
   switch (self->v.frame) {
-  case RUN1:
+  case RUN8:
     if (xrand32() < (ONE / 5))
       utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGIDLE2, SND_MAXVOL, ATTN_IDLE);
   /* fallthrough */

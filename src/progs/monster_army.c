@@ -105,7 +105,7 @@ static void army_run(edict_t *self) {
   monster_looping_state(self, MSTATE_RUN);
 
   switch (self->v.frame) {
-  case RUN1:
+  case RUN8:
     if (xrand32() < FTOX(0.2))
       utl_sound(self, CHAN_VOICE, SFXID_SOLDIER_IDLE, SND_MAXVOL, ATTN_IDLE);
   /* fallthrough */

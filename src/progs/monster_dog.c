@@ -85,7 +85,7 @@ static void dog_run(edict_t *self) {
 
   monster_looping_state(self, MSTATE_RUN);
 
-  if (self->v.frame == RUN1) {
+  if (self->v.frame == RUN12) {
     if (xrand32() < FTOX(0.2))
       utl_sound(self, CHAN_VOICE, SFXID_DOG_IDLE, SND_MAXVOL, ATTN_IDLE);
   }

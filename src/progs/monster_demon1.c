@@ -79,7 +79,7 @@ static void demon_run(edict_t *self) {
 
   monster_looping_state(self, MSTATE_RUN);
 
-  if (self->v.frame == WALK1 && (xrand32() < FTOX(0.2)))
+  if (self->v.frame == RUN6 && (xrand32() < FTOX(0.2)))
     utl_sound(self, CHAN_VOICE, SFXID_DEMON_IDLE1, SND_MAXVOL, ATTN_IDLE);
 
   ai_run(self, TO_FIX32(runtab[self->v.frame - RUN1]));

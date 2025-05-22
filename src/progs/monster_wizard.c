@@ -74,7 +74,7 @@ static void wizard_side(edict_t *self) {
 static void wizard_run(edict_t *self) {
   monster_looping_state(self, MSTATE_RUN);
   ai_run(self, TO_FIX32(16));
-  if (self->v.frame == FLY1 && (xrand32() < FTOX(0.05)))
+  if (self->v.frame == FLY14 && (xrand32() < FTOX(0.05)))
     utl_sound(self, CHAN_VOICE, SFXID_WIZARD_WIDLE1, SND_MAXVOL, ATTN_IDLE);
 }
 
