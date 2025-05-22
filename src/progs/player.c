@@ -149,10 +149,23 @@ void player_pain(edict_t *self, edict_t *attacker, s16 damage) {
   if (self->v.health <= 0)
     return;
 
-  if (self->v.waterlevel > 2)
-    utl_sound(self, CHAN_VOICE, SFXID_PLAYER_DROWN2, SND_MAXVOL, ATTN_NORM);
-  else
-    utl_sound(self, CHAN_VOICE, SFXID_PLAYER_PAIN1, SND_MAXVOL, ATTN_NORM);
+  if (self->v.player->pain_finished > gs.time)
+    return;
+
+  self->v.player->pain_finished = gs.time + HALF;
+
+  static const s16 painsfx[3] = { SFXID_PLAYER_PAIN1, SFXID_PLAYER_PAIN3, SFXID_PLAYER_PAIN6 };
+
+  s16 sfx;
+  if (self->v.waterlevel > 2) {
+    sfx = SFXID_PLAYER_DROWN2;
+  } else if (self->v.waterlevel && self->v.watertype == CONTENTS_LAVA) {
+    sfx = SFXID_PLAYER_LBURN1;
+  } else {
+    sfx = painsfx[rand() & 3];
+  }
+
+  utl_sound(self, CHAN_VOICE, sfx, SND_MAXVOL, ATTN_NORM);
 
   Sbar_IndicateDamage(damage);
 }
