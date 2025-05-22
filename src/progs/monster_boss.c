@@ -230,10 +230,11 @@ void spawn_monster_boss(edict_t *self) {
 }
 
 static void lightning_fire(edict_t *self) {
+  edict_t *le1 = G_FindByTarget(gs.edicts, PILLAR_TARGET);
+  edict_t *le2 = G_FindByTarget(le1, PILLAR_TARGET);
+
   if (gs.time >= self->v.extra_trigger.wait) {
     // done here, put the terminals back up
-    edict_t *le1 = G_FindByTarget(gs.edicts, PILLAR_TARGET);
-    edict_t *le2 = G_FindByTarget(le1, PILLAR_TARGET);
     if (le1 && le2) {
       door_go_down(le1);
       door_go_down(le2);
@@ -241,7 +242,18 @@ static void lightning_fire(edict_t *self) {
     return;
   }
 
-  // TODO: lightning
+  const x32vec3_t p1 = {{
+    (le1->v.mins.x + le1->v.maxs.x) >> 1,
+    (le1->v.mins.y + le1->v.maxs.y) >> 1,
+    le1->v.absmin.z - TO_FIX32(16)
+  }};
+  const x32vec3_t p2 = {{
+    (le2->v.mins.x + le2->v.maxs.x) >> 1,
+    (le2->v.mins.y + le2->v.maxs.y) >> 1,
+    le2->v.absmin.z - TO_FIX32(16)
+  }};
+
+  R_SpawnBeam(&p1, &p2, 0xFFC0C0, 2, 1); // 0 is always the player beam
 
   self->v.nextthink = gs.time + PR_FRAMETIME;
   self->v.think = lightning_fire;
