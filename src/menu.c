@@ -10,6 +10,7 @@ static menu_t *menu_current = NULL;
 
 void Menu_Toggle(void) {
   if (menu_current) {
+    IN_Clear();
     menu_current = NULL;
     return;
   }
@@ -21,6 +22,7 @@ void Menu_Toggle(void) {
 
 void Menu_Close(void) {
   menu_current = NULL;
+  IN_Clear();
 }
 
 void Menu_Update(void) {

@@ -25,6 +25,7 @@ static const char *choices_skill[] = {
 static void Menu_StartNewGame(menuoption_t *self);
 static void Menu_DbgStartGame(menuoption_t *self);
 static void Menu_DbgEpChanged(menuoption_t *self);
+static void Menu_ActivateCheat(menuoption_t *self);
 static void Menu_CdVolChanged(menuoption_t *self) { CD_SetAudioVolume(cd_volume); }
 static void Menu_SndVolChanged(menuoption_t *self) { Snd_SetVolume(snd_volume); }
 
@@ -37,6 +38,26 @@ static menuoption_t options_options[] = {
 static menu_t menu_options = {
   "Options",
   options_options, 3,
+  0, NULL
+};
+
+static menuoption_t options_cheats[] = {
+  { OPT_BUTTON, "Noclip",      NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "God mode",    NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "All weapons", NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Full health", NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Full armor",  NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "All keys",    NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Give quad",   NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Give pent",   NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Give ring",   NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Give suit",   NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Suicide",     NULL, Menu_ActivateCheat, { } },
+};
+
+static menu_t menu_cheats = {
+  "Cheats",
+  options_cheats, 11,
   0, NULL
 };
 
@@ -57,12 +78,13 @@ static menu_t menu_select_map = {
 static menuoption_t options_main[] = {
   { OPT_BUTTON, "New game",   NULL, Menu_StartNewGame, {                                } },
   { OPT_BUTTON, "Select map", NULL, NULL,              { .button = { &menu_select_map } } },
+  { OPT_BUTTON, "Cheats",     NULL, NULL,              { .button = { &menu_cheats     } } },
   { OPT_BUTTON, "Options",    NULL, NULL,              { .button = { &menu_options    } } },
 };
 
 menu_t menu_main = {
   "Main",
-  options_main, 3,
+  options_main, 4,
   0, NULL
 };
 
@@ -98,4 +120,80 @@ static void Menu_DbgEpChanged(menuoption_t *self) {
   options_select_map[1].choice.numchoices = 7 + (dbg_episode == 1 || dbg_episode == 4);
   if (dbg_map >= options_select_map[1].choice.numchoices)
     dbg_map = options_select_map[1].choice.numchoices - 1;
+}
+
+static void Menu_ActivateCheat(menuoption_t *self) {
+  edict_t *ent = gs.player->ent;
+  player_state_t *plr = gs.player;
+
+  Menu_Close();
+
+  switch (self - options_cheats) {
+  case 0: /* noclip */
+    if (ent->v.movetype == MOVETYPE_NOCLIP)
+      ent->v.movetype = MOVETYPE_WALK;
+    else if (ent->v.movetype == MOVETYPE_WALK)
+      ent->v.movetype = MOVETYPE_NOCLIP;
+    break;
+
+  case 1: /* god mode */
+    ent->v.flags ^= FL_GODMODE;
+    break;
+
+  case 2: /* all weapons*/
+    plr->stats.items |= IT_SUPER_SHOTGUN | IT_NAILGUN | IT_SUPER_NAILGUN | IT_GRENADE_LAUNCHER | IT_ROCKET_LAUNCHER | IT_LIGHTNING;
+    plr->stats.ammo[AMMO_SHELLS] = 100;
+    plr->stats.ammo[AMMO_NAILS] = 200;
+    plr->stats.ammo[AMMO_ROCKETS] = 100;
+    plr->stats.ammo[AMMO_CELLS] = 100;
+    break;
+
+  case 3: /* full health */
+    ent->v.health = 100;
+    break;
+
+  case 4: /* full armor */
+    plr->stats.armor = 150;
+    plr->stats.armortype = FTOX(0.8);
+    plr->stats.items |= IT_ARMOR3;
+    break;
+
+  case 5: /* all keys */
+    plr->stats.items |= IT_KEY1 | IT_KEY2;
+    break;
+
+  case 6: /* give quad */
+    plr->stats.items |= IT_QUAD;
+    plr->power_time[POWER_QUAD] = gs.time + FTOX(30.0);
+    plr->power_warn[POWER_QUAD] = 1;
+    break;
+
+  case 7: /* give pent */
+    plr->stats.items |= IT_INVULNERABILITY;
+    plr->power_time[POWER_INVULN] = gs.time + FTOX(30.0);
+    plr->power_warn[POWER_INVULN] = 1;
+    break;
+
+  case 8: /* give ring */
+    plr->stats.items |= IT_INVISIBILITY;
+    plr->power_time[POWER_INVIS] = gs.time + FTOX(30.0);
+    plr->power_warn[POWER_INVIS] = 1;
+    break;
+
+  case 9: /* give suit */
+    plr->stats.items |= IT_SUIT;
+    plr->power_time[POWER_SUIT] = gs.time + FTOX(30.0);
+    plr->power_warn[POWER_SUIT] = 1;
+    break;
+
+  case 10: /* suicide */
+    ent->v.flags &= ~FL_GODMODE;
+    plr->stats.items &= ~IT_INVULNERABILITY;
+    plr->power_time[POWER_INVULN] = 0;
+    utl_damage(ent, ent, ent, 6666);
+    break;
+
+  default:
+    break;
+  }
 }

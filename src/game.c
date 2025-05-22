@@ -190,6 +190,10 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
   // pause input inhibits all
   if (IN_ButtonPressed(PAD_START)) {
     Menu_Toggle();
+    XVecZero(&plr->move);
+    XVecZero(&plr->anglemove);
+    plr->movespeed = 0;
+    plr->buttons = 0;
     return;
   }
 

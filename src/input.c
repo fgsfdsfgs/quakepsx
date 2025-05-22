@@ -63,7 +63,5 @@ void IN_Update(void) {
 }
 
 void IN_Clear(void) {
-  in.btn = 0;
-  in.btn_prev = 0;
   in.btn_trig = 0;
 }
