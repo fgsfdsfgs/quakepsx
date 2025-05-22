@@ -449,6 +449,7 @@ static void changelevel_touch(edict_t *self, edict_t *other) {
   other->v.player->vmodel = NULL;
   other->v.player->vmodel_end_frame = 0;
   other->v.player->vmodel_frame = 0;
+  other->v.player->viewofs.z = 0;
   Scr_SetCenterMsg("");
 
   G_LinkEdict(other, false);
