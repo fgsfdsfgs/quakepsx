@@ -36,7 +36,6 @@ typedef struct player_state_s {
   edict_t *ent;
   amodel_t *vmodel;
   think_fn_t vmodel_think;
-  x32 movespeed;
   x32 fallspeed;
   x32 show_hostile;
   x32 attack_finished;

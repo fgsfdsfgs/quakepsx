@@ -2,6 +2,7 @@
 #include "entity.h"
 #include "game.h"
 #include "move.h"
+#include "system.h"
 
 static x32 PM_UserFriction(const x32 stopspeed) {
   x32 speed, newspeed, control;
@@ -76,24 +77,35 @@ static void PM_AirAccelerate(x32vec3_t *wishveloc) {
 static void PM_AirMove(void) {
   player_state_t *plr = &gs.player[0];
   x32vec3_t *wishvel = &movevars->pm.wishvel;
+  x16vec3_t *wishdir = &movevars->pm.wishdir;
+  x16vec3_t *right = &movevars->pm.right;
+  x16vec3_t *up = &movevars->pm.up;
+  x32 tmp, wishspeed, scale;
 
-  // assume movespeed is either G_FORWARDSPEED or 2 * G_FORWARDSPEED
-  wishvel->x = xmul32(movevars->pm.wishdir.x, plr->movespeed);
-  wishvel->y = xmul32(movevars->pm.wishdir.y, plr->movespeed);
+  // hack to not let you back into teleporter
+  if (gs.time < plr->teleport_time && plr->move.x < 0)
+    plr->move.x = 0;
+
+  // player entity angles only have yaw
+  AngleVectors(&plr->ent->v.angles, wishdir, right, up);
+
+  for (int i = 0; i < 3; ++i)
+    wishvel->d[i] = xmul32(wishdir->d[i], plr->move.x) + xmul32(right->d[i], plr->move.y);
 
   if (plr->ent->v.movetype != MOVETYPE_WALK)
     wishvel->z = plr->move.z;
   else
     wishvel->z = 0;
 
-  movevars->pm.wishspeed = plr->movespeed;
-
-  if (movevars->pm.wishspeed > G_MAXSPEED) {
-    // this can only happen if we're sprinting, and that doubles the speed
-    // so the fraction would be 320 / (2 * 200) = 0.8
-    XVecScaleLS(wishvel, G_DOUBLESPEEDFRAC, wishvel);
-    movevars->pm.wishspeed = G_MAXSPEED;
+  wishspeed = XVecNormLS(wishvel, wishdir, &tmp);
+  wishspeed = TO_FIX32(SquareRoot0(wishspeed));
+  if (wishspeed > G_MAXSPEED) {
+    scale = xdiv32(G_MAXSPEED, wishspeed);
+    XVecScaleLS(wishvel, scale, wishvel);
+    wishspeed = G_MAXSPEED;
   }
+
+  movevars->pm.wishspeed = wishspeed;
 
   if (plr->ent->v.movetype == MOVETYPE_NOCLIP) {
     // noclip
@@ -181,43 +193,6 @@ static inline void PM_WaterJump (void) {
   ent->v.velocity.y = plr->waterjump.y;
 }
 
-static inline void CalculateWishDir(const x32vec3_t *move, const edict_t *ped, x16vec3_t *wishdir) {
-  x16 wx;
-  x16 wy;
-
-  if (move->z && (ped->v.movetype != MOVETYPE_WALK || ped->v.waterlevel >= 2)) {
-    if (move->x || move->y) {
-      // diagonal move, vector is gonna be (+-1/sqrt(2), +-1/sqrt(2), +-1)
-      wishdir->z = xsign32(move->z) * 2896;
-    } else {
-      // cardinal move, vector is gonna be (0, 0, +-1)
-      wishdir->z = xsign32(move->z) * ONE;
-    }
-  } else {
-    wishdir->z = 0;
-  }
-
-  if (move->x && move->y) {
-    // diagonal move, vector is gonna be (+-1/sqrt(2), +-1/sqrt(2), 0)
-    wx = xsign32(move->x) * 2896;
-    wy = -xsign32(move->y) * 2896;
-  } else if (move->x || move->y) {
-    // cardinal move, vector is gonna be either (+-1, 0, 0) or (0, +-1, 0)
-    wx = xsign32(move->x) * ONE;
-    wy = -xsign32(move->y) * ONE;
-  } else {
-    // no move
-    wishdir->x = wishdir->y = 0;
-    return;
-  }
-
-  // rotate wishdir
-  const x32 sy = isin(ped->v.angles.y);
-  const x32 cy = icos(ped->v.angles.y);
-  wishdir->x = XMUL16(wx, cy) - XMUL16(wy, sy);
-  wishdir->y = XMUL16(wx, sy) + XMUL16(wy, cy);
-}
-
 void PM_PlayerMove(const x16 dt) {
   x32vec3_t forwardmove = { 0 };
   player_state_t *plr = &gs.player[0];
@@ -241,10 +216,6 @@ void PM_PlayerMove(const x16 dt) {
       // calculates its own wishdir
       PM_WaterMove();
     } else {
-      // when our yaw is zero, forward vector is (1, 0, 0)
-      // we can calculate the direction in which we want to go, then rotate it
-      // this is needed to avoid having to normalize vectors and calculate their lengths
-      CalculateWishDir(&plr->move, ped, &movevars->pm.wishdir);
       PM_AirMove();
       // jump if able
       if (movevars->pm.onground && plr->move.z > 0) {
@@ -254,7 +225,6 @@ void PM_PlayerMove(const x16 dt) {
     }
   } else if (ped->v.movetype == MOVETYPE_NOCLIP) {
     // fly around
-    CalculateWishDir(&plr->move, ped, &movevars->pm.wishdir);
     PM_AirMove();
     XVecScaleLS(&ped->v.velocity, dt, &forwardmove);
     XVecAdd(&ped->v.origin, &forwardmove, &ped->v.origin);

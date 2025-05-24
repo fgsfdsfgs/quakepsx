@@ -206,28 +206,22 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
     Menu_Toggle();
     XVecZero(&plr->move);
     XVecZero(&plr->anglemove);
-    plr->movespeed = 0;
     plr->buttons = 0;
     return;
   }
 
   // assume the player is using an analog pad and maybe a mouse for now
 
-  // move inputs
+  // digital move inputs
 
-  s32 up = IN_ButtonHeld(PAD_CROSS | PAD_L2) - IN_ButtonHeld(PAD_R3 | PAD_L1);
-  s32 fwd = IN_ButtonHeld(PAD_UP) -  IN_ButtonHeld(PAD_DOWN);
-  s32 side = IN_ButtonHeld(PAD_RIGHT) -  IN_ButtonHeld(PAD_LEFT);
-  if (!fwd && !side) {
-    // if digital inputs are not held, map left stick to digital directions
-    fwd = (in.sticks[0].y < -0x40) - (in.sticks[0].y > 0x40);
-    side = (in.sticks[0].x > 0x48) - (in.sticks[0].x < -0x48);
-  }
+  const s32 up = IN_ButtonHeld(PAD_CROSS | PAD_L2) - IN_ButtonHeld(PAD_R3 | PAD_L1);
+  const s32 fwd = IN_ButtonHeld(PAD_UP) -  IN_ButtonHeld(PAD_DOWN);
+  const s32 side = IN_ButtonHeld(PAD_RIGHT) -  IN_ButtonHeld(PAD_LEFT);
 
   // look inputs: use rstick and mouse
 
-  const x16 pitch = xmul32(in.sticks[1].y, in.stick_sens[1].y) + xmul32(in.mouse_sens, in.mouse.y);
-  const x16 yaw = xmul32(in.sticks[1].x, in.stick_sens[1].x) + xmul32(in.mouse_sens, in.mouse.x);
+  const x16 pitch = in.sticks[1].y * in.stick_sens[1].y + in.mouse.y * in.mouse_sens;
+  const x16 yaw = in.sticks[1].x * in.stick_sens[1].x + in.mouse.x * in.mouse_sens;
 
   // buttons
 
@@ -256,12 +250,25 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
 
   // transform look/move inputs into direction vectors
   const int onspeed = (plr->buttons & BTN_SPEED) != 0;
-  plr->movespeed = G_FORWARDSPEED << onspeed;
-  plr->move.x = fwd * plr->movespeed;
-  plr->move.y = side * plr->movespeed;
-  plr->move.z = up * plr->movespeed;
+  const x32 movespeed = G_FORWARDSPEED << onspeed;
   plr->anglemove.x = pitch;
   plr->anglemove.y = -yaw;
+  plr->move.z = up * movespeed;
+  if (fwd || side) {
+    // if digital inputs are held, use those for XY movement
+    plr->move.x = fwd * movespeed;
+    plr->move.y = side * movespeed;
+  } else {
+    // otherwise use left stick
+    plr->move.x = (-in.sticks[0].y * in.stick_sens[0].y * movespeed) >> 7;
+    plr->move.y = (in.sticks[0].x * in.stick_sens[0].x * movespeed) >> 7;
+    for (int i = 0; i < 2; ++i) {
+      if (plr->move.d[i] > movespeed)
+        plr->move.d[i] = movespeed;
+      else if (plr->move.d[i] < -movespeed)
+        plr->move.d[i] = -movespeed;
+    }
+  }
 }
 
 void G_Update(const x16 dt) {

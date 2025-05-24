@@ -19,11 +19,11 @@ void IN_Init(void) {
   pad[1] = (PADTYPE *)&pad_buff[1][0];
 
   // default sensitivity
-  in.stick_sens[0].x = TO_FIX32(16);
-  in.stick_sens[0].y = TO_FIX32(16);
-  in.stick_sens[1].x = TO_FIX32(16);
-  in.stick_sens[1].y = TO_FIX32(8);
-  in.mouse_sens = TO_FIX32(32);
+  in.stick_sens[0].x = 2;
+  in.stick_sens[0].y = 2;
+  in.stick_sens[1].x = 16;
+  in.stick_sens[1].y = 12;
+  in.mouse_sens = 32;
 
   // default deadzone
   in.stick_deadzone[0] = 16;
