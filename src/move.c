@@ -10,7 +10,7 @@
 
 movevars_t *const movevars = PSX_SCRATCH;
 
-#define MAX_CLIP_PLANES 4
+#define MAX_CLIP_PLANES 5
 #define MAX_PUSHED 64
 
 static int ClipVelocity(const x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce) {
@@ -353,7 +353,7 @@ int G_FlyMove(edict_t *ent, x16 time, const trace_t **steptrace) {
 
   time_left = time;
 
-  for (bumpcount = 0; bumpcount < 3; bumpcount++) {
+  for (bumpcount = 0; bumpcount < MAX_CLIP_PLANES - 1; bumpcount++) {
     if (!ent->v.velocity.x && !ent->v.velocity.y && !ent->v.velocity.z)
       break;
 
