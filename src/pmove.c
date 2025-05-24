@@ -3,8 +3,6 @@
 #include "game.h"
 #include "move.h"
 
-#define STOP_EPSILON 41 // ~0.01
-
 static x32 PM_UserFriction(const x32 stopspeed) {
   x32 speed, newspeed, control;
   x32vec3_t *vel = movevars->pm.velocity;
@@ -15,11 +13,8 @@ static x32 PM_UserFriction(const x32 stopspeed) {
   // direction first and then just scale that
 
   XVecNormLS(vel, &dir, &speed);
-  if (speed < STOP_EPSILON) {
-    vel->x = 0;
-    vel->y = 0;
+  if (speed == 0)
     return 0;
-  }
 
   speed = TO_FIX32(SquareRoot0(speed));
 
@@ -27,7 +22,7 @@ static x32 PM_UserFriction(const x32 stopspeed) {
   control = xmul32(G_FRICTION, control);
   newspeed = speed - xmul32(gs.frametime, control);
 
-  if (newspeed < STOP_EPSILON) {
+  if (newspeed <= 0) {
     vel->x = 0;
     vel->y = 0;
     vel->z = 0;

@@ -11,7 +11,6 @@
 movevars_t *const movevars = PSX_SCRATCH;
 
 #define MAX_CLIP_PLANES 4
-#define STOP_EPSILON 256
 #define MAX_PUSHED 64
 
 static int ClipVelocity(const x32vec3_t *in, const x16vec3_t *normal, x32vec3_t *out, const x16 overbounce) {
@@ -30,8 +29,6 @@ static int ClipVelocity(const x32vec3_t *in, const x16vec3_t *normal, x32vec3_t 
   for (i = 0; i < 3; i++) {
     change = xmul32(normal->d[i], backoff);
     out->d[i] = in->d[i] - change;
-    if (out->d[i] > -STOP_EPSILON && out->d[i] < STOP_EPSILON)
-      out->d[i] = 0;
   }
 
   return blocked;
@@ -487,10 +484,10 @@ void G_WalkMove(edict_t *ent) {
   ent->v.velocity.z = 0;
   clip = G_FlyMove(ent, gs.frametime, &steptrace);
 
-  // check for stuckness, possibly due to the limited precision of floats
-  // in the clipping hulls
+  // check for stuckness
+  // NOTE: do we even need this if there aren't floats?
   if (clip) {
-    if (oldorg.y == ent->v.origin.y || oldorg.x == ent->v.origin.x)
+    if (oldorg.y == ent->v.origin.y && oldorg.x == ent->v.origin.x)
       clip = G_TryUnstick(ent, &oldvel);
   }
 
