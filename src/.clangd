@@ -1,6 +1,6 @@
 CompileFlags:
-  Remove: [-march=r3000, -mtune=r3000, -mno-llsc]
+  Remove: [-march=r3000, -mtune=r3000, -mno-llsc, -fsection-anchors, -flimit-function-alignment, -fallow-store-data-races, -freg-struct-return]
   Add: [-march=mips1, -mtune=r3000, -xc, -Wno-pragma-pack]
 
 Diagnostics:
-  Suppress: asm_unknown_register_name
+  Suppress: [asm_unknown_register_name, -Wunknown-pragmas, -Waddress-of-packed-member]
