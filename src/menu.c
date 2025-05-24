@@ -138,7 +138,7 @@ void Menu_Draw(void) {
   Scr_DrawPic(40, 32, C_WHITE, pic_quake);
 
   s32 basex = 40 + 16 + pic_quake->size.u;
-  s32 basey = 32 + 8;
+  s32 basey = 32;
   Scr_DrawTextOffset(128, basex, basey, C_WHITE, menu_current->title);
   basey += 16;
 
