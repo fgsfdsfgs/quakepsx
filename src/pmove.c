@@ -178,12 +178,12 @@ static void PM_WaterMove(void) {
 static inline void PM_WaterJump (void) {
   player_state_t *plr = &gs.player[0];
   edict_t *ent = plr->ent;
-  if (!ent->v.waterlevel) {
+  if (gs.time > plr->teleport_time || !ent->v.waterlevel) {
     ent->v.flags &= ~FL_WATERJUMP;
-    // ent->v.teleport_time = 0;
+    plr->teleport_time = 0;
   }
-  ent->v.velocity.x = plr->move.x;
-  ent->v.velocity.y = plr->move.y;
+  ent->v.velocity.x = plr->waterjump.x;
+  ent->v.velocity.y = plr->waterjump.y;
 }
 
 static inline void CalculateWishDir(const x32vec3_t *move, const edict_t *ped, x16vec3_t *wishdir) {

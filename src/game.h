@@ -31,6 +31,7 @@ typedef struct player_state_s {
   x16vec3_t anglemove;
   s16vec3_t vmodelofs;
   x32vec3_t move;
+  x32vec3_t waterjump;
   x32vec3_t viewofs;
   edict_t *ent;
   amodel_t *vmodel;

@@ -147,6 +147,48 @@ static void player_think(edict_t *self) {
   self->v.nextthink = gs.time + PR_FRAMETIME;
 }
 
+static void player_check_waterjump(edict_t *self) {
+  // check for a jump-out-of-water
+
+  const x16vec3_t tangles = {{
+    0,
+    self->v.angles.y,
+    0,
+  }};
+
+  utl_makevectors(&tangles);
+
+  x32vec3_t start = {{
+    self->v.origin.x,
+    self->v.origin.y,
+    self->v.origin.z + FTOX(8.0),
+  }};
+
+  x32vec3_t end = {{
+    start.x + pr.v_forward.x * 24,
+    start.y + pr.v_forward.y * 24,
+    start.z + pr.v_forward.z * 24,
+  }};
+
+  const trace_t *trace = utl_traceline(&start, &end, true, self);
+  if (trace->fraction < ONE) {
+    // solid at waist
+    start.z += self->v.maxs.z - FTOX(8.0);
+    end.z += self->v.maxs.z - FTOX(8.0);
+    trace = utl_traceline(&start, &end, true, self);
+    if (trace->fraction == ONE) {
+      // open at eye level
+      self->v.flags |= FL_WATERJUMP;
+      self->v.velocity.z = FTOX(225.0);
+      self->v.player->flags &= ~PFL_JUMPED;
+      self->v.player->teleport_time = gs.time + FTOX(2.0); // safety net
+      self->v.player->waterjump.x = -50 * trace->plane.normal.x;
+      self->v.player->waterjump.y = -50 * trace->plane.normal.y;
+      self->v.player->waterjump.z = -50 * trace->plane.normal.z;
+    }
+  }
+}
+
 void player_pain(edict_t *self, edict_t *attacker, s16 damage) {
   if (self->v.health <= 0)
     return;
@@ -295,10 +337,13 @@ void Player_PreThink(edict_t *ent) {
   else
     plr->flags &= ~PFL_INWATER;
 
-  if (ent->v.waterlevel > 2)
+  if (ent->v.waterlevel > 2) {
     plr->flags |= PFL_NOAIR;
-  else
+  } else {
     plr->flags &= ~PFL_NOAIR;
+    if (ent->v.waterlevel == 2)
+      player_check_waterjump(ent);
+  }
 }
 
 void Player_PostThink(edict_t *ent) {
