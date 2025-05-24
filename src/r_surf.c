@@ -40,9 +40,9 @@ typedef struct {
 
 static savert_t alias_verts[MAX_XMDL_VERTS];
 
-static inline s16 TestClip(const s16 x, const s16 y) {
+static inline u8 TestClip(const s16 x, const s16 y) {
   // tests which corners of the screen a point lies outside of
-  register s16 result = 0;
+  register u8 result = 0;
   if (x < 0)
     result |= CLIP_LEFT;
   if (x >= (VID_WIDTH - 1))
@@ -56,9 +56,9 @@ static inline s16 TestClip(const s16 x, const s16 y) {
 
 static inline qboolean TriClip(const POLY_GT3 *poly) {
   // returns non-zero if a triangle is outside the screen boundaries
-  register const s16 c0 = TestClip(poly->x0, poly->y0);
-  register const s16 c1 = TestClip(poly->x1, poly->y1);
-  register const s16 c2 = TestClip(poly->x2, poly->y2);
+  register const u8 c0 = TestClip(poly->x0, poly->y0);
+  register const u8 c1 = TestClip(poly->x1, poly->y1);
+  register const u8 c2 = TestClip(poly->x2, poly->y2);
 
   if ((c0 & c1) == 0)
     return false;
@@ -72,10 +72,10 @@ static inline qboolean TriClip(const POLY_GT3 *poly) {
 
 static inline qboolean QuadClip(const POLY_GT4 *poly) {
   // returns non-zero if a quad is outside the screen boundaries
-  register const s16 c0 = TestClip(poly->x0, poly->y0);
-  register const s16 c1 = TestClip(poly->x1, poly->y1);
-  register const s16 c2 = TestClip(poly->x2, poly->y2);
-  register const s16 c3 = TestClip(poly->x3, poly->y3);
+  register const u8 c0 = TestClip(poly->x0, poly->y0);
+  register const u8 c1 = TestClip(poly->x1, poly->y1);
+  register const u8 c2 = TestClip(poly->x2, poly->y2);
+  register const u8 c3 = TestClip(poly->x3, poly->y3);
 
   if ((c0 & c1) == 0)
     return false;
@@ -157,14 +157,14 @@ static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz
 #pragma GCC optimize("no-strict-aliasing")
 
 static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert_t *sv1) {
-  h01->tex.u = (s16)sv0->tex.u + (((s16)sv1->tex.u - (s16)sv0->tex.u) >> 1);
-  h01->tex.v = (s16)sv0->tex.v + (((s16)sv1->tex.v - (s16)sv0->tex.v) >> 1);
-  h01->col.r = (s16)sv0->col.r + (((s16)sv1->col.r - (s16)sv0->col.r) >> 1);
+  h01->tex.u = (sv1->tex.u + sv0->tex.u) >> 1;
+  h01->tex.v = (sv1->tex.v + sv0->tex.v) >> 1;
+  h01->col.r = (sv1->col.r + sv0->col.r) >> 1;
   h01->col.g = h01->col.r; // assume non-colored lighting for now
   h01->col.b = h01->col.r;
-  h01->pos.x = sv0->pos.x + ((sv1->pos.x - sv0->pos.x) >> 1);
-  h01->pos.y = sv0->pos.y + ((sv1->pos.y - sv0->pos.y) >> 1);
-  h01->pos.z = sv0->pos.z + ((sv1->pos.z - sv0->pos.z) >> 1);
+  h01->pos.x = (sv1->pos.x + sv0->pos.x) >> 1;
+  h01->pos.y = (sv1->pos.y + sv0->pos.y) >> 1;
+  h01->pos.z = (sv1->pos.z + sv0->pos.z) >> 1;
   return h01;
 }
 
@@ -173,16 +173,16 @@ static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert
   gte_avsz3(); \
   gte_stotz_m(otz); \
   if (otz > 0) { \
-    *(u32 *)&poly->x0 = *(u32 *)&pv0->tpos.x; \
-    *(u32 *)&poly->x1 = *(u32 *)&pv1->tpos.x; \
-    *(u32 *)&poly->x2 = *(u32 *)&pv2->tpos.x; \
+    *(u32 *)&poly->x0 = pv0->tpos.word; \
+    *(u32 *)&poly->x1 = pv1->tpos.word; \
+    *(u32 *)&poly->x2 = pv2->tpos.word; \
     poly = EmitBrushTriangle(poly, tpage, otz, cv0, cv1, cv2); \
   }
 
 #define SORT_FTRI(pv0, pv1, pv2, cv0, cv1, cv2, az) \
-  *(u32 *)&poly->x0 = *(u32 *)&pv0->tpos.x; \
-  *(u32 *)&poly->x1 = *(u32 *)&pv1->tpos.x; \
-  *(u32 *)&poly->x2 = *(u32 *)&pv2->tpos.x; \
+  *(u32 *)&poly->x0 = pv0->tpos.word; \
+  *(u32 *)&poly->x1 = pv1->tpos.word; \
+  *(u32 *)&poly->x2 = pv2->tpos.word; \
   poly = EmitBrushTriangle(poly, tpage, az, cv0, cv1, cv2);
 
 #define SORT_QUAD(pv0, pv1, pv2, pv3, cv0, cv1, cv2, cv3) \
@@ -190,10 +190,10 @@ static inline svert_t *HalfwayVert(svert_t *h01, const svert_t *sv0, const svert
   gte_avsz4(); \
   gte_stotz_m(otz); \
   if (otz > 0) { \
-    *(u32 *)&((POLY_GT4 *)poly)->x0 = *(u32 *)&pv0->tpos.x; \
-    *(u32 *)&((POLY_GT4 *)poly)->x1 = *(u32 *)&pv1->tpos.x; \
-    *(u32 *)&((POLY_GT4 *)poly)->x2 = *(u32 *)&pv2->tpos.x; \
-    *(u32 *)&((POLY_GT4 *)poly)->x3 = *(u32 *)&pv3->tpos.x; \
+    *(u32 *)&((POLY_GT4 *)poly)->x0 = pv0->tpos.word; \
+    *(u32 *)&((POLY_GT4 *)poly)->x1 = pv1->tpos.word; \
+    *(u32 *)&((POLY_GT4 *)poly)->x2 = pv2->tpos.word; \
+    *(u32 *)&((POLY_GT4 *)poly)->x3 = pv3->tpos.word; \
     poly = EmitBrushQuad((void *)poly, tpage, otz, cv0, cv1, cv2, cv3); \
   }
 
@@ -330,9 +330,9 @@ static inline POLY_GT3 *RenderBrushTriangle(POLY_GT3 *poly, const u16 tpage, sve
     return poly;
 
   // fill in the transformed coords
-  *(u32 *)&poly->x0 = *(u32 *)&sv0->tpos.x;
-  *(u32 *)&poly->x1 = *(u32 *)&sv1->tpos.x;
-  *(u32 *)&poly->x2 = *(u32 *)&sv2->tpos.x;
+  *(u32 *)&poly->x0 = sv0->tpos.word;
+  *(u32 *)&poly->x1 = sv1->tpos.word;
+  *(u32 *)&poly->x2 = sv2->tpos.word;
 
   // see if we need to subdivide
   if (otz < GPU_SUBDIV_DIST_2) {
