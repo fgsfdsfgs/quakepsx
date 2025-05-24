@@ -115,52 +115,64 @@ static void PM_AirMove(void) {
 static void PM_WaterMove(void) {
   player_state_t *plr = &gs.player[0];
   x32vec3_t *wishvel = &movevars->pm.wishvel;
-  x16vec3_t *wishdir = &movevars->pm.wishdir;
-  x32 newspeed, addspeed, accelspeed;
+  x16vec3_t *forward = &movevars->pm.wishdir;
+  x16vec3_t *right = &movevars->pm.right;
+  x16vec3_t *up = &movevars->pm.up;
+  x32 wishspeed, speed, newspeed, addspeed, accelspeed;
+  x32 scale, tmp;
+  int i;
 
-  if (!plr->move.x && !plr->move.y && !plr->move.z) {
-    // drift towards bottom
-    wishvel->x = 0;
-    wishvel->y = 0;
-    wishvel->z = -TO_FIX32(60);
-    wishdir->x = 0;
-    wishdir->y = 0;
-    wishdir->z = -ONE;
-  } else {
-    // assume movespeed is either G_FORWARDSPEED or 2 * G_FORWARDSPEED
-    wishvel->x = xmul32(wishdir->x, plr->movespeed);
-    wishvel->y = xmul32(wishdir->y, plr->movespeed);
-    wishvel->z = +plr->move.z;
+  // user intentions
+  AngleVectors(&plr->viewangles, forward, right, up);
+
+  for (i = 0; i < 3; ++i)
+    wishvel->d[i] = xmul32(forward->d[i], plr->move.x) + xmul32(right->d[i], plr->move.y);
+
+  if (!plr->move.x && !plr->move.y && !plr->move.z)
+    wishvel->z -= FTOX(60.0); // drift towards bottom
+  else
+    wishvel->z += plr->move.z;
+
+  wishspeed = XVecLengthIntL(wishvel) << FIXSHIFT;
+  if (wishspeed > G_MAXSPEED) {
+    scale = xdiv32(G_MAXSPEED, wishspeed);
+    wishvel->x = xmul32(scale, wishvel->x);
+    wishvel->y = xmul32(scale, wishvel->y);
+    wishvel->z = xmul32(scale, wishvel->z);
+    wishspeed = G_MAXSPEED;
   }
-
-  movevars->pm.wishspeed = plr->movespeed;
-
-  if (movevars->pm.wishspeed > G_MAXSPEED) {
-    // this can only happen if we're sprinting, and that doubles the speed
-    // so the fraction would be 320 / (2 * 200) = 0.8
-    XVecScaleLS(wishvel, G_DOUBLESPEEDFRAC, wishvel);
-    movevars->pm.wishspeed = G_MAXSPEED;
-  }
-  movevars->pm.wishspeed = xmul32(2867, movevars->pm.wishspeed); // TO_FIX32(0.7)
+  wishspeed = xmul32(wishspeed, FTOX(0.7));
 
   // water friction
-  newspeed = PM_UserFriction(0);
+  speed = XVecLengthIntL(movevars->pm.velocity) << FIXSHIFT;
+  if (speed) {
+    newspeed = speed - xmul32(gs.frametime, xmul32(speed, G_FRICTION));
+    if (newspeed < 0)
+      newspeed = 0;
+    scale = xdiv32(newspeed, speed);
+    movevars->pm.velocity->x = xmul32(scale, movevars->pm.velocity->x);
+    movevars->pm.velocity->y = xmul32(scale, movevars->pm.velocity->y);
+    movevars->pm.velocity->z = xmul32(scale, movevars->pm.velocity->z);
+  } else {
+    newspeed = 0;
+  }
 
   // water acceleration
-  if (!movevars->pm.wishspeed)
+  if (!wishspeed)
     return;
 
-  addspeed = movevars->pm.wishspeed - newspeed;
+  addspeed = wishspeed - newspeed;
   if (addspeed <= 0)
     return;
 
-  accelspeed = xmul32(gs.frametime, G_ACCELERATE);
-  accelspeed = xmul32(accelspeed, movevars->pm.wishspeed);
+  XVecNormLS(wishvel, forward, &tmp);
+
+  accelspeed = xmul32(gs.frametime, xmul32(wishspeed, G_ACCELERATE));
   if (accelspeed > addspeed)
     accelspeed = addspeed;
 
-  for (int i = 0; i < 3; i++)
-    movevars->pm.velocity->d[i] += xmul32(wishdir->d[i], accelspeed);
+  for (i = 0; i < 3; ++i)
+    movevars->pm.velocity->d[i] += xmul32(forward->d[i], accelspeed);
 }
 
 static inline void PM_WaterJump (void) {
@@ -227,18 +239,17 @@ void PM_PlayerMove(const x16 dt) {
   movevars->pm.origin = &ped->v.origin;
   movevars->pm.velocity = &ped->v.velocity;
 
-  // when our yaw is zero, forward vector is (1, 0, 0)
-  // we can calculate the direction in which we want to go, then rotate it
-  // this is needed to avoid having to normalize vectors and calculate their lengths
-  x16vec3_t *wishdir = &movevars->pm.wishdir;
-  CalculateWishDir(&plr->move, ped, wishdir);
-
   if (ped->v.movetype == MOVETYPE_WALK) {
     if (ped->v.flags & FL_WATERJUMP) {
       PM_WaterJump();
     } else if (ped->v.waterlevel >= 2) {
+      // calculates its own wishdir
       PM_WaterMove();
     } else {
+      // when our yaw is zero, forward vector is (1, 0, 0)
+      // we can calculate the direction in which we want to go, then rotate it
+      // this is needed to avoid having to normalize vectors and calculate their lengths
+      CalculateWishDir(&plr->move, ped, &movevars->pm.wishdir);
       PM_AirMove();
       // jump if able
       if (movevars->pm.onground && plr->move.z > 0) {
@@ -248,6 +259,7 @@ void PM_PlayerMove(const x16 dt) {
     }
   } else if (ped->v.movetype == MOVETYPE_NOCLIP) {
     // fly around
+    CalculateWishDir(&plr->move, ped, &movevars->pm.wishdir);
     PM_AirMove();
     XVecScaleLS(&ped->v.velocity, dt, &forwardmove);
     XVecAdd(&ped->v.origin, &forwardmove, &ped->v.origin);

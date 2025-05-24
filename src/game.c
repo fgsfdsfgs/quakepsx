@@ -256,12 +256,12 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
 
   // transform look/move inputs into direction vectors
   const int onspeed = (plr->buttons & BTN_SPEED) != 0;
-  plr->move.x = fwd * G_FORWARDSPEED;
-  plr->move.y = side * G_FORWARDSPEED;
-  plr->move.z = up * G_FORWARDSPEED;
+  plr->movespeed = G_FORWARDSPEED << onspeed;
+  plr->move.x = fwd * plr->movespeed;
+  plr->move.y = side * plr->movespeed;
+  plr->move.z = up * plr->movespeed;
   plr->anglemove.x = XMUL16(TO_FIX32(8), pitch);
   plr->anglemove.y = XMUL16(TO_FIX32(8), -yaw);
-  plr->movespeed = G_FORWARDSPEED << onspeed;
 }
 
 void G_Update(const x16 dt) {

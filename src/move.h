@@ -39,6 +39,8 @@ typedef struct {
 typedef struct {
   x32vec3_t wishvel;
   x16vec3_t wishdir;
+  x16vec3_t right;
+  x16vec3_t up;
   x32vec3_t *origin;
   x32vec3_t *velocity;
   x32 wishspeed;
