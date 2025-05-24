@@ -1,4 +1,9 @@
 ## QuakePSX
+
+<p align="center">
+  <img src="https://github.com/fgsfdsfgs/quakepsx/blob/master/doc/img/screenshot0.png?raw=true"/>
+</p>
+
 This is an experimental port of the original Quake to the Sony PlayStation.
 
 It is based on the original Quake codebase, with the main idea being to keep it as close to the original as possible, other than the resource formats.
