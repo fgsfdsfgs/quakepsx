@@ -52,12 +52,13 @@ static menuoption_t options_cheats[] = {
   { OPT_BUTTON, "Give pent",   NULL, Menu_ActivateCheat, { } },
   { OPT_BUTTON, "Give ring",   NULL, Menu_ActivateCheat, { } },
   { OPT_BUTTON, "Give suit",   NULL, Menu_ActivateCheat, { } },
+  { OPT_BUTTON, "Notarget ",   NULL, Menu_ActivateCheat, { } },
   { OPT_BUTTON, "Suicide",     NULL, Menu_ActivateCheat, { } },
 };
 
 static menu_t menu_cheats = {
   "Cheats",
-  options_cheats, 11,
+  options_cheats, 12,
   0, NULL
 };
 
@@ -186,7 +187,14 @@ static void Menu_ActivateCheat(menuoption_t *self) {
     plr->power_warn[POWER_SUIT] = 1;
     break;
 
-  case 10: /* suicide */
+  case 10: /* notarget */
+    if (ent->v.flags & FL_NOTARGET)
+      ent->v.flags &= ~FL_NOTARGET;
+    else
+      ent->v.flags |= FL_NOTARGET;
+    break;
+
+  case 11: /* suicide */
     ent->v.flags &= ~FL_GODMODE;
     plr->stats.items &= ~IT_INVULNERABILITY;
     plr->power_time[POWER_INVULN] = 0;
