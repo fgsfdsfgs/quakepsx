@@ -332,11 +332,10 @@ void utl_become_explosion(edict_t *self) {
 void utl_aim(edict_t *self, x16vec3_t *result) {
   const trace_t *trace;
 
-#if !PLAYER_AIM_ENABLED
-  // TODO: setting
-  *result = pr.v_forward;
-  return;
-#endif
+  if (!player_autoaim) {
+    *result = pr.v_forward;
+    return;
+  }
 
   x32vec3_t start;
   start.x = self->v.origin.x;

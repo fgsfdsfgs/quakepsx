@@ -654,3 +654,19 @@ void ai_gib(edict_t *self) {
   fx_throw_gib(&self->v.origin, MDLID_GIB2, self->v.health);
   fx_throw_gib(&self->v.origin, MDLID_GIB3, self->v.health);
 }
+
+static void corpse_disable(edict_t *self) {
+  // do not remove because this might be still targeted by something else
+  G_SetModel(self, 0);
+  self->v.movetype = MOVETYPE_NONE;
+  self->v.effects = 0;
+  G_UnlinkEdict(self);
+}
+
+void ai_fade_corpse(edict_t *self) {
+  self->v.solid = SOLID_NOT;
+  if (monster_fade_corpses) {
+    self->v.think = corpse_disable;
+    self->v.nextthink = gs.time + FTOX(30.0);
+  }
+}

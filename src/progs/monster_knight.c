@@ -187,12 +187,16 @@ static void knight_die_a(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE_A, -1);
   if (self->v.frame == DEATH3)
     self->v.solid = SOLID_NOT;
+  else if (self->v.frame == DEATH10)
+    ai_fade_corpse(self);
 }
 
 static void knight_die_b(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE_B, -1);
   if (self->v.frame == DEATHB3)
     self->v.solid = SOLID_NOT;
+  else if (self->v.frame == DEATHB11)
+    ai_fade_corpse(self);
 }
 
 static void knight_start_die(edict_t *self, edict_t *killer) {

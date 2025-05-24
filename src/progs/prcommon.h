@@ -270,6 +270,7 @@ void flymonster_start(edict_t *self, const monster_class_t *class);
 void swimmonster_start(edict_t *self, const monster_class_t *class);
 
 // monster physics and ai
+extern s32 monster_fade_corpses;
 void monster_death_use(edict_t *self);
 qboolean ai_movestep(edict_t *ent, const x32vec3_t *move, const qboolean relink);
 qboolean ai_walkmove(edict_t *ent, x16 yaw, const x32 dist);
@@ -289,8 +290,10 @@ void ai_checkrefire(edict_t *self, const s16 state);
 void ai_foundtarget(edict_t *self);
 void ai_attack_finished(edict_t *self, const x32 dt);
 void ai_gib(edict_t *self);
+void ai_fade_corpse(edict_t *self);
 
 // player functions
+extern s32 player_autoaim;
 void player_pain(edict_t *self, edict_t *attacker, s16 damage);
 void player_die(edict_t *self, edict_t *killer);
 void player_set_weapon(edict_t *ent, const s16 num);

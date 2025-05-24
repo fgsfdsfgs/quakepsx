@@ -312,6 +312,8 @@ static void ogre_die_a(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE_A, -1);
   if (self->v.frame == DEATH3)
     ogre_finish_die(self);
+  else if (self->v.frame == DEATH14)
+    ai_fade_corpse(self);
 }
 
 static void ogre_die_b(edict_t *self) {
@@ -323,6 +325,7 @@ static void ogre_die_b(edict_t *self) {
   case BDEATH5: ai_forward(self, TO_FIX32(3)); break;
   case BDEATH6: ai_forward(self, TO_FIX32(7)); break;
   case BDEATH7: ai_forward(self, TO_FIX32(25)); break;
+  case BDEATH10: ai_fade_corpse(self); break;
   default: break;
   }
 }

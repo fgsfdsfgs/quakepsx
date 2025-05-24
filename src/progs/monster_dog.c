@@ -182,10 +182,14 @@ static void dog_pain_b(edict_t *self) {
 
 static void dog_die_a(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE_A, -1);
+  if (self->v.frame == DEATH9)
+    ai_fade_corpse(self);
 }
 
 static void dog_die_b(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE_B, -1);
+  if (self->v.frame == DEATHB9)
+    ai_fade_corpse(self);
 }
 
 static void dog_start_die(edict_t *self, edict_t *killer) {

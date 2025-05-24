@@ -4,6 +4,8 @@
 
 #define IT_ALL_SIGILS (IT_SIGIL1 | IT_SIGIL2 | IT_SIGIL3 | IT_SIGIL4)
 
+s32 player_autoaim = true;
+
 static const u32 powerup_table[] = {
   IT_SUPERHEALTH,
   IT_INVISIBILITY,

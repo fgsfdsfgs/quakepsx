@@ -300,6 +300,8 @@ static void sham_die(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE, -1);
   if (self->v.frame == DEATH3)
     self->v.solid = SOLID_NOT;
+  else if (self->v.frame == DEATH11)
+    ai_fade_corpse(self);
 }
 
 static void sham_start_die(edict_t *self, edict_t *killer) {

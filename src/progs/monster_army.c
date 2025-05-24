@@ -222,6 +222,8 @@ static void army_die_a(edict_t *self) {
   monster_finite_state(self, MSTATE_DIE_A, -1);
   if (self->v.frame == DEATH3)
     army_finish_die(self);
+  else if (self->v.frame == DEATH10)
+    ai_fade_corpse(self);
 }
 
 static void army_die_b(edict_t *self) {
@@ -235,6 +237,7 @@ static void army_die_b(edict_t *self) {
   case DEATHC4: ai_back(self, TO_FIX32(13)); break;
   case DEATHC5: ai_back(self, TO_FIX32(3)); break;
   case DEATHC6: ai_back(self, TO_FIX32(4)); break;
+  case DEATHC11: ai_fade_corpse(self); break;
   default: break;
   }
 }

@@ -1,5 +1,7 @@
 #include "prcommon.h"
 
+s32 monster_fade_corpses = true;
+
 void monster_init(edict_t *self, const monster_class_t *class) {
   // all monsters are created at map init time in OG Quake, so we can alloc extra fields here
   // to avoid bloating edict_t

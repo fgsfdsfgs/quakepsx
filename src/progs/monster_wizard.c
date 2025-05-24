@@ -181,6 +181,8 @@ static void wizard_die(edict_t *self) {
     self->v.flags &= ~FL_ONGROUND;
   } else if (self->v.frame == DEATH3) {
     self->v.solid = SOLID_NOT;
+  } else if (self->v.frame == DEATH8) {
+    ai_fade_corpse(self);
   }
 }
 

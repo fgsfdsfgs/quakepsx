@@ -44,6 +44,8 @@ static menuoption_t options_options[] = {
   { OPT_SLIDER, "RS Deadzone",  &in.stick_deadzone[1], NULL,               { .slider = { 0, 64, 8          } } },
   { OPT_LABEL,  "Game",         NULL,                  NULL,               {                                 } },
   { OPT_CHOICE, "Crosshair",    &sbar_xhair,           NULL,               { .choice = { choices_off_on, 2 } } },
+  { OPT_CHOICE, "Auto Aim",     &player_autoaim,       NULL,               { .choice = { choices_off_on, 2 } } },
+  { OPT_CHOICE, "Fade Corpses", &monster_fade_corpses, NULL,               { .choice = { choices_off_on, 2 } } },
 };
 
 static menu_t menu_options = {

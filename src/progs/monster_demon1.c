@@ -187,6 +187,8 @@ static void demon_die(edict_t *self) {
     utl_sound(self, CHAN_VOICE, SFXID_DEMON_DDEATH, SND_MAXVOL, ATTN_NORM);
   else if (self->v.frame == DEATH6)
     self->v.solid = SOLID_NOT;
+  else if (self->v.frame == DEATH9)
+    ai_fade_corpse(self);
 }
 
 static void demon_start_die(edict_t *self, edict_t *killer) {
