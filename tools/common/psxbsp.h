@@ -141,6 +141,7 @@ typedef struct {
 #define XTEX_SKY       4
 #define XTEX_INVISIBLE 8
 #define XTEX_ANIMATED  16
+#define XTEX_LARGE     32
 #define XTEX_NULL      0x80
 
 typedef struct {

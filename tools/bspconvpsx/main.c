@@ -46,10 +46,10 @@ static int tex_sort(const struct texsort *a, const struct texsort *b) {
 
   int aw = a->qtex->width;
   int ah = a->qtex->height;
-  xbsp_texture_shrink(&aw, &ah);
+  xbsp_texture_shrink(&aw, &ah, MAX_TEX_WIDTH, MAX_TEX_HEIGHT);
   int bw = b->qtex->width;
   int bh = b->qtex->height;
-  xbsp_texture_shrink(&bw, &bh);
+  xbsp_texture_shrink(&bw, &bh, MAX_TEX_WIDTH, MAX_TEX_HEIGHT);
 
   if (ah > bh) {
     return -1;
@@ -182,7 +182,7 @@ static inline void do_textures(void) {
       int vry = 0;
       if (xbsp_vram_fit(qtex, &xti, &vrx, &vry))
         panic("VRAM atlas can't fit '%s'", qtex->name);
-      xbsp_vram_store_miptex(qtex, vrx, vry);
+      xbsp_vram_store_miptex(qtex, &xti, vrx, vry);
       // clear animation data
       xti.anim_alt = -1;
       xti.anim_next = -1;

@@ -159,9 +159,9 @@ int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, i
   return 0;
 }
 
-int xbsp_texture_shrink(int *w, int *h) {
+int xbsp_texture_shrink(int *w, int *h, const int maxw, const int maxh) {
   int i = 0;
-  while ((*w > MAX_TEX_WIDTH || *h > MAX_TEX_HEIGHT) && *w > 2 && *h > 1 && i < NUM_MIPLEVELS - 1) {
+  while ((*w > maxw || *h > maxh) && *w > 2 && *h > 1 && i < NUM_MIPLEVELS - 1) {
     ++i;
     *w >>= 1;
     *h >>= 1;
@@ -172,7 +172,9 @@ int xbsp_texture_shrink(int *w, int *h) {
 int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy) {
   int w = qti->width;
   int h = qti->height;
-  int i = xbsp_texture_shrink(&w, &h);
+  const int maxw = (xti->flags & XTEX_LARGE) ? 256 : MAX_TEX_WIDTH;
+  const int maxh = (xti->flags & XTEX_LARGE) ? 256 : MAX_TEX_HEIGHT;
+  int i = xbsp_texture_shrink(&w, &h, maxw, maxh);
   if (i) {
     printf("    ! larger than %dx%d, using miplevel %d\n", MAX_TEX_WIDTH, MAX_TEX_HEIGHT, i);
   }
@@ -194,14 +196,17 @@ void xbsp_set_palette(const u8 *pal) {
   convert_palette(xbsp_clutdata, pal, NUM_CLUT_COLORS);
 }
 
-void xbsp_vram_store_miptex(const qmiptex_t *qti, int x, int y) {
+void xbsp_vram_store_miptex(const qmiptex_t *qti, const xtexinfo_t *xti, int x, int y) {
   int w, h, i;
   const u8 *data;
 
   w = qti->width;
   h = qti->height;
-  i = xbsp_texture_shrink(&w, &h);
+  const int maxw = (xti->flags & XTEX_LARGE) ? 256 : MAX_TEX_WIDTH;
+  const int maxh = (xti->flags & XTEX_LARGE) ? 256 : MAX_TEX_HEIGHT;
+  i = xbsp_texture_shrink(&w, &h, maxw, maxh);
   assert(i < NUM_MIPLEVELS);
+
   data = (const u8 *)qti + qti->offsets[i];
 
   if (y + h > xbsp_texmaxy)
@@ -250,6 +255,8 @@ u16 xbsp_texture_flags(const qmiptex_t *qti) {
     flags |= XTEX_SPECIAL | XTEX_SKY | XTEX_INVISIBLE;
   else if (!strncmp(qti->name, "clip", 16) || !strncmp(qti->name, "trigger", 16))
     flags |= XTEX_SPECIAL | XTEX_INVISIBLE;
+  else if (!strcmp(qti->name, "quake"))
+    flags |= XTEX_LARGE; // HACK: don't shrink the start.bsp quake logo as much
   return flags;
 }
 
