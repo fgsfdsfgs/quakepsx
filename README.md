@@ -22,12 +22,12 @@ It is based on the original Quake codebase, with the main idea being to keep it 
 * [PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK);
 * [mkpsxiso](https://github.com/Lameguy64/mkpsxiso);
 * `gcc` for your host platform;
-* `mips-none-elf-gcc`, preferably versions 12.2 - 13.3;
+* `mipsel-none-elf-gcc`, preferably versions 12.2 - 13.3;
 * `cmake`, `git`, `make`;
 * Quake (shareware or full version).
 
 #### Instructions:
-1. Install the prerequisites and ensure `mips-none-elf-gcc` and `mkpsxiso` are in your `PATH` and the PSn00bSDK environment variables are set:
+1. Install the prerequisites and ensure `mipsel-none-elf-gcc` and `mkpsxiso` are in your `PATH` and the PSn00bSDK environment variables are set:
    ```
    export PSN00BSDK_LIBS=/path/to/psn00bsdk/lib/libpsn00b
    export PATH=/path/to/psn00bsdk/bin:$PATH
