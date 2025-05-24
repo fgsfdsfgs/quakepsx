@@ -70,6 +70,7 @@ typedef struct link_s {
 #define FS_BASE "\\ID1PSX"
 
 #define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
+#define ARRAYCOUNT(a) (sizeof(a) / sizeof((a)[0]))
 
 FORCEINLINE void ClearLink(link_t *l) {
   l->prev = l->next = l;

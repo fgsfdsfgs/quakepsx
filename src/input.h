@@ -12,6 +12,9 @@ typedef struct {
   u16 btn_trig;
   s8vec2_t mouse;
   s8vec2_t sticks[2];
+  x32vec2_t stick_sens[2];
+  s32 stick_deadzone[2];
+  x32 mouse_sens;
 } input_t;
 
 extern input_t in;

@@ -221,13 +221,13 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
   if (!fwd && !side) {
     // if digital inputs are not held, map left stick to digital directions
     fwd = (in.sticks[0].y < -0x40) - (in.sticks[0].y > 0x40);
-    side = (in.sticks[0].x > 0x40) - (in.sticks[0].x < -0x40);
+    side = (in.sticks[0].x > 0x48) - (in.sticks[0].x < -0x48);
   }
 
   // look inputs: use rstick and mouse
 
-  const x16 pitch = in.sticks[1].y + XMUL16(TO_FIX32(3), in.mouse.y);
-  const x16 yaw = in.sticks[1].x + XMUL16(TO_FIX32(3), in.mouse.x);
+  const x16 pitch = xmul32(in.sticks[1].y, in.stick_sens[1].y) + xmul32(in.mouse_sens, in.mouse.y);
+  const x16 yaw = xmul32(in.sticks[1].x, in.stick_sens[1].x) + xmul32(in.mouse_sens, in.mouse.x);
 
   // buttons
 
@@ -260,8 +260,8 @@ static void UpdatePlayerInput(player_state_t *plr, const x16 dt) {
   plr->move.x = fwd * plr->movespeed;
   plr->move.y = side * plr->movespeed;
   plr->move.z = up * plr->movespeed;
-  plr->anglemove.x = XMUL16(TO_FIX32(8), pitch);
-  plr->anglemove.y = XMUL16(TO_FIX32(8), -yaw);
+  plr->anglemove.x = pitch;
+  plr->anglemove.y = -yaw;
 }
 
 void G_Update(const x16 dt) {
@@ -274,13 +274,6 @@ void G_Update(const x16 dt) {
     Menu_Update();
     return;
   }
-
-  plr->viewangles.y += XMUL16(plr->anglemove.y, dt);
-  plr->viewangles.x += XMUL16(plr->anglemove.x, dt);
-  if (plr->viewangles.x < TO_DEG16(-89))
-    plr->viewangles.x = TO_DEG16(-89);
-  else if (plr->viewangles.x > TO_DEG16(89))
-    plr->viewangles.x = TO_DEG16(89);
 
   if (plr->punchangle) {
     plr->punchangle += XMUL16(TO_DEG16(10), gs.frametime);

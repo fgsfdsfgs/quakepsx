@@ -28,7 +28,7 @@ static const pic_t *pic_powers = NULL;
 static x32 face_pain_time = 0;
 
 u32 sbar_xhair_color = C_WHITE;
-s32 sbar_xhair = false;
+s32 sbar_xhair = true;
 
 static inline void DrawCrosshair(void) {
   // just draw a little dotted + with 4 rects for now

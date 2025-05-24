@@ -1,6 +1,7 @@
 #include "prcommon.h"
 #include "menu.h"
 #include "cd.h"
+#include "input.h"
 
 static s32 dbg_skill = 1;
 static s32 dbg_episode = 1;
@@ -30,14 +31,24 @@ static void Menu_CdVolChanged(menuoption_t *self) { CD_SetAudioVolume(cd_volume)
 static void Menu_SndVolChanged(menuoption_t *self) { Snd_SetVolume(snd_volume); }
 
 static menuoption_t options_options[] = {
-  { OPT_SLIDER, "Sound Volume", &snd_volume, Menu_SndVolChanged, { .slider = { 0, 128, 16        } } },
-  { OPT_SLIDER, "Music Volume", &cd_volume,  Menu_CdVolChanged,  { .slider = { 0, 128, 16        } } },
-  { OPT_CHOICE, "Crosshair",    &sbar_xhair, NULL,               { .choice = { choices_off_on, 2 } } },
+  { OPT_LABEL,  "Audio",        NULL,                  NULL,               {                                    } },
+  { OPT_SLIDER, "Sound Volume", &snd_volume,           Menu_SndVolChanged, { .slider = { 0, 128, 16           } } },
+  { OPT_SLIDER, "Music Volume", &cd_volume,            Menu_CdVolChanged,  { .slider = { 0, 128, 16           } } },
+  { OPT_LABEL,  "Input",        NULL,                  NULL,               {                                    } },
+  { OPT_SLIDER, "Mouse Speed",  &in.mouse_sens,        NULL,               { .slider = { 0, FTOX(64), FTOX(8) } } },
+  { OPT_SLIDER, "LS Speed X",   &in.stick_sens[0].x,   NULL,               { .slider = { 0, FTOX(64), FTOX(8) } } },
+  { OPT_SLIDER, "LS Speed Y",   &in.stick_sens[0].y,   NULL,               { .slider = { 0, FTOX(64), FTOX(8) } } },
+  { OPT_SLIDER, "LS Deadzone",  &in.stick_deadzone[0], NULL,               { .slider = { 0, 64, 8             } } },
+  { OPT_SLIDER, "RS Speed X",   &in.stick_sens[1].x,   NULL,               { .slider = { 0, FTOX(64), FTOX(8) } } },
+  { OPT_SLIDER, "RS Speed Y",   &in.stick_sens[1].y,   NULL,               { .slider = { 0, FTOX(64), FTOX(8) } } },
+  { OPT_SLIDER, "RS Deadzone",  &in.stick_deadzone[1], NULL,               { .slider = { 0, 64, 8             } } },
+  { OPT_LABEL,  "Game",         NULL,                  NULL,               {                                    } },
+  { OPT_CHOICE, "Crosshair",    &sbar_xhair,           NULL,               { .choice = { choices_off_on, 2    } } },
 };
 
 static menu_t menu_options = {
   "Options",
-  options_options, 3,
+  options_options, ARRAYCOUNT(options_options),
   0, NULL
 };
 

@@ -12,10 +12,22 @@ static PADTYPE *pad[2];
 void IN_Init(void) {
   InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
   StartPAD();
+
   // don't make pad driver acknowledge vblank IRQ
   ChangeClearPAD(0);
   pad[0] = (PADTYPE *)&pad_buff[0][0];
   pad[1] = (PADTYPE *)&pad_buff[1][0];
+
+  // default sensitivity
+  in.stick_sens[0].x = TO_FIX32(16);
+  in.stick_sens[0].y = TO_FIX32(16);
+  in.stick_sens[1].x = TO_FIX32(16);
+  in.stick_sens[1].y = TO_FIX32(8);
+  in.mouse_sens = TO_FIX32(32);
+
+  // default deadzone
+  in.stick_deadzone[0] = 16;
+  in.stick_deadzone[1] = 16;
 }
 
 static inline void IN_UpdateAnalog(const PADTYPE *pad) {
@@ -23,12 +35,16 @@ static inline void IN_UpdateAnalog(const PADTYPE *pad) {
   const u8 sy[2] = { pad->ls_y, pad->rs_y };
 
   for (int i = 0; i < 2; ++i) {
-    in.sticks[i].x = sx[i] - 0x80;
-    if (abs(in.sticks[i].x) < IN_DEADZONE_X)
+    const s16 x = sx[i] - 0x80;
+    const s16 y = sy[i] - 0x80;
+    const s16 dead = in.stick_deadzone[i];
+    if ((x * x + y * y) < dead * dead) {
       in.sticks[i].x = 0;
-    in.sticks[i].y = sy[i] - 0x80;
-    if (abs(in.sticks[i].y) < IN_DEADZONE_Y)
       in.sticks[i].y = 0;
+    } else {
+      in.sticks[i].x = x;
+      in.sticks[i].y = y;
+    }
   }
 }
 

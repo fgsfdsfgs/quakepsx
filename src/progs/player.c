@@ -330,6 +330,17 @@ void spawn_player(edict_t *self) {
 void Player_PreThink(edict_t *ent) {
   player_state_t *plr = ent->v.player;
 
+  if (pr.intermission_state) {
+    plr->move.x = 0;
+    plr->move.y = 0;
+    plr->move.z = 0;
+    plr->anglemove.x = 0;
+    plr->anglemove.y = 0;
+    plr->anglemove.z = 0;
+    plr->flags = 0;
+    return;
+  }
+
   plr->flags &= ~PFL_JUMPED;
 
   if ((ent->v.watertype == CONTENTS_WATER) || (ent->v.watertype == CONTENTS_SLIME) || (ent->v.watertype == CONTENTS_LAVA))
