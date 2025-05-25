@@ -38,6 +38,8 @@ static inline void load_palette(void) {
   const char *palname = "gfx/palette.lmp";
   size_t palsize = 0;
   paldata = lmp_read(moddir, palname, &palsize);
+  if (!paldata)
+    panic("could not load '%s'", palname);
 
   if (palsize < NUM_CLUT_COLORS * 3)
     panic("palette too small: %d bytes", (s32)palsize);
@@ -49,6 +51,8 @@ static inline void load_gfxwad(void) {
   const char *wadname = "gfx.wad";
   size_t wadsize = 0;
   u8 *waddata = lmp_read(moddir, wadname, &wadsize);
+  if (!waddata)
+    panic("could not find WAD %s", wadname);
 
   if (wad_open(&gfxwad, waddata, wadsize) < 0)
     panic("could not open %s in moddir %s", wadname, moddir);

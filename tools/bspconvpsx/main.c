@@ -530,7 +530,9 @@ static void load_entmodel(const int id, int override_id) {
 
   size_t mdlsize = 0;
   u8 *mdl = lmp_read(moddir, mdlname, &mdlsize);
-  if (strstr(mdlname, ".bsp")) {
+  if (!mdl) {
+    printf("* * not found!\n");
+  } else if (strstr(mdlname, ".bsp")) {
     static qbsp_t tmpqbsp;
     qbsp_init(&tmpqbsp, mdl, mdlsize);
     xaliashdr_t *xmdl = xbsp_entmodel_add_from_qbsp(&tmpqbsp, id);
@@ -653,6 +655,8 @@ int main(int argc, const char **argv) {
   // read palette
   size_t palsize = 0;
   qbsp.palette = lmp_read(moddir, "gfx/palette.lmp", &palsize);
+  if (!qbsp.palette)
+    panic("could not load gfx/palette.lmp");
   if (palsize < (NUM_CLUT_COLORS * 3))
     panic("palette size < %d", NUM_CLUT_COLORS * 3);
   xbsp_set_palette(qbsp.palette);
@@ -660,6 +664,8 @@ int main(int argc, const char **argv) {
   // load input map
   size_t bspsize = 0;
   u8 *bsp = lmp_read(moddir, inname, &bspsize);
+  if (!bsp)
+    panic("could not load '%s'", inname);
   qbsp_init(&qbsp, bsp, bspsize);
 
   // prepare lump headers

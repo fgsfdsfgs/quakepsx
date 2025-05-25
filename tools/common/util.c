@@ -41,7 +41,7 @@ void *lmp_read(const char *dir, const char *fname, size_t *outsize) {
     return buf;
   }
 
-  panic("could not find '%s' in '%s' or in cwd", fname, dir);
+  fprintf(stderr, "warning: could not find '%s' in '%s' or in cwd", fname, dir);
 
   // never gets here
   return NULL;

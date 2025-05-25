@@ -19,7 +19,6 @@ ent worldspawn
   mdl progs/v_rock2.mdl
   mdl progs/v_shot.mdl
   mdl progs/v_shot2.mdl
-  mdl progs/v_spike.mdl
   mdl progs/v_light.mdl
   mdl progs/spike.mdl
   mdl progs/gib1.mdl
