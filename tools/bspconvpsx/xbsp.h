@@ -41,11 +41,9 @@ extern int         xbsp_numentities;
 extern xmapsnd_t   xbsp_sounds[MAX_SOUNDS];
 extern int         xbsp_numsounds;
 extern u32         xbsp_spuptr;
-extern u16         xbsp_clutdata[NUM_CLUT_COLORS];
 extern u16         xbsp_texatlas[VRAM_TOTAL_HEIGHT][VRAM_TOTAL_WIDTH];
 extern xlump_t     xbsp_lumps[XLMP_COUNT];
 
-void xbsp_set_palette(const u8 *pal);
 xmapsnd_t *xbsp_spu_fit(qsfx_t *src);
 int xbsp_vram_page_fit(xtexinfo_t *xti, const int pg, int w, int h, int *outx, int *outy);
 int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy);

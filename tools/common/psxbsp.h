@@ -46,7 +46,6 @@
 
 /* XBSP STRUCTURE
  * xbsphdr_t  ver="PSX\x1D"
- * xbsplump_t XLMP_CLUTDATA
  * xbsplump_t XLMP_TEXDATA
  * xbsplump_t XLMP_SNDDATA
  * xbsplump_t XLMP_MDLDATA
@@ -67,7 +66,6 @@
 enum xbsplump_e {
   XLMP_INVALID = -1,
 
-  XLMP_CLUTDATA,
   XLMP_TEXDATA,
   XLMP_SNDDATA,
   XLMP_MDLDATA,

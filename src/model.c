@@ -35,13 +35,6 @@ static inline void CheckLumpHeader(xbsplump_t *lump, const int etype, const int 
   xbsplump_t lump; \
   CheckLumpHeader(&lump, etype, esize, fh)
 
-static void Mod_LoadClutData(bmodel_t *mod, const int fh) {
-  INIT_LUMP(lump, LUMP_CLUTDATA, VID_NUM_COLORS * 2, fh);
-  u16 clut[VID_NUM_COLORS];
-  Sys_FileRead(fh, clut, VID_NUM_COLORS * 2);
-  R_UploadClut(clut);
-}
-
 static void Mod_LoadTextureData(bmodel_t *mod, const int fh) {
   INIT_LUMP(lump, LUMP_TEXDATA, 0, fh);
   const int lines = lump.size / (VRAM_TEX_WIDTH * 2);
@@ -406,7 +399,6 @@ static void Mod_ParseBrushModel(bmodel_t *mod, const int fh) {
     Sys_Error("Mod_LoadBrushModel: %04x has wrong version number (%d should be %d)\n", mod->id, header.ver, PSXBSPVERSION);
 
   // fat data comes first, then gets offloaded from RAM to VRAM/SPURAM
-  Mod_LoadClutData(mod, fh);
   Mod_LoadTextureData(mod, fh);
   Mod_LoadSoundData(mod, fh);
   Mod_LoadAliasData(mod, fh);

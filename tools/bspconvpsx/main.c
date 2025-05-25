@@ -200,7 +200,6 @@ static inline void do_textures(void) {
   xbsp_numtexinfos = numtex;
   xbsp_lumps[XLMP_TEXDATA].size = 2 * VRAM_TOTAL_WIDTH * xbsp_vram_height();
   xbsp_lumps[XLMP_TEXINFO].size = numtex * sizeof(xtexinfo_t);
-  xbsp_lumps[XLMP_CLUTDATA].size = 2 * NUM_CLUT_COLORS;
 }
 
 static void do_planes(void) {
@@ -659,7 +658,6 @@ int main(int argc, const char **argv) {
     panic("could not load gfx/palette.lmp");
   if (palsize < (NUM_CLUT_COLORS * 3))
     panic("palette size < %d", NUM_CLUT_COLORS * 3);
-  xbsp_set_palette(qbsp.palette);
 
   // load input map
   size_t bspsize = 0;

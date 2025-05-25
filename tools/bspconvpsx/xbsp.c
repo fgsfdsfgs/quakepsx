@@ -57,7 +57,6 @@ int         xbsp_numstrings = 1; // actually the number of chars; empty string i
 xmapsnd_t   xbsp_sounds[MAX_SOUNDS];
 int         xbsp_numsounds;
 u32         xbsp_spuptr = 0;
-u16         xbsp_clutdata[NUM_CLUT_COLORS];
 u16         xbsp_texatlas[VRAM_TOTAL_HEIGHT][VRAM_TOTAL_WIDTH];
 xlump_t     xbsp_lumps[XLMP_COUNT];
 
@@ -190,10 +189,6 @@ int xbsp_vram_fit(const qmiptex_t *qti, xtexinfo_t *xti, int *outx, int *outy) {
   }
 
   return -1;
-}
-
-void xbsp_set_palette(const u8 *pal) {
-  convert_palette(xbsp_clutdata, pal, NUM_CLUT_COLORS);
 }
 
 void xbsp_vram_store_miptex(const qmiptex_t *qti, const xtexinfo_t *xti, int x, int y) {
@@ -464,10 +459,6 @@ int xbsp_write(const char *fname) {
 
   xbsp_header.ver = PSXBSPVERSION;
   fwrite(&xbsp_header, sizeof(xbsp_header), 1, f);
-
-  // write clut
-  fwrite(&xbsp_lumps[XLMP_CLUTDATA], sizeof(xlump_t), 1, f);
-  fwrite(xbsp_clutdata, sizeof(u16), NUM_CLUT_COLORS, f);
 
   // write VRAM image
   fwrite(&xbsp_lumps[XLMP_TEXDATA], sizeof(xlump_t), 1, f);
