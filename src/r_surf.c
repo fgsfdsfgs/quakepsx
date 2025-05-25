@@ -106,7 +106,7 @@ static inline void *EmitAliasTriangle(POLY_FT3 *poly, const u16 tpage, const int
   if (!TriClip((POLY_GT3 *)poly)) {
     setPolyFT3(poly);
     poly->tpage = tpage;
-    poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+    poly->clut = rs.clut;
     addPrim(gpu_ot + otz, poly);
     ++c_draw_polys;
     ++poly;
@@ -124,7 +124,7 @@ static inline void *EmitBrushTriangle(POLY_GT3 *poly, const u16 tpage, const int
     *(u16 *)&poly->u2 = sv2->tex.word;
     setPolyGT3(poly);
     poly->tpage = tpage;
-    poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+    poly->clut = rs.clut;
     addPrim(gpu_ot + otz, poly);
     ++c_draw_polys;
     ++poly;
@@ -144,7 +144,7 @@ static inline void *EmitBrushQuad(POLY_GT4 *poly, const u16 tpage, const s32 otz
     *(u16 *)&poly->u3 = sv3->tex.word;
     setPolyGT4(poly);
     poly->tpage = tpage;
-    poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+    poly->clut = rs.clut;
     addPrim(gpu_ot + otz, poly);
     c_draw_polys += 2;
     ++poly;
@@ -547,7 +547,7 @@ void R_DrawAliasViewModel(const amodel_t *model, const int frame, const u32 tint
     *(u32 *)&poly->r0 = tint;
     setPolyFT3(poly);
     poly->tpage = tpage;
-    poly->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+    poly->clut = rs.clut;
     R_AddScreenPrim(sizeof(*poly));
   }
 }

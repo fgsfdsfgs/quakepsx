@@ -41,6 +41,7 @@
 #define SPURAM_SIZE         (0x80000 - SPURAM_BASE)
 
 #define NUM_CLUT_COLORS     256
+#define NUM_GAMMA_LEVELS    6
 
 #pragma pack(push, 1)
 

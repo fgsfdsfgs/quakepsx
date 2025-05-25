@@ -41,7 +41,7 @@ static inline void DrawPic8(const s16 x, const s16 y, const u8 du, const u8 dv, 
   setSprt8(prim);
   setXY0(prim, x, y);
   setUV0(prim, pic->uv.u + du, pic->uv.v + dv);
-  prim->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+  prim->clut = rs.clut;
   R_AddScreenPrim(sizeof(*prim));
 }
 
@@ -51,7 +51,7 @@ static inline void DrawPic16(const s16 x, const s16 y, const u8 du, const u8 dv,
   setSprt16(prim);
   setXY0(prim, x, y);
   setUV0(prim, pic->uv.u + du, pic->uv.v + dv);
-  prim->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+  prim->clut = rs.clut;
   R_AddScreenPrim(sizeof(*prim));
 }
 
@@ -62,7 +62,7 @@ static inline void DrawPic(const s16 x, const s16 y, const u8 du, const u8 dv, c
   setXY0(prim, x, y);
   setUV0(prim, pic->uv.u + du, pic->uv.v + dv);
   setWH(prim, pic->size.x, pic->size.y);
-  prim->clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+  prim->clut = rs.clut;
   R_AddScreenPrim(sizeof(*prim));
 }
 

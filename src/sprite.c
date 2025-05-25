@@ -15,10 +15,10 @@ void Spr_Init(void) {
   if (fsize < sizeof(spr_num_pics) + vramsize)
     Sys_Error("Spr_Init: invalid GFX.DAT");
 
-  // file starts with the default CLUT, upload it right away
-  u16 *clut = Mem_Alloc(VID_NUM_COLORS * sizeof(u16));
-  Sys_FileRead(fhandle, clut, VID_NUM_COLORS * sizeof(u16));
-  R_UploadClut(clut);
+  // file starts with the CLUTs, upload them right away
+  u16 *clut = Mem_Alloc(VID_NUM_CLUTS * VID_NUM_COLORS * sizeof(u16));
+  Sys_FileRead(fhandle, clut, VID_NUM_CLUTS * VID_NUM_COLORS * sizeof(u16));
+  R_UploadCluts(clut);
   Mem_Free(clut);
 
   Sys_FileRead(fhandle, &spr_num_pics, sizeof(spr_num_pics));

@@ -20,7 +20,7 @@
 #define PICS_XEND 1023
 
 static u8 *paldata = NULL;
-static u16 clutdata[NUM_CLUT_COLORS];
+static u16 clutdata[NUM_GAMMA_LEVELS][NUM_CLUT_COLORS];
 static u16 vramdata[VRAM_TOTAL_HEIGHT][VRAM_TEXPAGE_WIDTH];
 
 static wad_t gfxwad;
@@ -44,7 +44,22 @@ static inline void load_palette(void) {
   if (palsize < NUM_CLUT_COLORS * 3)
     panic("palette too small: %d bytes", (s32)palsize);
 
-  convert_palette(clutdata, paldata, NUM_CLUT_COLORS);
+  // clut 0 is the default
+  convert_palette(clutdata[0], paldata, NUM_CLUT_COLORS);
+
+  // the rest are gamma-adjusted copies using these powers
+  const double gammapows[NUM_GAMMA_LEVELS] = { 1.0, 0.9, 0.8, 0.7, 0.6, 0.5 };
+  u8 pal[NUM_CLUT_COLORS * 3];
+  for (int level = 1; level < NUM_GAMMA_LEVELS; ++level) {
+    for (int i = 0; i < NUM_CLUT_COLORS * 3; ++i) {
+      const double f = pow((paldata[i] + 1.0) / 256.0, gammapows[level]);
+      double inf = f * 255.0 + 0.5;
+      if (inf < 0.0) inf = 0.0;
+      if (inf > 255.0) inf = 255.0;
+      pal[i] = inf;
+    }
+    convert_palette(clutdata[level], pal, NUM_CLUT_COLORS);
+  }
 }
 
 static inline void load_gfxwad(void) {
@@ -125,7 +140,7 @@ static inline void process_pic(const char *name, const int x, const int y, const
     u16 *newpixels = calloc(w * h, 2);
     assert(newpixels);
     for (int i = 0; i < w * h; ++i)
-      newpixels[i] = clutdata[pixels[i]];
+      newpixels[i] = clutdata[0][pixels[i]];
     pixels = (u8 *)newpixels;
   } else if (ckey != 0xFF) {
     for (int i = 0; i < w * h; ++i) {

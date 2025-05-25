@@ -29,11 +29,14 @@ static void Menu_DbgEpChanged(menuoption_t *self);
 static void Menu_ActivateCheat(menuoption_t *self);
 static void Menu_CdVolChanged(menuoption_t *self) { CD_SetAudioVolume(cd_volume); }
 static void Menu_SndVolChanged(menuoption_t *self) { Snd_SetVolume(snd_volume); }
+static void Menu_GammaChanged(menuoption_t *self) { R_ApplyGamma(); }
 
 static menuoption_t options_options[] = {
   { OPT_LABEL,  "Audio",        NULL,                  NULL,               {                                 } },
   { OPT_SLIDER, "Sound Volume", &snd_volume,           Menu_SndVolChanged, { .slider = { 0, 128, 16        } } },
   { OPT_SLIDER, "Music Volume", &cd_volume,            Menu_CdVolChanged,  { .slider = { 0, 128, 16        } } },
+  { OPT_LABEL,  "Video",        NULL,                  NULL,               {                                 } },
+  { OPT_SLIDER, "Gamma",        &rs.gamma,             Menu_GammaChanged,  { .slider = { 0, 5, 1           } } },
   { OPT_LABEL,  "Input",        NULL,                  NULL,               {                                 } },
   { OPT_SLIDER, "Mouse Speed",  &in.mouse_sens,        NULL,               { .slider = { 0, 64, 8          } } },
   { OPT_SLIDER, "LS Speed X",   &in.stick_sens[0].x,   NULL,               { .slider = { 0, 8, 1           } } },

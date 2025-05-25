@@ -43,6 +43,7 @@ typedef struct link_s {
 #define VID_CENTER_X   (VID_WIDTH >> 1)
 #define VID_CENTER_Y   (VID_HEIGHT >> 1)
 #define VID_NUM_COLORS 256
+#define VID_NUM_CLUTS  6  // one for each gamma level
 #define VID_MAXFPS     60 // TODO: PAL?
 
 // texture flags

@@ -88,8 +88,10 @@ typedef struct render_state_s {
   u32 frame;
   u32 visframe;
   u32 debug;
+  s32 gamma; // 0 - 5
   u16 num_particles;
   u16 last_beam;
+  u16 clut;
 } render_state_t;
 
 extern render_state_t rs;
@@ -111,8 +113,9 @@ static inline void *R_AllocPrim(const u32 size) {
 }
 
 void R_Init(void);
-void R_UploadClut(const u16 *clut);
+void R_UploadCluts(const u16 *clut);
 void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h);
+void R_ApplyGamma(void);
 qboolean R_CullBox(const x32vec3_t *mins, const x32vec3_t *maxs);
 void R_SetFrustum(void);
 void R_AddScreenPrim(const u32 primsize);

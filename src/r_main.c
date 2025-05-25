@@ -128,18 +128,21 @@ void R_Init(void) {
   // load gfx.dat
   Spr_Init();
 
+  // set default CLUT
+  rs.clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART);
+
   Scr_Init();
 
   // enable display
   SetDispMask(1);
 }
 
-void R_UploadClut(const u16 *clut) {
-  static RECT clut_rect = { GPU_CLUT_X, GPU_CLUT_Y, VID_NUM_COLORS, 1 };
+void R_UploadCluts(const u16 *clut) {
+  static RECT clut_rect = { GPU_CLUT_X, GPU_CLUT_Y, VID_NUM_COLORS, VID_NUM_CLUTS };
   LoadImage(&clut_rect, (void *)clut);
   DrawSync(0);
 
-  // store an RGBA8888 copy of it for particles and the like
+  // store an RGBA8888 copy of the first clut for particles and the like
   u32 *dst = r_palette;
   for (int i = 0; i < VID_NUM_COLORS; ++i, ++dst, ++clut) {
     const u16 c = *clut;
@@ -154,6 +157,10 @@ void R_UploadTexture(const u8 *data, int x, int y, const int w, const int h) {
   RECT rect = { x, y, w, h };
   LoadImage(&rect, (void *)data);
   DrawSync(0);
+}
+
+void R_ApplyGamma(void) {
+  rs.clut = getClut(VRAM_PAL_XSTART, VRAM_PAL_YSTART + rs.gamma);
 }
 
 void R_SetupGPU(void) {
