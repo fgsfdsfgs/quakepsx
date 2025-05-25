@@ -1,8 +1,10 @@
-## QuakePSX
+<div align="center">
+  <img src="https://github.com/fgsfdsfgs/quakepsx/blob/master/doc/img/screenshot0.png?raw=true" width="30%"/>
+  <img src="https://github.com/fgsfdsfgs/quakepsx/blob/master/doc/img/screenshot1.png?raw=true" width="30%"/>
+  <img src="https://github.com/fgsfdsfgs/quakepsx/blob/master/doc/img/screenshot2.png?raw=true" width="30%"/>
+</div>
 
-<p align="center">
-  <img src="https://github.com/fgsfdsfgs/quakepsx/blob/master/doc/img/screenshot0.png?raw=true"/>
-</p>
+## QuakePSX
 
 This is an experimental port of the original Quake to the Sony PlayStation.
 
