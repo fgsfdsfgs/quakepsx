@@ -1,0 +1,7 @@
+CompileFlags:
+  Add: [-Og, -g, -xc, -Wall]
+  CompilationDatabase:
+    None
+
+Diagnostics:
+  Suppress: [asm_unknown_register_name, unused-includes]
