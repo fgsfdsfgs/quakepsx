@@ -4,6 +4,8 @@
 #include "game.h"
 #include "render.h"
 
+#define MAX_LIGHTVALUE 400
+
 u16 r_lightstylevalue[MAX_LIGHTSTYLES + 1];
 
 struct {
@@ -20,7 +22,8 @@ void R_SetLightStyle(const int i, const char *map) {
       r_lightstyle[i].map[j] -= 'a';
   } else if (i < MAX_LIGHTSTYLES) {
     // toggleable light; set value directly
-    r_lightstylevalue[i] = (s32)(map[0] - 'a') * 22;
+    const u16 k = (u16)(map[0] - 'a') * 22;
+    r_lightstylevalue[i] = k > MAX_LIGHTVALUE ? MAX_LIGHTVALUE : k;
   }
 }
 
@@ -64,7 +67,7 @@ void R_UpdateLightStyles(const x32 time) {
     }
     k = i % r_lightstyle[j].len;
     k = r_lightstyle[j].map[k] * 22;
-    r_lightstylevalue[j] = k;
+    r_lightstylevalue[j] = k > MAX_LIGHTVALUE ? MAX_LIGHTVALUE : k;
   }
 }
 
