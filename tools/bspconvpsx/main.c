@@ -408,7 +408,8 @@ static void do_entities(void) {
       continue;
 
     // don't care about lights that don't get triggered and have no model
-    if (!strncmp(qent->classname, "light", 5) &&
+    const int is_light = !strncmp(qent->classname, "light", 5);
+    if (is_light &&
         !qent_get_string(qent, "targetname") &&
         !qent_get_string(qent, "model") &&
         !qent->info->mdlnums[0][0])
@@ -488,7 +489,7 @@ static void do_entities(void) {
     if (qent_get_int(qent, "lip", &tmpint))
       xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
-    if (qent_get_int(qent, "style", &tmpint))
+    if (qent_get_int(qent, "style", &tmpint) && is_light)
       xent->count = (tmpint > 0x7FFF) ? 0x7FFF : tmpint;
 
     if (qent_get_int(qent, "dmg", &tmpint))
