@@ -93,8 +93,8 @@ static const monster_class_t monster_ogre_class = {
 
 static void ogre_stand(edict_t *self) {
   monster_looping_state(self, MSTATE_STAND);
-  if (self->v.frame == STAND5 && xrand32() < FTOX(0.2))
-    utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGIDLE, SND_MAXVOL, ATTN_NORM);
+  if (self->v.frame == STAND5 && xrand32() < FTOX(0.1))
+    utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGIDLE, SND_MAXVOL, ATTN_IDLE);
   ai_stand(self);
 }
 
@@ -109,7 +109,7 @@ static void ogre_walk(edict_t *self) {
 
   switch (self->v.frame) {
   case WALK3:
-    if (xrand32() < FTOX(0.2))
+    if (xrand32() < FTOX(0.1))
       utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGIDLE, SND_MAXVOL, ATTN_IDLE);
     break;
   case WALK6:
@@ -133,7 +133,7 @@ static void ogre_run(edict_t *self) {
 
   switch (self->v.frame) {
   case RUN8:
-    if (xrand32() < (ONE / 5))
+    if (xrand32() < FTOX(0.1))
       utl_sound(self, CHAN_VOICE, SFXID_OGRE_OGIDLE2, SND_MAXVOL, ATTN_IDLE);
   /* fallthrough */
   default:
