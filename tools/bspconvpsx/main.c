@@ -222,11 +222,11 @@ static void do_faces(void) {
   for (int f = 0; f < qbsp.numfaces; ++f) {
     const qface_t *qf = qbsp.faces + f;
     xface_t *xf = xbsp_faces + f;
-    xf->planenum = qf->planenum;
-    xf->side = qf->side;
     xbsp_face_add(xf, qf, &qbsp);
     // printf("* qface %05d numverts %03d -> %03d\n", f, qf->numedges, xf->numverts);
   }
+
+  xbsp_numfaces = qbsp.numfaces;
 
   xbsp_lumps[XLMP_FACES].size = xbsp_numfaces * sizeof(xface_t);
   xbsp_lumps[XLMP_VERTS].size = xbsp_numverts * sizeof(xvert_t);

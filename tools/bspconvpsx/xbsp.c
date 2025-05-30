@@ -362,6 +362,8 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     xv->col[1] = lit[1];
   }
 
+  xf->planenum = qf->planenum;
+  xf->side = qf->side;
   xf->firstvert = startvert;
   xf->numverts = numverts;
   xf->texinfo = qti->miptex;
@@ -374,7 +376,6 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     xf->styles[0] = qf->styles[0] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[0];
     xf->styles[1] = qf->styles[1] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[1];
   }
-  xbsp_faces[xbsp_numfaces++] = *xf;
 }
 
 static u16 xbsp_stringbuffer_add(const char *str, char *buf, int *bufnum, const int maxnum) {
