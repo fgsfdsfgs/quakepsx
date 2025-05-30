@@ -327,7 +327,7 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     quvmax[j] = quvmin[j] + quvsiz[j];
 
     const f32 bmin = floorf(qstmin[j] / 16.f);
-    const f32 bmax = floorf(qstmax[j] / 16.f);
+    const f32 bmax = ceilf(qstmax[j] / 16.f);
     qlmmin[j] = bmin * 16.f;
     qlmsiz[j] = (bmax - bmin) * 16.f;
   }
