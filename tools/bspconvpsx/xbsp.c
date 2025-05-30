@@ -271,11 +271,15 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   };
   qvert_t *qverts[numverts];
   qvec2_t qst[numverts];
+  u16 qlight[numverts][MAX_LIGHTMAPS];
+  u32 qlightacc[MAX_LIGHTMAPS] = { 0, 0, 0, 0 };
   qvec2_t qstmin = { 999999.0f, 999999.0f };
   qvec2_t qstmax = { -99999.0f, -99999.0f };
   qvec2_t qstsiz;
   qvec2_t qlmmin, qlmsiz;
   qvec2_t quvmin, quvmax, quvsiz;
+
+  memset(qlight, 0, numverts * sizeof(qlight[0]));
 
   // get verts
   for (int i = 0; i < qf->numedges; ++i) {
@@ -355,11 +359,40 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
     xv->tex.v = fuv[1] * 1.0f * (f32)(xti->size.v - 1);
 
     // sample lightmaps
-    u16 lit[MAX_LIGHTMAPS] = { 0, 0, 0, 0 };
-    qbsp_light_for_vert(qbsp, qf, qvert->v, qlmmin, qlmsiz, lit);
-    // assume lightstyles come without gaps
-    xv->col[0] = lit[0];
-    xv->col[1] = lit[1];
+    qbsp_light_for_vert(qbsp, qf, qvert->v, qlmmin, qlmsiz, qlight[i]);
+
+    // accumulate contribution for each lightstyle
+    for (int m = 0; m < MAX_LIGHTMAPS; ++m)
+      qlightacc[m] += qlight[i][m];
+  }
+
+  // sort the lightstyles by total contribution, in descending order
+  u8 lmord[MAX_LIGHTMAPS] = { 0, 1, 2, 3 };
+  #define QCMP(ia, ib) \
+    if (qlightacc[lmord[ia]] < qlightacc[lmord[ib]]) { u8 t = lmord[ia]; lmord[ia] = lmord[ib]; lmord[ib] = t; }
+  QCMP(0, 1);
+  QCMP(2, 3);
+  QCMP(0, 2);
+  QCMP(1, 3);
+  QCMP(1, 2);
+  #undef QCMP
+
+  if (qti->flags & (TEXF_SPECIAL | TEXF_LIQUID | TEXF_SKY)) {
+    // fullbright style
+    xf->styles[0] = 0;
+    xf->styles[1] = 0;
+  } else {
+    // pick the top two lightstyles
+    // remap undefined style to 64, since we actually put a 0 at that index
+    xf->styles[0] = qf->styles[lmord[0]] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[lmord[0]];
+    xf->styles[1] = qf->styles[lmord[1]] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[lmord[1]];
+  }
+
+  // apply the selected lightstyles to all verts
+  xvert_t *xv = xbsp_verts + startvert;
+  for (int i = 0; i < numverts; ++i, ++xv) {
+    xv->col[0] = qlight[i][lmord[0]];
+    xv->col[1] = qlight[i][lmord[1]];
   }
 
   xf->planenum = qf->planenum;
@@ -367,15 +400,6 @@ void xbsp_face_add(xface_t *xf, const qface_t *qf, const qbsp_t *qbsp) {
   xf->firstvert = startvert;
   xf->numverts = numverts;
   xf->texinfo = qti->miptex;
-  if ((qti->flags & TEXF_SPECIAL) || qf->lightofs < 0) {
-    // fullbright style
-    xf->styles[0] = 0;
-    xf->styles[1] = 0;
-  } else {
-    // remap undefined style to 64, since we actually put a 0 at that index
-    xf->styles[0] = qf->styles[0] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[0];
-    xf->styles[1] = qf->styles[1] > MAX_LIGHTSTYLES ? MAX_LIGHTSTYLES : qf->styles[1];
-  }
 }
 
 static u16 xbsp_stringbuffer_add(const char *str, char *buf, int *bufnum, const int maxnum) {

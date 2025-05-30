@@ -70,23 +70,25 @@ const qmiptex_t *qbsp_get_miptex(const qbsp_t *qbsp, const int i) {
 }
 
 u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, qvec2_t sorg, qvec2_t sext, u16 *out) {
-  if (qf->lightofs < 0) {
-    // no lightmap => fullbright
-    out[0] = out[1] = out[2] = out[3] = 0x40;
-    return 0x40;
-  }
-
   const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
   const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
+
   if (qmt->name[0] == '+' || strstr(qmt->name, "*lava") || strstr(qmt->name, "*tele")) {
     // lava, animated texture (presumably button or monitor) or teleport surface => extra bright
     out[0] = out[1] = out[2] = out[3] = 0x60;
     return 0x60;
   }
-  if (qti->flags & TEXF_SPECIAL) {
+
+  if (qti->flags & (TEXF_SPECIAL | TEXF_LIQUID | TEXF_SKY)) {
     // this is water or sky or some shit => fullbright
     out[0] = out[1] = out[2] = out[3] = 0x40;
     return 0x40;
+  }
+
+  if (qf->lightofs < 0) {
+    // no lightmap => 100% dark
+    out[0] = out[1] = out[2] = out[3] = 0;
+    return 0;
   }
 
   const u8 *samples = qbsp->lightdata + qf->lightofs;

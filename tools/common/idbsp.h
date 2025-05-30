@@ -149,7 +149,9 @@ typedef struct {
   u32 offsets[NUM_MIPLEVELS];
 } qmiptex_t;
 
-#define TEXF_SPECIAL 1 // sky or slime, no lightmap or 256 subdivision
+#define TEXF_SPECIAL 1
+#define TEXF_LIQUID  2 // sky or slime, no lightmap or 256 subdivision
+#define TEXF_SKY     4
 
 typedef struct {
   qvec4_t vecs[2]; // [s/t][xyzw]
