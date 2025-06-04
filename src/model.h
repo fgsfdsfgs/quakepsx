@@ -33,7 +33,7 @@
 #define CONTENTS_CURRENT_UP   -13
 #define CONTENTS_CURRENT_DOWN -14
 
-#define SURF_PLANEBACK      2
+#define SURF_PLANEBACK      1     // 2 in og quake
 #define SURF_DRAWSKY        4
 #define SURF_DRAWSPRITE     8
 #define SURF_DRAWTURB       0x10
@@ -84,7 +84,7 @@ struct msurface_s {
   u8 styles[MAX_MAP_LIGHTVALS];
   u16 firstvert;
   u16 numverts;
-  u8 flags;
+  u8 backface;
 };
 
 typedef struct mnode_s {

@@ -419,7 +419,7 @@ void R_RecursiveWorldNode(mnode_t *node) {
     break;
   }
 
-  int side = !(dot >= 0);
+  u8 side = (dot < 0);
 
   // recurse down the children, front side first
   R_RecursiveWorldNode(node->children[side]);
@@ -438,8 +438,8 @@ void R_RecursiveWorldNode(mnode_t *node) {
       // skip invisible textures
       if (surf->texture->flags & (TEX_INVISIBLE | TEX_NULL))
         continue;
-      // don't backface underwater surfaces, because they warp
-      if (!(surf->flags & SURF_UNDERWATER) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
+      // backface cull
+      if (side ^ surf->backface)
         continue;
       // build a bigass list of all the visible world surfaces
       surf->vischain = rs.vischain;
@@ -481,9 +481,6 @@ static inline void DrawEntity(edict_t *ed) {
   }
 
   rs.cur_entity = ed;
-  rs.modelorg.x = ed->v.origin.x - rs.vieworg.x;
-  rs.modelorg.y = ed->v.origin.y - rs.vieworg.y;
-  rs.modelorg.z = ed->v.origin.z - rs.vieworg.z;
 
   // set up the GTE matrix
   VECTOR *t = PSX_SCRATCH;
@@ -502,6 +499,8 @@ static inline void DrawEntity(edict_t *ed) {
       ed->v.origin.y >> FIXSHIFT,
       ed->v.origin.z >> FIXSHIFT
     }};
+    // view origin in the model's coordinate system
+    XVecSub(&rs.vieworg, &ed->v.origin, &rs.modelorg);
   } else {
     // set rotation
     r->vx = ed->v.angles.z;

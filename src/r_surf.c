@@ -556,6 +556,7 @@ void R_DrawBrushModel(bmodel_t *model) {
   msurface_t *psurf;
   mplane_t *pplane;
   x32 dot;
+  u8 side;
 
   psurf = &model->surfaces[model->firstmodelsurface];
 
@@ -565,12 +566,16 @@ void R_DrawBrushModel(bmodel_t *model) {
       continue;
     // find which side of the node we are on
     pplane = psurf->plane;
-    dot = XVecDotSL(&pplane->normal, &rs.vieworg) - pplane->dist;
+    dot = XVecDotSL(&pplane->normal, &rs.modelorg) - pplane->dist;
+    if (dot < -BACKFACE_EPSILON)
+      side = SURF_PLANEBACK;
+    else if (dot > BACKFACE_EPSILON)
+      side = 0;
+    else
+      side = (dot < 0);
     // draw the polygon right away if it's facing the camera
-    if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
-      (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON))) {
-        RenderBrushPoly(psurf);
-    }
+    if ((side ^ psurf->backface) == 0)
+      RenderBrushPoly(psurf);
   }
 }
 

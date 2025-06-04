@@ -146,9 +146,7 @@ void Mod_LoadFaces(bmodel_t *mod, const int fh) {
   for (int i = 0; i < numfaces; ++i, ++out) {
     xbspface_t in;
     Sys_FileRead(fh, &in, sizeof(in));
-    out->flags = 0;
-    if (in.side)
-      out->flags |= SURF_PLANEBACK;
+    out->backface = !!in.side;
     out->plane = mod->planes + in.planenum;
     out->texture = mod->textures + in.texinfo;
     out->firstvert = in.firstvert;
