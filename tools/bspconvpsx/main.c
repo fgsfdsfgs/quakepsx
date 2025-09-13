@@ -619,6 +619,37 @@ static void do_sounds(void) {
   printf("loaded %d sounds, sfx lump size = %u\n", xbsp_numsounds, xbsp_lumps[XLMP_SNDDATA].size);
 }
 
+static void do_mem_stats(void) {
+  static const char *lmpnames[] = {
+    "XLMP_TEXDATA",
+    "XLMP_SNDDATA",
+    "XLMP_MDLDATA",
+    "XLMP_VERTS",
+    "XLMP_PLANES",
+    "XLMP_TEXINFO",
+    "XLMP_FACES",
+    "XLMP_MARKSURF",
+    "XLMP_VISILIST",
+    "XLMP_LEAFS",
+    "XLMP_NODES",
+    "XLMP_CLIPNODES",
+    "XLMP_MODELS",
+    "XLMP_STRINGS",
+    "XLMP_ENTITIES",
+  };
+
+  printf("\nmemory usage:\n\n");
+
+  s32 total = 0;
+  for (int i = 0; i < XLMP_COUNT; ++i) {
+    printf("lump %14s (%02d): %u bytes\n", lmpnames[i], i, xbsp_lumps[i].size);
+    total += xbsp_lumps[i].size;
+  }
+
+  printf("\ntotal:    %d bytes\n", total);
+  printf("RAM data: %d bytes\n", total - xbsp_lumps[XLMP_TEXDATA].size - xbsp_lumps[XLMP_SNDDATA].size);
+}
+
 static inline const char *get_arg(int c, const char **v, const char *arg) {
   for (int i = 4; i < c; ++i) {
     if (!strcmp(v[i], arg)) {
@@ -689,6 +720,9 @@ int main(int argc, const char **argv) {
 
   if (xbsp_write(outname) != 0)
     panic("could not write PSX BSP to '%s'", outname);
+
+  if (get_arg(argc, argv, "--mem-stats"))
+    do_mem_stats();
 
   return 0;
 }
