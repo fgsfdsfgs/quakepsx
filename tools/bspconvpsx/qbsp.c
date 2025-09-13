@@ -73,7 +73,7 @@ u16 qbsp_light_for_vert(const qbsp_t *qbsp, const qface_t *qf, const qvec3_t v, 
   const qtexinfo_t *qti = qbsp->texinfos + qf->texinfo;
   const qmiptex_t *qmt = qbsp_get_miptex(qbsp, qti->miptex);
 
-  if (qmt->name[0] == '+' || strstr(qmt->name, "*lava") || strstr(qmt->name, "*tele")) {
+  if (qmt && (qmt->name[0] == '+' || strstr(qmt->name, "*lava") || strstr(qmt->name, "*tele"))) {
     // lava, animated texture (presumably button or monitor) or teleport surface => extra bright
     out[0] = out[1] = out[2] = out[3] = 0x60;
     return 0x60;
