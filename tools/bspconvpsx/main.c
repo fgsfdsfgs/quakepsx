@@ -682,6 +682,7 @@ int main(int argc, const char **argv) {
   assert(qsfxmap_init(strfmt("%s/sfxmap.txt", cfgdir)) >= 0);
   assert(qentmap_init(strfmt("%s/entmap.txt", cfgdir)) >= 0);
   assert(qentmap_link(strfmt("%s/reslist.txt", cfgdir)) >= 0);
+  qmdlprops_init(strfmt("%s/mdlprops.txt", cfgdir));
 
   // read palette
   size_t palsize = 0;

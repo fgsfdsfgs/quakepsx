@@ -11,6 +11,7 @@ typedef struct {
   u8 *start;
   s16 id;
   size_t size;
+  s32 viewmodel;
   qaliashdr_t *header;
   qaliasframe_t *frames;
   qaliastexcoord_t *texcoords;
@@ -24,6 +25,8 @@ extern qmdl_t qmdls[MAX_QMDLS];
 int qmdlmap_init(const char *mapfile);
 int qmdlmap_id_for_name(const char *name);
 const char *qmdlmap_name_for_id(const int id);
+
+int qmdlprops_init(const char *propsfile);
 
 qmdl_t *qmdl_add(const int id, const char *name, u8 *start, const size_t size);
 qmdl_t *qmdl_find(const char *name);

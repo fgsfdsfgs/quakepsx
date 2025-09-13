@@ -18,6 +18,9 @@ static qmdl_t *sort;
 static int sort_muzzlehack = 0;
 static sort_weight_fn_t sort_weight_fn;
 
+static char *qmdl_props = NULL;
+static char *qmdl_props_end = NULL;
+
 int qmdlmap_init(const char *mapfile) {
   num_qmdlmap = resmap_parse(mapfile, (char *)qmdlmap, MAX_QMDLS, sizeof(qmdlmap[0]), sizeof(qmdlmap[0]));
   printf("qmdlmap_init(): indexed %d models from %s\n", num_qmdlmap, mapfile);
@@ -40,6 +43,78 @@ const char *qmdlmap_name_for_id(const int id) {
   return qmdlmap[id];
 }
 
+int qmdlprops_init(const char *propsfile) {
+  // fuck it, just load the entire thing and re-parse it every time,
+  // I'll hopefully figure out a better config format later
+  FILE *f = fopen(propsfile, "rb");
+  if (!f)
+    return 0;
+  fseek(f, 0, SEEK_END);
+  int sz = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  if (sz > 0) {
+    qmdl_props = calloc(1, sz + 1);
+    fread(qmdl_props, sz, 1, f);
+    qmdl_props_end = qmdl_props + sz;
+  } else {
+    qmdl_props = calloc(1, 1);
+    qmdl_props_end = qmdl_props;
+  }
+  fclose(f);
+  return 1;
+}
+
+static int qmdlprops_read(qmdl_t *qmdl) {
+  const char *data = strstr(qmdl_props, qmdl->name);
+  if (!data) return 0;
+
+  data += strlen(qmdl->name);
+  if (!*data) return 0;
+
+  char key[MAX_TOKEN] = { 0 };
+  char value[MAX_TOKEN] = { 0 };
+
+  while (1) {
+    // parse key
+    data = com_parse(data, key);
+    if (!data || !key[0])
+      break;
+    if (!strcmp(key, "viewmodel")) {
+      // this model is a viewmodel
+      qmdl->viewmodel = 1;
+      printf("* * is a viewmodel\n");
+    } else if (!strcmp(key, "delete")) {
+      // delete a frame or range of frames
+      data = com_parse(data, value);
+      assert(value[0]);
+      if (strstr(value, "..")) {
+        int fstart = -1;
+        int fend = -1;
+        // check if it's a range of frames, otherwise check for a single
+        if (sscanf(value, "%d..%d", &fstart, &fend) < 2) {
+          sscanf(value, "%d", &fend);
+          fstart = fend;
+        }
+        assert(fstart >= 0 && fend >= 0);
+        assert(fend >= fstart);
+        assert(fend < qmdl->header->numframes);
+        const int ndeleted = fend - fstart + 1;
+        const int nright = qmdl->header->numframes - fend - 1;
+        if (nright > 0)
+          memmove(qmdl->frames + fstart, qmdl->frames + fend + 1, nright * sizeof(qmdl->frames[0]));
+        printf("* * deleted frames %d..%d, numframes %d -> %d\n",
+          fstart, fend, qmdl->header->numframes, qmdl->header->numframes - ndeleted);
+        qmdl->header->numframes -= ndeleted;
+      }
+    } else if (!strcmp(key, "mdl")) {
+      // next model block begins here
+      break;
+    }
+  }
+
+  return 1;
+}
+
 qmdl_t *qmdl_find(const char *name) {
   for (s32 i = 0; i < num_qmdls; ++i) {
     if (!strncmp(qmdls[i].name, name, sizeof(qmdls[i].name)))
@@ -57,8 +132,11 @@ qmdl_t *qmdl_add(const int id, const char *name, u8 *start, const size_t size) {
   qmdl_init(mdl, start, size);
   mdl->id = id ? id : qmdlmap_id_for_name(name);
 
-  // pre-sort viewmodels (TODO: add a better way to detect them)
-  if (strstr(name, "/v_"))
+  // parse the model's props (this looks through the entire props file every time but whatever)
+  qmdlprops_read(mdl);
+
+  // pre-sort viewmodels
+  if (mdl->viewmodel)
     qmdl_sort(mdl);
 
   return mdl;

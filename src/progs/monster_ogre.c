@@ -35,7 +35,9 @@ enum ogre_frames_e {
   BDEATH1, BDEATH2, BDEATH3, BDEATH4, BDEATH5, BDEATH6,
   BDEATH7, BDEATH8, BDEATH9, BDEATH10,
 
+  /* // unused
   PULL1, PULL2, PULL3, PULL4, PULL5, PULL6, PULL7, PULL8, PULL9, PULL10, PULL11
+  */
 };
 
 enum ogre_states_e {

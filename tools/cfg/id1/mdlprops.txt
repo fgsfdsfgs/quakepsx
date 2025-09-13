@@ -1,0 +1,35 @@
+mdl progs/soldier.mdl
+  delete 29..39
+
+mdl progs/ogre.mdl
+  delete 136..146
+
+mdl progs/knight.mdl
+  delete 67..75
+
+mdl progs/hknight.mdl
+  delete 79..111
+
+mdl progs/v_axe.mdl
+  viewmodel
+
+mdl progs/v_light.mdl
+  viewmodel
+
+mdl progs/v_nail.mdl
+  viewmodel
+
+mdl progs/v_nail2.mdl
+  viewmodel
+
+mdl progs/v_rock.mdl
+  viewmodel
+
+mdl progs/v_rock2.mdl
+  viewmodel
+
+mdl progs/v_shot.mdl
+  viewmodel
+
+mdl progs/v_shot2.mdl
+  viewmodel
