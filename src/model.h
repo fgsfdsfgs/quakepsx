@@ -55,9 +55,9 @@ typedef xbspclipnode_t mclipnode_t;
 
 typedef struct {
   x16vec3_t normal;
-  x32 dist;
   u8 type;
   u8 signbits; // signx + signy<<1 + signz<<1
+  x32 dist;
 } mplane_t;
 
 typedef struct msurface_s msurface_t;
