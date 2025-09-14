@@ -48,7 +48,7 @@ void *Mem_Alloc(const u32 size) {
   if (size == 0)
     Sys_Error("Mem_Alloc: size == 0");
   if (mem_left < asize)
-    Sys_Error("Mem_Alloc: failed to alloc %u bytes", size);
+    Sys_Error("Mem_Alloc: failed to alloc %u bytes - only %d left", size, mem_left);
   if (mem_numallocs == MEM_MAX_ALLOCS)
     Sys_Error("Mem_Alloc: MAX_ALLOCS reached");
   mem_lastptr = mem_ptr;
@@ -72,10 +72,10 @@ void *Mem_Realloc(void *ptr, const u32 newsize) {
   if (ptr != mem_lastptr || !mem_numallocs)
     Sys_Error("Mem_Realloc: this is a stack allocator you dolt");
   if (mem_left < anewsize)
-    Sys_Error("Mem_Realloc: failed to realloc %p from %u to %u bytes", oldsize, anewsize);
-  mem_left -= (int)newsize - (int)oldsize;
-  mem_ptr = mem_lastptr + newsize;
-  mem_allocs[mem_numallocs - 1] = newsize;
+    Sys_Error("Mem_Realloc: failed to realloc %p from %u to %u bytes - only %d left", ptr, oldsize, anewsize, mem_left);
+  mem_left -= (int)anewsize - (int)oldsize;
+  mem_ptr = mem_lastptr + anewsize;
+  mem_allocs[mem_numallocs - 1] = anewsize;
   return mem_lastptr;
 }
 
