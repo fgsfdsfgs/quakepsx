@@ -18,8 +18,15 @@ void panic(const char *fmt, ...) {
 void *lmp_read(const char *dir, const char *fname, size_t *outsize) {
   // scan pak files first
   pak_t pak;
+  int err;
   for (int i = 0; i <= 9; ++i) {
-    if (pak_open(&pak, strfmt("%s/pak%d.pak", dir, i)) == 0) {
+    err = pak_open(&pak, strfmt("%s/pak%d.pak", dir, i));
+#ifndef _WIN32
+    // on case-sensitive filesystems also try the full-caps pak name as used by the og game
+    if (err != 0)
+      err = pak_open(&pak, strfmt("%s/PAK%d.PAK", dir, i));
+#endif
+    if (err == 0) {
       void *data = pak_readfile(&pak, fname, outsize);
       pak_close(&pak);
       if (data) return data;
@@ -41,7 +48,7 @@ void *lmp_read(const char *dir, const char *fname, size_t *outsize) {
     return buf;
   }
 
-  fprintf(stderr, "warning: could not find '%s' in '%s' or in cwd", fname, dir);
+  fprintf(stderr, "warning: could not find '%s' in '%s' or in cwd\n", fname, dir);
 
   // never gets here
   return NULL;
