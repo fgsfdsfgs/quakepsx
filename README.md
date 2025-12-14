@@ -22,6 +22,16 @@ It is based on the original Quake codebase, with the main idea being to keep it 
 * There are some bugs in the movement code that can cause you to get stuck or gain high speed for no reason.
 * There might be many other bugs.
 
+### Running
+
+You can get a [prebuilt CD image](https://github.com/fgsfdsfgs/quakepsx/releases/tag/latest-shareware) of QuakePSX with the Quake Shareware data files.
+
+If you want to run the full version (note that registered episodes mostly don't work right now; refer to the Status section above for details) or add CD music, you will have to build your own CD image.
+Refer to the Building section below for instructions.
+
+Once you have a CD image, you can burn it to a CD-R and run it on a modchipped console, or load it using something like FreePSXBoot.
+It will also run on modern emulators, such as DuckStation or PCSX-Redux. I have not tested whether it works with ODEs, but it should.
+
 ### Building
 
 #### Prerequisites:
